@@ -2,18 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>多数決投票トップ</title>
+  <meta description="オンラインで投票が可能なサービスです．ネット環境とデバイスさえあれば使用可能なお手軽ソフトです．">
+  <title>オンライン投票サービス(Top)</title>
   <style>
     body { font-family: sans-serif; }
   </style>
 </head>
 <body>
-  <h2>多数決投票システム</h2>
-  <button onclick="newSession()">新しい投票を開始（マスター画面）</button>
+  <h2>オンライン投票サービス</h2>
+  <p>
+    オンラインで投票をするサービスです．<br>
+    投票開催者の方は以下のボタンをクリックして新しい投票を開始してください．<br><br>
+      
+    参加者の方は，開催者から共有された投票IDをテキスト入力欄に入力して投票に参加してください．
+  </p>
+  <button onclick="newSession()">新しい投票を開始(マスター画面)</button>
   <hr>
   <form onsubmit="join(event)">
     <label>参加する投票ID: <input type="text" id="joinId" required></label>
-    <button type="submit">参加（スレーブ画面）</button>
+    <button type="submit">参加(スレーブ画面)</button>
   </form>
   <script>
     function newSession() {
