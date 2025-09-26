@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>多数決マスター画面</title>
+  <title>オンライン投票サービス(Master)</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="vote.js"></script>
@@ -14,22 +14,25 @@
   </style>
 </head>
 <body>
-  <h2>マスター画面</h2>
+  <h2>投票確認画面</h2>
   <div>投票ID: <span id="voteId"></span></div>
   <div>
-    スレーブ用URL: 
+    参加者用URL: 
     <input type="text" id="slaveUrl" readonly style="width:300px">
     <button type="button" onclick="copySlaveUrl()">コピー</button>
   </div>
+  <hr>
   <details>
-    <summary>スレーブ用URLのQRコードを表示</summary>
+    <summary>参加者向けQRコードを表示</summary>
     <div id="qrcode"></div>
   </details>
+  <hr>
   <form id="labelForm">
     <div id="labels"></div>
-    <button type="submit">項目名を更新</button>
-    <button type="button" onclick="resetVotes()">投票リセット</button>
+    <button type="submit" style="font-size: 1.2em;">項目名を更新</button>
+    <button type="button" style="font-size: 1.2em;" onclick="resetVotes()">投票リセット</button>
   </form>
+  <hr>
   <div id="results"></div>
   <script>
     // ページロード時に初期化
