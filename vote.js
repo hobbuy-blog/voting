@@ -1,12 +1,13 @@
 // 1. Firebase初期化（自分のプロジェクト情報に書き換えてください）
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MSG_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDav5Vz9EOrXLXJwlR-FmHZAvKTm05yEM0",
+  authDomain: "voting-app-c3be3.firebaseapp.com",
+  databaseURL: "https://voting-app-c3be3-default-rtdb.firebaseio.com",
+  projectId: "voting-app-c3be3",
+  storageBucket: "voting-app-c3be3.firebasestorage.app",
+  messagingSenderId: "374537942967",
+  appId: "1:374537942967:web:e9706bca99e0abb3ed5a32",
+  measurementId: "G-SCZN4F5NB0"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
