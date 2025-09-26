@@ -15,8 +15,22 @@
   <h2>投票確認画面</h2>
   <div>投票ID: <span id="voteId"></span></div>
   <div>
-    スレーブ用URL: <input type="text" id="slaveUrl" readonly style="width:300px">
+    スレーブ用URL: <input type="text" id="slaveUrl" readonly style="width:350px">
+    <button type="button" onclick="copySlaveUrl()">参加リンクをコピー</button>
   </div>
+  <script>
+  // ...既存のコード...
+
+  function copySlaveUrl() {
+    const url = document.getElementById('slaveUrl').value;
+    navigator.clipboard.writeText(url).then(() => {
+      alert('スレーブ用URLをコピーしました');
+    }).catch(() => {
+      alert('コピーに失敗しました');
+    });
+  }
+  </script>
+  
   <form id="labelForm">
     <div id="labels"></div>
     <button type="submit" style="font-size: 1.5em;">項目名を更新</button>
