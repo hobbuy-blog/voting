@@ -19,8 +19,8 @@
   </div>
   <form id="labelForm">
     <div id="labels"></div>
-    <button type="submit">項目名を更新</button>
-    <button type="button" onclick="resetVotes()">投票リセット</button>
+    <button type="submit" style="font-size: 2em;">項目名を更新</button>
+    <button type="button" style="font-size: 2em;" onclick="resetVotes()">投票リセット</button>
   </form>
   <div id="results"></div>
   <script>
@@ -28,7 +28,7 @@
     const url = new URL(location.href);
     const id = url.searchParams.get('id');
     document.getElementById('voteId').textContent = id;
-    document.getElementById('slaveUrl').value = `${location.origin}/slave.html?id=${id}`;
+    document.getElementById('slaveUrl').value = `${location.origin}/voting/slave.html?id=${id}`;
     initMaster(id);
   </script>
 </body>
