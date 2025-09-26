@@ -39,7 +39,7 @@
     const url = new URL(location.href);
     const id = url.searchParams.get('id');
     document.getElementById('voteId').textContent = id;
-    document.getElementById('slaveUrl').value = `${location.origin}/slave.html?id=${id}`;
+    document.getElementById('slaveUrl').value = `${location.origin}/voting/slave.html?id=${id}`;
     makeQrCode(); // スレーブURLセット後にQR生成
     initMaster(id);
 
