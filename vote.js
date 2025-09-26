@@ -12,17 +12,25 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 2. 初期状態
 const defaultLabels = ["1", "2", "3", "4"];
 
 function initMaster(id) {
   const ref = db.ref(`votes/${id}`);
-  // 初期データがなければ作成
+  // 3日経過チェック・自動削除
   ref.once('value', snap => {
-    if (!snap.exists()) {
+    const data = snap.val();
+    if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
+      ref.remove();
+      alert("この投票は3日間投票がなかったため自動削除されました。");
+      window.location.href = "index.html";
+      return;
+    }
+    // 初期データがなければ作成
+    if (!data) {
       ref.set({
         labels: defaultLabels,
-        votes: [0,0,0,0]
+        votes: [0,0,0,0],
+        lastVoted: Date.now()
       });
     }
   });
@@ -34,7 +42,6 @@ function initMaster(id) {
     renderMaster(data, id);
   });
 
-  // ラベル編集
   document.getElementById('labelForm').onsubmit = e => {
     e.preventDefault();
     const labels = [];
@@ -50,14 +57,12 @@ function initMaster(id) {
 }
 
 function renderMaster(data, id) {
-  // ラベルフォーム
   const labelsDiv = document.getElementById('labels');
   labelsDiv.innerHTML = '';
   for (let i=0; i<4; ++i) {
     labelsDiv.innerHTML += 
       `項目${i+1}: <input type="text" id="label${i}" value="${data.labels[i]||defaultLabels[i]}"><br>`;
   }
-  // 投票状況
   let html = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
     html += `${data.labels[i]||defaultLabels[i]} : ${data.votes[i]||0}票<br>`;
@@ -67,7 +72,17 @@ function renderMaster(data, id) {
 
 function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
-  // 投票UI
+  // 3日経過チェック・自動削除
+  ref.once('value', snap => {
+    const data = snap.val();
+    if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
+      ref.remove();
+      alert("この投票は3日間投票がなかったため自動削除されました。");
+      window.location.href = "index.html";
+      return;
+    }
+  });
+
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) {
@@ -80,25 +95,23 @@ function initSlave(id) {
 }
 
 function renderSlave(data, id) {
-  // 投票ボタン
   let chtml = '';
   for (let i=0; i<4; ++i) {
     chtml += `<button class="vote-btn" onclick="vote(${i})">${data.labels[i]||defaultLabels[i]} に投票</button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
-  // 投票状況
   let rhtml = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
     rhtml += `${data.labels[i]||defaultLabels[i]} : ${data.votes[i]||0}票<br>`;
   }
   document.getElementById('results').innerHTML = rhtml;
-  // 投票関数
   window.vote = idx => {
-    const ref = db.ref(`votes/${id}/votes`);
-    ref.transaction(arr => {
+    const ref = db.ref(`votes/${id}`);
+    ref.child('votes').transaction(arr => {
       if (!arr) arr = [0,0,0,0];
       arr[idx] = (arr[idx]||0)+1;
       return arr;
     });
+    ref.update({ lastVoted: Date.now() });
   };
 }
