@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>多数決スレーブ画面</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="vote.js"></script>
+  <style>
+    body { font-family: sans-serif; }
+    .vote-btn { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h2>投票参加画面</h2>
+  <div>投票ID: <span id="voteId"></span></div>
+  <div id="choices"></div>
+  <div id="results"></div>
+  <script>
+    // ページロード時に初期化
+    const url = new URL(location.href);
+    const id = url.searchParams.get('id');
+    document.getElementById('voteId').textContent = id;
+    initSlave(id);
+  </script>
+</body>
+</html>
