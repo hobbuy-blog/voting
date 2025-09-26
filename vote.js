@@ -21,7 +21,7 @@ function initMaster(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("この投票は3日間投票がなかったため自動削除されました。");
+      alert("この投票IDに関連付けられていたデータがリセットされました．サーバーを再度作成してください．");
       window.location.href = "index.html";
       return;
     }
@@ -77,7 +77,7 @@ function initSlave(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("この投票は3日間投票がなかったため自動削除されました。");
+      alert("この投票IDに関連付けられていたデータがリセットされました．サーバーを再度作成してください．");
       window.location.href = "index.html";
       return;
     }
