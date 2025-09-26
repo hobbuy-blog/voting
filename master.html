@@ -46,7 +46,7 @@
     function copySlaveUrl() {
       const url = document.getElementById('slaveUrl').value;
       navigator.clipboard.writeText(url).then(() => {
-        alert('スレーブ用URLをコピーしました');
+        alert('参加者用URLをコピーしました');
       }).catch(() => {
         alert('コピーに失敗しました');
       });
