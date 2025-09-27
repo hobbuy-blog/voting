@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta description="オンラインで投票が可能なサービスです．ネット環境とデバイスさえあれば使用可能なお手軽ソフトです．">
+  <meta description="オンラインで投票が可能なサービスです．ネット環境とデバイスさえあれば使用可能なお手軽ソフトです．主に授業の理解度確認などの教育関係を目的としています。">
   <title>オンライン投票サービス(Top)</title>
   <style>
     body { font-family: sans-serif; }
@@ -12,12 +12,11 @@
   <h2>オンライン投票サービス</h2>
   <p>
     オンラインで投票をするサービスです．<br>
-    投票開催者の方は以下のボタンをクリックして新しい投票を開始してください．<br><br>
-      
-    参加者の方は，開催者から共有された投票IDをテキスト入力欄に入力して投票に参加してください．
+    投票開催者の方は以下のボタンをクリックして新しい投票を開始してください．
   </p>
   <button onclick="newSession()">新しい投票を開始(マスター画面)</button>
   <hr>
+  <p>参加者の方は，開催者から共有された投票IDをテキスト入力欄に入力して投票に参加してください.</p>
   <form onsubmit="join(event)">
     <label>参加する投票ID: <input type="text" id="joinId" required></label>
     <button type="submit">参加(スレーブ画面)</button>
