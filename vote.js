@@ -13,7 +13,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const defaultLabels = ["1", "2", "3", "4"];
-const colorset = [#f20, #f70, #1d2, #07f];
 
 function initMaster(id) {
   const ref = db.ref(`votes/${id}`);
@@ -98,7 +97,7 @@ function initSlave(id) {
 function renderSlave(data, id) {
   let chtml = '';
   for (let i=0; i<4; ++i) {
-    chtml += `<button class="vote-btn" style="background-color: colorset(${i});" onclick="vote(${i})"><b>${data.labels[i]||defaultLabels[i]}</b>に投票</button><br>`;
+    chtml += `<button class="vote-btn" onclick="vote(${i})"><b>${data.labels[i]||defaultLabels[i]}</b>に投票</button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
   let rhtml = "<h3>投票状況</h3>";
