@@ -41,7 +41,7 @@
   </style>
 </head>
 <body>
-  <h1>オンライン投票サービス</h1>
+  <h2>オンライン投票サービス</h2>
   <div id="offline-notice">インターネットに接続されていません．<br>インターネット環境をお確かめください．</div>
   
   <p>
@@ -49,20 +49,20 @@
     本サービスはインターネット接続環境さえあれば，アカウントなしで投票をすることが可能です．<br>
     投票の進行状況はリアルタイムで反映されます．<br><br>
 
-    主に学校教育を目的とした簡易投票サービスであり，できる限り機能は省いていますので，投票数が重要な用途など，本サービスが不向きな場合も多いことをお知りおきください．
+    主に学校教育を目的とした簡易投票サービスであり，可能な限り機能を省いているため投票数が重要な用途などの本サービスが不向きな場合も多いことをお知りおきください．
   </p>
   <hr>
-  <h2>投票開催者</h2>
+  <h3>投票開催者</h3>
   <p>
     投票開催者の方は以下のボタンをクリックして新しい投票を開始してください．<br>
     なお，管理画面リンクをメモしておくことを推奨します．
   </p>
   <button onclick="newSession()" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">新しい投票を開始(マスター画面)</button>
   <hr>
-  <h2>投票参加者</h2>
+  <h2>投票参加者</h3>
   <p>参加者の方は，開催者から共有された投票IDをテキスト入力欄に入力して投票に参加してください.</p>
   <form onsubmit="join(event)">
-    <label>参加する投票ID: <input type="text" id="joinId" required></label>
+    <label>参加する投票ID: <input type="text" id="joinId" height="32px" required></label>
     <button type="submit" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">参加(スレーブ画面)</button>
   </form>
   <script>
