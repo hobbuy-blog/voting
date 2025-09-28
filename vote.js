@@ -65,7 +65,7 @@ function renderMaster(data, id) {
   }
   let html = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
-    html += `${data.labels[i]||defaultLabels[i]} : ${data.votes[i]||0}票<br>`;
+    html += `${data.labels[i]||defaultLabels[i]} : <span style="font-size: 1.5em; text-decoration: bold, underline; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
   }
   document.getElementById('results').innerHTML = html;
 }
