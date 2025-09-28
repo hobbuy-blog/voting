@@ -61,11 +61,11 @@ function renderMaster(data, id) {
   labelsDiv.innerHTML = '';
   for (let i=0; i<4; ++i) {
     labelsDiv.innerHTML += 
-      `項目${i+1}: <input type="text" id="label${i}" value="${data.labels[i]||defaultLabels[i]}"><br>`;
+      `項目${i+1}: <input type="text" style="font-size: 1em;" id="label${i}" value="${data.labels[i]||defaultLabels[i]}"><br>`;
   }
   let html = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
-    html += `${data.labels[i]||defaultLabels[i]} : <span style="font-size: 1.5em; text-decoration: bold, underline; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
+    html += `${data.labels[i]||defaultLabels[i]} : <span style="font-size: 2em; text-decoration: bold,underline; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
   }
   document.getElementById('results').innerHTML = html;
 }
