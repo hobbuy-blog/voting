@@ -98,7 +98,7 @@ function initSlave(id) {
 function renderSlave(data, id) {
   let chtml = '';
   for (let i=0; i<4; ++i) {
-    chtml += `<button class="vote-btn" style="background-color: colorset(%{i});" onclick="vote(${i})">${data.labels[i]||defaultLabels[i]} に投票</button><br>`;
+    chtml += `<button class="vote-btn" style="background-color: colorset(${i});" onclick="vote(${i})"><b>${data.labels[i]||defaultLabels[i]}</b>に投票</button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
   let rhtml = "<h3>投票状況</h3>";
