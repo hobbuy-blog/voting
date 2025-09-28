@@ -53,7 +53,7 @@
   <div>
     参加者用URL: 
     <input type="text" id="slaveUrl" style="height: 28px;" readonly style="width:200px">
-    <button type="button" onclick="copySlaveUrl()">コピー</button>
+    <button type="button" style="background-color: #eee; color: #000; border-style: solid; border-color: #888; border-width: 4px; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="copySlaveUrl()">コピー</button>
   </div>
   <hr>
   <details>
@@ -62,9 +62,9 @@
   </details>
   <hr>
   <form id="labelForm">
-    <div id="labels"></div>
-    <button type="submit" style="font-size: 1.2em;">項目内容を更新</button>
-    <button type="button" style="font-size: 1.2em;" onclick="resetVotes()">投票リセット</button>
+    <div id="labels" style="height: 28px;"></div>
+    <button type="submit" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">項目内容を更新</button>
+    <button type="button" style="background-color: #f50; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="resetVotes()">投票リセット</button>
   </form>
   <hr>
   <div id="results"></div>
