@@ -21,7 +21,7 @@ function initMaster(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("この投票IDに関連付けられていたデータがリセットされました．サーバーを再度作成してください．");
+      alert("サーバーがリセットされました．サーバーを再度作成してください．");
       window.location.href = "index.html";
       return;
     }
@@ -77,7 +77,7 @@ function initSlave(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("この投票IDに関連付けられていたデータがリセットされました．サーバーを再度作成してください．");
+      alert("サーバーがリセットされました．サーバーを再度作成してください．");
       window.location.href = "index.html";
       return;
     }
@@ -102,7 +102,7 @@ function renderSlave(data, id) {
   document.getElementById('choices').innerHTML = chtml;
   let rhtml = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
-    rhtml += `${data.labels[i]||defaultLabels[i]} : ${data.votes[i]||0}票<br>`;
+    rhtml += `${data.labels[i]||defaultLabels[i]} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
   }
   document.getElementById('results').innerHTML = rhtml;
   window.vote = idx => {
