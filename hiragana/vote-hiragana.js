@@ -35,7 +35,7 @@ function initSlave(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("サーバーがリセットされました．サーバーに入りなおしてください．");
+      alert("サーバーがリセットされました．サーバーにはいりなおしてください．");
       window.location.href = "index.html";
       return;
     }
@@ -44,7 +44,7 @@ function initSlave(id) {
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) {
-      document.getElementById('choices').textContent = "IDがちがいます．やりなおしてください．";
+      document.getElementById('choices').textContent = "IDがちがいます．";
       document.getElementById('results').textContent = "";
       return;
     }
