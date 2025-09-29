@@ -44,7 +44,7 @@ function initSlave(id) {
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) {
-      document.getElementById('choices').textContent = "<ruby>投票<rt>とうひょう</rt></ruby>IDが<ruby>違<rt></rt></ruby>います．";
+      document.getElementById('choices').textContent = "IDがちがいます．やりなおしてください．";
       document.getElementById('results').textContent = "";
       return;
     }
