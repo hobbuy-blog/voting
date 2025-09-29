@@ -56,16 +56,30 @@ function initMaster(id) {
   };
 }
 
+function escapeHtml(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/[&<>"']/g, function(match) {
+    switch (match) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return match;
+    }
+  });
+}
+
 function renderMaster(data, id) {
   const labelsDiv = document.getElementById('labels');
   labelsDiv.innerHTML = '';
   for (let i=0; i<4; ++i) {
     labelsDiv.innerHTML += 
-      `項目${i+1}: <input type="text" style="font-size: 1em; margin: 1px; height: 22px;" id="label${i}" value="${data.labels[i]||defaultLabels[i]}"><br>`;
+      `項目${i+1}: <input type="text" style="font-size: 1em; margin: 1px; height: 22px;" id="label${i}" value="${escapeHtml(data.labels[i]||defaultLabels[i])}"><br>`;
   }
   let html = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
-    html += `${data.labels[i]||defaultLabels[i]} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
   }
   document.getElementById('results').innerHTML = html;
 }
