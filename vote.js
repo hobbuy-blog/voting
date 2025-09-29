@@ -79,7 +79,7 @@ function renderMaster(data, id) {
   }
   let html = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span>票<br>`;
   }
   document.getElementById('results').innerHTML = html;
 }
