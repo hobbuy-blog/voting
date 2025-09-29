@@ -74,7 +74,7 @@
     function join(e) {
       e.preventDefault();
       const id = document.getElementById('joinId').value.trim();
-      if(id) location.href = `slave.html?id=${id}`;
+      if(id) location.href = `slave.html?id=${encodeURIComponent(id)}`;
     }
 
     // service workerの登録関係
