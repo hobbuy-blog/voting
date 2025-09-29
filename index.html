@@ -71,7 +71,7 @@
     <label>自動生成投票IDで開始: <button onclick="newSession()" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">新しい投票を開始(マスター画面)</button></label>
   </form>
   <form style="margin-top: 4px;">
-    <label>カスタム投票IDで開始: <input type="text" id="joinId" style="height: 28px;" required></label>
+    <label>カスタム投票IDで開始: <input type="text" id="customId" style="height: 28px;" required></label>
     <button onclick="customSession()" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">新しい投票を開始(マスター画面)</button>
   </form>
   <hr>
@@ -88,7 +88,9 @@
       location.href = `master.html?id=${id}`;
     }
     function customSession() {
-      location.href = `master.html?id=${id}`;
+      e.preventDefault();
+      const id = document.getElementById('customId').value.trim();
+      location.href = `master.html?id=${encodeURIComponent(id)}`;
     }
     function join(e) {
       e.preventDefault();
