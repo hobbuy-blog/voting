@@ -7,6 +7,19 @@ GitHub Pagesで動作する「オンライン投票サービス」です．
 - スレーブ（参加者）はID指定で投票
 - 投票・ラベルはリアルタイム同期
 
+## 言語対応 | つかえることば | Language Support
+|  | 日本語(漢字) | <ruby>日本語<rt>にほんご</rt></ruby>(ひらがな) | English |
+|-:|:-:|:-:|:-:|
+| トップ<br>Top | ○ | ○ | ○ |
+| マスター<br>開催者<br>せんせい<br>Master | ○ | × | ○ |
+| スレーブ<br>参加者<br>こども<br>Slave | ○ | ○ | ○ |
+
+**<ruby>日本語<rt>にほんご</rt></ruby>(ひらがな)** と **English** の2言語は`Ver 4`から利用可能になります．
+
+**<ruby>日本語<rt>にほんご</rt></ruby>(ひらがな)** と **English** の2つのことばは`Ver 4`からつかえるようになります．
+
+The languages **<ruby>日本語<rt>にほんご</rt></ruby>(ひらがな)** and **English** will be available from `Ver 4`．
+
 ## 使い方
 1. [トップページ](https://hobbuy-blog.github.io/voting)を開きます
 2. 投票開催者の方は`新しい投票を開始(マスター画面)`を押します<br>**この時，開催者の方はページを閉じないようにしてください．閉じてしまった場合に備えてリンクをメモしておくことを推奨します**
