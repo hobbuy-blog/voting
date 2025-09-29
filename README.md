@@ -1,6 +1,6 @@
 # voting
 ## 概要
-GitHub Pagesで動作する「リアルタイム多数決」アプリです．
+GitHub Pagesで動作する「オンライン投票サービス」です．
 集計・同期にはFirebase Realtime Databaseを用いています（サーバーレス構成）．
 
 - マスター画面で項目名編集・投票リセットが可能
