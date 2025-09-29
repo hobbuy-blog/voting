@@ -90,7 +90,7 @@
     function customSession() {
       e.preventDefault();
       const id = document.getElementById('customId').value.trim();
-      location.href = `master.html?id=${encodeURIComponent(id)}`;
+      if(id) location.href = `master.html?id=${encodeURIComponent(id)}`;
     }
     function join(e) {
       e.preventDefault();
