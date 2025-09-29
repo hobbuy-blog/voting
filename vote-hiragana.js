@@ -111,7 +111,7 @@ function initSlave(id) {
 function renderSlave(data, id) {
   let chtml = '';
   for (let i=0; i<4; ++i) {
-    chtml += `<button class="vote-btn" onclick="vote(${i})"><b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b>に投票</button><br>`;
+    chtml += `<button class="vote-btn" onclick="vote(${i})"><b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b>に<ruby>投票<rt>とうひょう</rt></ruby></button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
   let rhtml = "<h3><ruby>投票<rt>とうひょう</rt></ruby>の<ruby>様子<rt>ようす</rt></ruby></h3>";
