@@ -7,18 +7,18 @@
 
   <meta property="og:title" content="オンライン投票サービス">
   <meta property="og:description" content="オンラインで投票が可能なサービスです．ネット環境とデバイスさえあれば使用可能なお手軽ソフトです．">
-  <meta property="og:image" content="images/ogp-icon-1200x630.png">
+  <meta property="og:image" content="./../images/ogp-icon-1200x630.png">
   <meta property="og:url" content="https://hobbuy-blog.github.io/voting">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="オンライン投票サービス">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="images/ogp-icon-1200x630.png">
+  <meta name="twitter:image" content="./../images/ogp-icon-1200x630.png">
   
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="./../manifest.json">
 
-  <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" href="images/apple-touch-icon-180x180.png" sizes="180x180">
-  <link rel="icon" type="image/png" href="images/android-chrome-192x192.png" sizes="192x192">
+  <link rel="shortcut icon" href="./../images/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="./../images/apple-touch-icon-180x180.png" sizes="180x180">
+  <link rel="icon" type="image/png" href="./../images/android-chrome-192x192.png" sizes="192x192">
 
   <title>オンラインとうひょうサービス(トップ)</title>
   <style>
@@ -79,7 +79,7 @@
 
     // service workerの登録関係
     if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service_worker.js').then(function(registration) {
+    navigator.serviceWorker.register('./../service_worker.js').then(function(registration) {
         console.log('ServiceWorker registration successful with scope: ', registration.scope);
     }).catch(function(err) {
         console.log('ServiceWorker registration failed: ', err);
