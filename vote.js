@@ -111,12 +111,12 @@ function initSlave(id) {
 function renderSlave(data, id) {
   let chtml = '';
   for (let i=0; i<4; ++i) {
-    chtml += `<button class="vote-btn" onclick="vote(${i})"><b><u>${data.labels[i]||defaultLabels[i]}</u></b>に投票</button><br>`;
+    chtml += `<button class="vote-btn" onclick="vote(${i})"><b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b>に投票</button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
   let rhtml = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
-    rhtml += `${data.labels[i]||defaultLabels[i]} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${data.votes[i]||0}</span>票<br>`;
+    rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span>票<br>`;
   }
   document.getElementById('results').innerHTML = rhtml;
   window.vote = idx => {
