@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:title" content="オンライン投票サービス">
+  <meta property="og:description" content="オンラインで投票が可能なサービスです．ネット環境とデバイスさえあれば使用可能なお手軽ソフトです．">
+  <meta property="og:image" content="images/ogp-icon-1200x630.png">
+  <meta property="og:url" content="https://hobbuy-blog.github.io/voting">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="オンライン投票サービス">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="images/ogp-icon-1200x630.png">
+  
+  <title>オンライン投票サービス(Master)</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="vote.js"></script>
+  <!-- QRコード生成ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <link rel="manifest" href="./../manifest.json">
+
+  <link rel="shortcut icon" href="./../images/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="./../images/apple-touch-icon-180x180.png" sizes="180x180">
+  <link rel="icon" type="image/png" href="./../images/android-chrome-192x192.png" sizes="192x192">
+
+  <style>
+    body { font-family: sans-serif; }
+    input[type="text"] { width: 300px; height: 28px; margin: 1px; font-size: 1.75em}
+    #offline-notice {
+      display: flex;
+      align-items: center;
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      min-width: 220px;
+      background: #f44336;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      font-weight: bold;
+      opacity: 0;
+      transform: translateY(40px) scale(0.95);
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(.4,0,.2,1), 
+                  transform 0.4s cubic-bezier(.4,0,.2,1);
+      z-index: 9999;
+    }
+    #offline-notice.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="offline-notice">インターネットに接続されていません．<br>インターネット環境をお確かめください．</div>
+
+  <h2>投票確認画面</h2>
+  <div>投票ID: <span id="voteId" style="font-family: Courier; font-size: 1.25em; text-decoration: underline;"></span></div>
+  <div>
+    参加者用URL: 
+    <input type="text" id="slaveUrl" style="height: 20px; font-size: 1em;" readonly style="width:200px">
+    <button type="button" style="background-color: #eee; color: #000; border-style: solid; border-color: #888; border-width: 1px; border-radius: 10px; padding: 4px 16px; font-size: 1em; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="copySlaveUrl()">コピー</button>
+  </div>
+  <hr>
+  <details>
+    <summary>参加者向けQRコードを表示</summary>
+    <div id="qrcode" align="center" style="margin: 1em;"></div>
+  </details>
+  <hr>
+  <form id="labelForm">
+    <div id="labels"></div>
+    <button type="submit" style="margin-top: 4px; background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">項目内容を更新</button>
+    <button type="button" style="margin-top: 4px; background-color: #f50; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="resetVotes()">投票リセット</button>
+  </form>
+  <hr>
+  <div id="results"></div>
+  <script>
+    // ページロード時に初期化
+    const url = new URL(location.href);
+    const id = url.searchParams.get('id');
+    document.getElementById('voteId').textContent = id;
+    document.getElementById('slaveUrl').value = `${location.origin}/voting/slave.html?id=${id}`;
+    makeQrCode(); // スレーブURLセット後にQR生成
+    initMaster(id);
+
+    function copySlaveUrl() {
+      const url = document.getElementById('slaveUrl').value;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('参加者用URLをコピーしました');
+      }).catch(() => {
+        alert('コピーに失敗しました');
+      });
+    }
+
+    function makeQrCode() {
+      const url = document.getElementById('slaveUrl').value;
+      const qrDiv = document.getElementById('qrcode');
+      qrDiv.innerHTML = "";
+      new QRCode(qrDiv, {
+        text: url,
+        width: 180,
+        height: 180
+      });
+    }
+
+    // service workerの登録関係
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service_worker.js').then(function(registration) {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }).catch(function(err) {
+        console.log('ServiceWorker registration failed: ', err);
+    });
+    }
+
+    function updateOnlineStatus() {
+      const notice = document.getElementById('offline-notice');
+      if (navigator.onLine) {
+        notice.classList.remove('show');
+      } else {
+        notice.classList.add('show');
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+  </script>
+</body>
+</html>
