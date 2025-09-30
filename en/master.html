@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta property="og:title" content="オンライン投票サービス">
-  <meta property="og:description" content="オンラインで投票が可能なサービスです．ネット環境とデバイスさえあれば使用可能なお手軽ソフトです．">
-  <meta property="og:image" content="images/ogp-icon-1200x630.png">
+  <meta property="og:title" content="Online Voting Service">
+  <meta property="og:description" content="The service is what can vote online. Very easy to use, you need to prepare the Internet and devices.">
+  <meta property="og:image" content="./../images/ogp-icon-1200x630.png">
   <meta property="og:url" content="https://hobbuy-blog.github.io/voting">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="オンライン投票サービス">
+  <meta property="og:site_name" content="Online Voting Service">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="images/ogp-icon-1200x630.png">
+  <meta name="twitter:image" content="./../images/ogp-icon-1200x630.png">
   
-  <title>オンライン投票サービス(Master)</title>
+  <title>Online Voting Service(Master)</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="./vote.js"></script>
@@ -56,25 +56,25 @@
   </style>
 </head>
 <body>
-  <div id="offline-notice">インターネットに接続されていません．<br>インターネット環境をお確かめください．</div>
+  <div id="offline-notice">The Internet connection has lost.<br>Please check your Internet.</div>
 
-  <h2>投票確認画面</h2>
-  <div>投票ID: <span id="voteId" style="font-family: Courier; font-size: 1.25em; text-decoration: underline;"></span></div>
+  <h2>Hosting Page</h2>
+  <div>Voting ID: <span id="voteId" style="font-family: Courier; font-size: 1.25em; text-decoration: underline;"></span></div>
   <div>
-    参加者用URL: 
+    Joining URL: 
     <input type="text" id="slaveUrl" style="height: 20px; font-size: 1em;" readonly style="width:200px">
     <button type="button" style="background-color: #eee; color: #000; border-style: solid; border-color: #888; border-width: 1px; border-radius: 10px; padding: 4px 16px; font-size: 1em; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="copySlaveUrl()">コピー</button>
   </div>
   <hr>
   <details>
-    <summary>参加者向けQRコードを表示</summary>
+    <summary>Show QRcode for participants</summary>
     <div id="qrcode" align="center" style="margin: 1em;"></div>
   </details>
   <hr>
   <form id="labelForm">
     <div id="labels"></div>
-    <button type="submit" style="margin-top: 4px; background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">項目内容を更新</button>
-    <button type="button" style="margin-top: 4px; background-color: #f50; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="resetVotes()">投票リセット</button>
+    <button type="submit" style="margin-top: 4px; background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">Save Item Names</button>
+    <button type="button" style="margin-top: 4px; background-color: #f50; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="resetVotes()">Reset a Vote</button>
   </form>
   <hr>
   <div id="results"></div>
@@ -83,7 +83,7 @@
     const url = new URL(location.href);
     const id = url.searchParams.get('id');
     document.getElementById('voteId').textContent = id;
-    document.getElementById('slaveUrl').value = `${location.origin}/voting/slave.html?id=${id}`;
+    document.getElementById('slaveUrl').value = `${location.origin}/voting/en/join.html?id=${id}`;
     makeQrCode(); // スレーブURLセット後にQR生成
     initMaster(id);
 
@@ -109,7 +109,7 @@
 
     // service workerの登録関係
     if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service_worker.js').then(function(registration) {
+    navigator.serviceWorker.register('./../service_worker.js').then(function(registration) {
         console.log('ServiceWorker registration successful with scope: ', registration.scope);
     }).catch(function(err) {
         console.log('ServiceWorker registration failed: ', err);
