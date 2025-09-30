@@ -130,7 +130,7 @@
     }
     .footer-tab {
       width: 180px;
-      margin: 0 auto;
+      margin: 0.5em;
       background: #444;
       color: #fff;
       text-align: center;
@@ -192,7 +192,7 @@
   }
   </style>
   <div class="footer-container">
-    <div class="footer-tab" id="footerTab">▲ 言語 | ことば | English</div>
+    <div class="footer-tab" id="footerTab">▲ 言語 | ことば | Language ▲</div>
       <footer class="footer" id="footer">
       <div class="footer-content">
         <p>
@@ -216,7 +216,7 @@
     footerTab.addEventListener('click', () => {
       isOpen = !isOpen;
       footer.classList.toggle('open', isOpen);
-      footerTab.textContent = isOpen ? '▼ 言語 | ことば | Language' : '▲ 言語 | ことば | Language';
+      footerTab.textContent = isOpen ? '▼ 言語 | ことば | Language ▼' : '▲ 言語 | ことば | Language ▲';
     });
   </script>
 </body>

@@ -70,7 +70,7 @@
   }
   </style>
   <div class="footer-container">
-    <div class="footer-tab" id="footerTab">▲ 言語 | ことば | English</div>
+    <div class="footer-tab" id="footerTab">▲ 言語 | ことば | Language ▲</div>
       <footer class="footer" id="footer">
       <div class="footer-content">
         <p>
@@ -78,6 +78,7 @@
         <div class="footer-content">
           <a href="https://hobbuy-blog.github.io/voting/index.html" class="button-link">日本語(漢字)に切り替える</a>
         </div>
+        <hr>
         <div class="footer-content">
           <a href="https://hobbuy-blog.github.io/voting/hiragana/top-hiragana.html" class="button-link"><ruby>日本語<rt>にほんご</rt></ruby>(ひらがな)にきりかえる</a>
         </div>
@@ -97,6 +98,6 @@
     footerTab.addEventListener('click', () => {
       isOpen = !isOpen;
       footer.classList.toggle('open', isOpen);
-      footerTab.textContent = isOpen ? '▼ 言語 | ことば | Language' : '▲ 言語 | ことば | Language';
+      footerTab.textContent = isOpen ? '▼ 言語 | ことば | Language ▼' : '▲ 言語 | ことば | Language ▲';
     });
   </script>
