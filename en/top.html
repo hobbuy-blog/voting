@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta description="The service is what can vote online. Very easy to use, you need to prepare the Internet and devices only. Main way to use is in the school classroom.">
+
+  <meta property="og:title" content="Online Voting Service">
+  <meta property="og:description" content="The service is what can vote online. Very easy to use, you need to prepare the Internet and devices.">
+  <meta property="og:image" content="./../images/ogp-icon-1200x630.png">
+  <meta property="og:url" content="https://hobbuy-blog.github.io/voting">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Online Voting Service">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="./../images/ogp-icon-1200x630.png">
+  
+  <link rel="manifest" href="./../manifest.json">
+
+  <link rel="shortcut icon" href="./../images/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="./../images/apple-touch-icon-180x180.png" sizes="180x180">
+  <link rel="icon" type="image/png" href="./../images/android-chrome-192x192.png" sizes="192x192">
+
+  <title>Online Voting Service(Top)</title>
+  <style>
+    body { font-family: sans-serif; }
+    #offline-notice {
+      display: flex;
+      align-items: center;
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      min-width: 220px;
+      background: #f44336;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      font-weight: bold;
+      opacity: 0;
+      transform: translateY(40px) scale(0.95);
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(.4,0,.2,1), 
+                  transform 0.4s cubic-bezier(.4,0,.2,1);
+      z-index: 9999;
+    }
+    #offline-notice.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+  <h2>Online Voting Service</h2>
+  <div id="offline-notice">The Internet connection has lost.<br>Please check your Internet.</div>
+  
+  <p>
+    Welcome to Online Voting Service.<br>
+    This service won't need you to prepare accounts, just need the Internet connection and devices.<br>
+    Current status of voting will be shown real-timely.<br><br>
+
+    Please understand that there are many ways that not compatible so that the service is made for education (mainly).
+  </p>
+  <hr>
+  <h3>Hosting a Vote</h3>
+  <p>
+    Click "Create a Vote (Master)" to start a vote.<br>
+    You had better note the url.
+  </p>
+  <form>
+    <label>Start from auto-generated ID: <button onclick="newSession()" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); font-weight: bold;">Create a Vote (Master)</button></label>
+  </form>
+  <form onsubmit="enter(event)" style="margin-top: 4px;">
+    <label>Start from your custom ID: <input type="text" id="joinId" style="height: 28px;" required></label>
+    <button type="submit" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">Create a Vote (Master)</button>
+  </form>
+  <hr>
+  <h3>Join a Vote</h3>
+  <p>Enter the voting ID which provided from host into textbox, then click "Join a Vote (Slave)".</p>
+  <form onsubmit="join(event)">
+    <label>Voting ID: <input type="text" id="joinId" style="height: 28px;" required></label>
+    <button type="submit" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">Join a Vote (Slave)</button>
+  </form>
+  <script>
+    function newSession() {
+      // ランダムID生成
+      const id = Math.random().toString(36).slice(2,8);
+      location.href = `master.html?id=${id}`;
+    }
+    function enter(e) {
+      e.preventDefault();
+      const id = document.getElementById('joinId').value.trim();
+      if(id) location.href = `master.html?id=${encodeURIComponent(id)}`;
+    }
+    function join(e) {
+      e.preventDefault();
+      const id = document.getElementById('joinId').value.trim();
+      if(id) location.href = `slave.html?id=${encodeURIComponent(id)}`;
+    }
+
+    // service workerの登録関係
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./../service_worker.js').then(function(registration) {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }).catch(function(err) {
+        console.log('ServiceWorker registration failed: ', err);
+    });
+    }
+
+    function updateOnlineStatus() {
+      const notice = document.getElementById('offline-notice');
+      if (navigator.onLine) {
+        notice.classList.remove('show');
+      } else {
+        notice.classList.add('show');
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+  </script>
+</body>
+</html>
