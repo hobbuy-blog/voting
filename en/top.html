@@ -67,8 +67,8 @@
     Click "Create a Vote (Master)" to start a vote.<br>
     You had better note the url.
   </p>
-  <form>
-    <label>Start from auto-generated ID: <button onclick="newSession()" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); font-weight: bold;">Create a Vote (Master)</button></label>
+  <form onsubmit="newSession()">
+    <label>Start from auto-generated ID: <button style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); font-weight: bold;">Create a Vote (Master)</button></label>
   </form>
   <form onsubmit="enter(event)" style="margin-top: 4px;">
     <label>Start from your custom ID: <input type="text" id="joinId" style="height: 28px;" required></label>
