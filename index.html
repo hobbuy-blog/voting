@@ -67,9 +67,9 @@
     投票開催者の方は以下のボタンをクリックして新しい投票を開始してください．<br>
     なお，管理画面リンクをメモしておくことを推奨します．
   </p>
-  <form onsubmit="newSession()">
+  <form onsubmit="newSession(event)">
     <label>自動生成投票IDで開始: </label>
-    <button style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); font-weight: bold;">新しい投票を開始(マスター画面)</button>
+    <button type="submit" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); font-weight: bold;">新しい投票を開始(マスター画面)</button>
   </form>
   <form onsubmit="enter(event)" style="margin-top: 4px;">
     <label>カスタム投票IDで開始: <input type="text" id="joinId" style="height: 28px;" required></label>
@@ -83,8 +83,9 @@
     <button type="submit" style="background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">参加(スレーブ画面)</button>
   </form>
   <script>
-    function newSession() {
+    function newSession(e) {
       // ランダムID生成
+      e.preventDefault();
       const id = Math.random().toString(36).slice(2,8);
       location.href = `master.html?id=${id}`;
     }
