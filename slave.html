@@ -216,9 +216,6 @@
         <p>
           <b><u>日本語(漢字)</u></b>を使用中<br>
         <div class="footer-content">
-          <a id="master-jp" class="button-link">日本語(漢字)に切り替える</a>
-        </div>
-        <div class="footer-content">
           <a id="master-kana" class="button-link"><ruby>日本語<rt>にほんご</rt></ruby>(ひらがな)にきりかえる</a>
         </div>
         <div class="footer-content">
@@ -236,7 +233,6 @@
     const domain = "https://hobbuy-blog.github.io/voting";
     const urlParams = new URLSearchParams(window.location.search);
     const voteId = urlParams.get('id');
-    document.getElementById("master-jp").href = `${domain}/slave.html?id=${voteId}`;
     document.getElementById("master-kana").href = `${domain}/hiragana/slave-hiragana.html?id=${voteId}`;
     document.getElementById("master-en").href = `${domain}/en/join.html?id=${voteId}`;
 
