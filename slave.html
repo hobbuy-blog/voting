@@ -112,5 +112,115 @@
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
   </script>
+
+    <style>
+    .footer-container {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .footer-tab {
+      width: 240px;
+      margin-left: 0;
+      margin-right: 0 auto;
+      background: #444;
+      color: #fff;
+      text-align: center;
+      border-radius: 10px 10px 0 0;
+      padding: 10px 0;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+      pointer-events: auto;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+      transition: background 0.2s;
+      user-select: none;
+    }
+    .footer-tab:hover {
+      background: #222;
+    }
+    .footer {
+      width: 100vw;
+      background: #222;
+      color: #fff;
+      text-align: center;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      transform: translateY(100%);
+      transition: transform 0.4s ease-in-out, box-shadow 0.2s;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.2);
+      will-change: transform;
+      pointer-events: auto;
+    }
+    .footer.open {
+      transform: translateY(0%);
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.32);
+    }
+    .footer-content {
+      padding: 4px 0 4px;
+    }
+    .button-link {
+    display: inline-block;
+    padding: 8px 32px;
+    border-radius: 6px;
+    background: #1976d2;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+    transition: background 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .button-link:hover,
+  .button-link:focus {
+    background: #1560a8;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    text-decoration: none;
+    color: #fff;
+  }
+  </style>
+  <div class="footer-container">
+    <div class="footer-tab" id="footerTab">▲ 言語 | ことば | Language ▲</div>
+      <footer class="footer" id="footer">
+      <div class="footer-content">
+        <p>
+          <b><u>日本語(漢字)</u></b>を使用中<br>
+        <div class="footer-content">
+          <a id="master-jp" class="button-link">日本語(漢字)に切り替える</a>
+        </div>
+        <div class="footer-content">
+          <a id="master-kana" class="button-link"><ruby>日本語<rt>にほんご</rt></ruby>(ひらがな)にきりかえる</a>
+        </div>
+        <div class="footer-content">
+          <a id="master-en" class="button-link">Change to English</a>
+        </div>
+      </p>
+      </div>
+    </footer>
+  </div>
+  <script>
+    const footerTab = document.getElementById('footerTab');
+    const footer = document.getElementById('footer');
+    let isOpen = false;
+
+    const domain = "https://hobbuy-blog.github.io/voting";
+    const urlParams = new URLSearchParams(window.location.search);
+    const voteId = urlParams.get('id');
+    document.getElementById("master-jp").href = `${domain}/slave.html?id=${voteId}`;
+    document.getElementById("master-kana").href = `${domain}/hiragana/slave-hiragana.html?id=${voteId}`;
+    document.getElementById("master-en").href = `${domain}/en/join.html?id=${voteId}`;
+
+    footerTab.addEventListener('click', () => {
+      isOpen = !isOpen;
+      footer.classList.toggle('open', isOpen);
+      footerTab.textContent = isOpen ? '▼ 言語 | ことば | Language ▼' : '▲ 言語 | ことば | Language ▲';
+    });
+  </script>
 </body>
 </html>
