@@ -1,8 +1,8 @@
 {
-    "short_name": "オンライン投票",
-    "name": "オンライン投票サービス",
+    "short_name": "Online Vote",
+    "name": "Online Voting Service",
     "display": "standalone",
-    "start_url": "index.html",
+    "start_url": "en/top.html",
     "icons": [
         {
             "src": "images/android-chrome-192x192.png",
