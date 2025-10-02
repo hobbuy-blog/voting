@@ -1,4 +1,8 @@
-// 1. Firebase初期化（自分のプロジェクト情報に書き換えてください）
+// ============================================
+// vote-en.js - English Version with Fingerprint
+// ============================================
+
+// 1. Firebase initialization
 const firebaseConfig = {
   apiKey: "AIzaSyDav5Vz9EOrXLXJwlR-FmHZAvKTm05yEM0",
   authDomain: "voting-app-c3be3.firebaseapp.com",
@@ -16,7 +20,7 @@ const defaultLabels = ["1", "2", "3", "4"];
 
 function initMaster(id) {
   const ref = db.ref(`votes/${id}`);
-  // 3日経過チェック・自動削除
+  // Check for 3-day expiration and auto-delete
   ref.once('value', snap => {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
@@ -25,7 +29,7 @@ function initMaster(id) {
       window.location.href = "index.html";
       return;
     }
-    // 初期データがなければ作成
+    // Create initial data if not exists
     if (!data) {
       ref.set({
         labels: defaultLabels,
@@ -35,7 +39,7 @@ function initMaster(id) {
     }
   });
 
-  // リアルタイム監視
+  // Real-time monitoring
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) return;
@@ -52,7 +56,12 @@ function initMaster(id) {
   };
 
   window.resetVotes = () => {
-    ref.update({votes:[0,0,0,0]});
+    if (confirm('Reset vote counts?\n※Fingerprint records will also be cleared')) {
+      ref.update({
+        votes: [0,0,0,0],
+        votedFingerprints: null
+      });
+    }
   };
 }
 
@@ -81,12 +90,19 @@ function renderMaster(data, id) {
   for (let i=0; i<4; ++i) {
     html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span><br>`;
   }
+  
+  // Display voted device count
+  if (data.votedFingerprints) {
+    const votedCount = Object.keys(data.votedFingerprints).length;
+    html += `<hr><small>Voted devices: ${votedCount}</small>`;
+  }
+  
   document.getElementById('results').innerHTML = html;
 }
 
 function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
-  // 3日経過チェック・自動削除
+  // Check for 3-day expiration and auto-delete
   ref.once('value', snap => {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
@@ -109,23 +125,68 @@ function initSlave(id) {
 }
 
 function renderSlave(data, id) {
+  // Control button visibility
+  const alreadyVotedMessage = document.getElementById('already-voted-message');
+  const shouldHideButtons = alreadyVotedMessage !== null;
+  
   let chtml = '';
   for (let i=0; i<4; ++i) {
-    chtml += `<button class="vote-btn" onclick="vote(${i})">Vote <b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b></button><br>`;
+    const buttonStyle = shouldHideButtons ? 'style="display:none;"' : '';
+    chtml += `<button class="vote-btn" ${buttonStyle} onclick="vote(${i})">Vote <b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b></button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
+  
   let rhtml = "<h3>Voting Status</h3>";
   for (let i=0; i<4; ++i) {
     rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span><br>`;
   }
   document.getElementById('results').innerHTML = rhtml;
-  window.vote = idx => {
+  
+  window.vote = async function(idx) {
+    // Check if device fingerprint is ready
+    if (!window.deviceFingerprint) {
+      alert('Device information is being retrieved. Please wait a moment.');
+      return;
+    }
+    
+    // Double check: already voted?
+    const alreadyVoted = await hasVotedByFingerprint(id, window.deviceFingerprint);
+    if (alreadyVoted) {
+      alert('You have already voted');
+      return;
+    }
+    
+    // Voting process
     const ref = db.ref(`votes/${id}`);
-    ref.child('votes').transaction(arr => {
-      if (!arr) arr = [0,0,0,0];
-      arr[idx] = (arr[idx]||0)+1;
-      return arr;
-    });
-    ref.update({ lastVoted: Date.now() });
+    
+    try {
+      // Increment vote count
+      await ref.child('votes').transaction(arr => {
+        if (!arr) arr = [0,0,0,0];
+        arr[idx] = (arr[idx]||0)+1;
+        return arr;
+      });
+      
+      // Update timestamp
+      await ref.update({ lastVoted: Date.now() });
+      
+      // Record fingerprint
+      await recordFingerprint(id, window.deviceFingerprint);
+      
+      // Also record in cookie (double defense)
+      setCookie(`voted_${id}`, 'true', 365);
+      
+      // Update UI (hide buttons)
+      const buttons = document.querySelectorAll('.vote-btn');
+      buttons.forEach(btn => btn.style.display = 'none');
+      
+      showAlreadyVotedMessage();
+      
+      alert('Vote completed!');
+      
+    } catch (error) {
+      console.error('Voting error:', error);
+      alert('Failed to vote. Please try again.');
+    }
   };
 }
