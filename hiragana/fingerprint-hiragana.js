@@ -118,6 +118,11 @@ function getCookie(name) {
   return null;
 }
 
+// Cookieを削除する関数
+function deleteCookie(name) {
+  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
 // Firebaseで投票済みかチェック
 async function hasVotedByFingerprint(voteId, fingerprint) {
   try {
@@ -195,19 +200,19 @@ async function initVotingUIWithFingerprint(voteId) {
   // フィンガープリント生成
   const fingerprint = await generateFingerprint();
   
-  // Cookie チェック（高速）
-  const cookieVoted = getCookie(`voted_${voteId}`) === 'true';
-  
-  // Firebase チェック（確実）
+  // Firebase チェック（信頼できる情報源として優先）
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
   
-  const hasVoted = cookieVoted || fingerprintVoted;
+  // Firebaseで投票済みでない場合、Cookieをクリア（同期）
+  if (!fingerprintVoted) {
+    deleteCookie(`voted_${voteId}`);
+  }
   
   hideLoadingMessage();
   
-  if (hasVoted) {
+  if (fingerprintVoted) {
     showAlreadyVotedMessage();
   }
   
-  return { fingerprint, hasVoted };
+  return { fingerprint, hasVoted: fingerprintVoted };
 }
