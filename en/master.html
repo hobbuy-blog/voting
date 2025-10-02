@@ -226,7 +226,7 @@
     const domain = "https://hobbuy-blog.github.io/voting";
     const urlParams = new URLSearchParams(window.location.search);
     const voteId = urlParams.get('id');
-    document.getElementById("master-jp").href = `${domain}/slave.html?${voteId}`;
+    document.getElementById("master-jp").href = `${domain}/master.html?${voteId}`;
     document.getElementById("master-kana").href = `${domain}/hiragana/master-hiragana.html?${voteId}`;
 
     footerTab.addEventListener('click', () => {
