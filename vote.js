@@ -66,6 +66,7 @@ function initMaster(id) {
         votes: [0,0,0,0],
         votedFingerprints: null
       });
+      setCookie('voted_' + voteId, '', -1);
     }
   };
 }
