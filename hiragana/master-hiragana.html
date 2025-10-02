@@ -75,7 +75,13 @@
   <form id="labelForm">
     <div id="labels"></div>
     <button type="submit" style="margin-top: 4px; background-color: #2196f3; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">項目内容を更新</button>
-    <button type="button" style="margin-top: 4px; background-color: #f50; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="resetVotes()">投票リセット</button>
+    <button type="button" style="margin-top: 4px; background-color: #f50; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="resetVotes()">投票数リセット</button>
+    <button 
+      type="button" 
+      style="margin-top: 4px; background-color: #f50; color: #fff; border: none; border-radius: 10px; padding: 6px 16px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" 
+      onclick="resetVotes()">
+      重複投票リセット
+    </button>
   </form>
   <hr>
   <div id="results"></div>
