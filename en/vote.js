@@ -56,7 +56,7 @@ function initMaster(id) {
   };
 
   window.resetVotes = () => {
-    if (confirm('Reset vote counts?\n※Fingerprint records will also be cleared')) {
+    if (confirm('Are you sure to reset the vote?')) {
       ref.update({
         votes: [0,0,0,0],
         votedFingerprints: null

@@ -61,7 +61,7 @@ function initMaster(id) {
   
   // 投票リセット
   window.resetVotes = () => {
-    if (confirm('投票数をリセットしますか？\n※フィンガープリント記録もクリアされます')) {
+    if (confirm('投票を全てリセットしますか？')) {
       ref.update({
         votes: [0,0,0,0],
         votedFingerprints: null
