@@ -2,7 +2,7 @@
     "short_name": "オンラインとうひょう",
     "name": "オンラインとうひょうサービス",
     "display": "standalone",
-    "start_url": "hiragana/top-hiragana.html",
+    "start_url": "top-hiragana.html",
     "icons": [
         {
             "src": "./../images/android-chrome-192x192.png",

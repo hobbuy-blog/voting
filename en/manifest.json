@@ -2,7 +2,7 @@
     "short_name": "Online Vote",
     "name": "Online Voting Service",
     "display": "standalone",
-    "start_url": "en/top.html",
+    "start_url": "top.html",
     "icons": [
         {
             "src": "images/android-chrome-192x192.png",
