@@ -1,5 +1,5 @@
 // ============================================
-// fingerprint.js - デバイスフィンガープリント機能
+// fingerprint-hiragana.js - デバイスフィンガープリント機能（ひらがな版）
 // ============================================
 
 // デバイスフィンガープリント生成
@@ -151,11 +151,11 @@ async function recordFingerprint(voteId, fingerprint) {
   }
 }
 
-// ローディングメッセージ表示
+// ローディングメッセージ表示（ひらがな版）
 function showLoadingMessage() {
   const msg = document.createElement('div');
   msg.id = 'fingerprint-loading';
-  msg.textContent = '投票状況を確認中...';
+  msg.textContent = 'とうひょうじょうきょうをかくにんちゅう...';
   const choices = document.getElementById('choices');
   if (choices) {
     choices.parentElement.insertBefore(msg, choices);
@@ -170,14 +170,14 @@ function hideLoadingMessage() {
   if (msg) msg.remove();
 }
 
-// 投票済みメッセージ表示
+// 投票済みメッセージ表示（ひらがな版）
 function showAlreadyVotedMessage() {
   const message = document.createElement('div');
   message.id = 'already-voted-message';
   message.innerHTML = `
-    <ruby>⚠️ <rt>　</rt></ruby><ruby>すでに<rt>　</rt></ruby><ruby>投票<rt>とうひょう</rt></ruby><ruby>されています<rt>　</rt></ruby><br>
+    ⚠️ すでに<ruby>投票<rt>とうひょう</rt></ruby>ずみです<br>
     <small style="font-weight: normal; font-size: 0.9em;">
-      <ruby>くり<rt>　</rt></ruby><ruby>返<rt>かえ</rt></ruby><ruby>しの<rt>　</rt></ruby><ruby>投票<rt>とうひょう</rt></ruby><ruby>はできません<rt>　</rt></ruby>
+      このデバイスからすでに<ruby>投票<rt>とうひょう</rt></ruby>がかんりょうしています
     </small>
   `;
   const choices = document.getElementById('choices');
@@ -188,7 +188,7 @@ function showAlreadyVotedMessage() {
   }
 }
 
-// 投票UIの初期化（フィンガープリント版）
+// 投票UIの初期化（フィンガープリント版・ひらがな）
 async function initVotingUIWithFingerprint(voteId) {
   showLoadingMessage();
   
