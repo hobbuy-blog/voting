@@ -224,9 +224,10 @@
     let isOpen = false;
 
     const domain = "https://hobbuy-blog.github.io/voting";
-    document.getElementById("master-jp").href = `${domain}/slave.html?${id.toString()}`;
-    document.getElementById("master-kana").href = `${domain}/hiragana/master-hiragana.html?${id.toString()}`;
-    document.getElementById("master-en").href = `${domain}/en/master.html?${id.toString()}`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const voteId = urlParams.get('id');
+    document.getElementById("master-jp").href = `${domain}/slave.html?${voteId}`;
+    document.getElementById("master-kana").href = `${domain}/hiragana/master-hiragana.html?${voteId}`;
 
     footerTab.addEventListener('click', () => {
       isOpen = !isOpen;
