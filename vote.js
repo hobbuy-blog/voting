@@ -1,4 +1,8 @@
-// 1. Firebase初期化（自分のプロジェクト情報に書き換えてください）
+// ============================================
+// vote.js - Firebase投票システム（フィンガープリント統合版）
+// ============================================
+
+// 1. Firebase初期化
 const firebaseConfig = {
   apiKey: "AIzaSyDav5Vz9EOrXLXJwlR-FmHZAvKTm05yEM0",
   authDomain: "voting-app-c3be3.firebaseapp.com",
@@ -11,11 +15,14 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
 const defaultLabels = ["1", "2", "3", "4"];
 
+// ============================================
+// Master（管理者）画面の初期化
+// ============================================
 function initMaster(id) {
   const ref = db.ref(`votes/${id}`);
+  
   // 3日経過チェック・自動削除
   ref.once('value', snap => {
     const data = snap.val();
@@ -34,14 +41,15 @@ function initMaster(id) {
       });
     }
   });
-
+  
   // リアルタイム監視
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) return;
     renderMaster(data, id);
   });
-
+  
+  // ラベル更新フォーム
   document.getElementById('labelForm').onsubmit = e => {
     e.preventDefault();
     const labels = [];
@@ -50,12 +58,19 @@ function initMaster(id) {
     }
     ref.update({labels});
   };
-
+  
+  // 投票リセット
   window.resetVotes = () => {
-    ref.update({votes:[0,0,0,0]});
+    if (confirm('投票数をリセットしますか？\n※フィンガープリント記録もクリアされます')) {
+      ref.update({
+        votes: [0,0,0,0],
+        votedFingerprints: null
+      });
+    }
   };
 }
 
+// HTMLエスケープ
 function escapeHtml(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/[&<>"']/g, function(match) {
@@ -70,6 +85,7 @@ function escapeHtml(str) {
   });
 }
 
+// Master画面の描画
 function renderMaster(data, id) {
   const labelsDiv = document.getElementById('labels');
   labelsDiv.innerHTML = '';
@@ -77,15 +93,27 @@ function renderMaster(data, id) {
     labelsDiv.innerHTML += 
       `項目${i+1}: <input type="text" style="font-size: 1em; margin: 1px; height: 22px;" id="label${i}" value="${escapeHtml(data.labels[i]||defaultLabels[i])}"><br>`;
   }
+  
   let html = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
     html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span>票<br>`;
   }
+  
+  // 投票済みデバイス数を表示
+  if (data.votedFingerprints) {
+    const votedCount = Object.keys(data.votedFingerprints).length;
+    html += `<hr><small>投票済みデバイス数: ${votedCount}</small>`;
+  }
+  
   document.getElementById('results').innerHTML = html;
 }
 
+// ============================================
+// Slave（投票者）画面の初期化
+// ============================================
 function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
+  
   // 3日経過チェック・自動削除
   ref.once('value', snap => {
     const data = snap.val();
@@ -96,7 +124,8 @@ function initSlave(id) {
       return;
     }
   });
-
+  
+  // リアルタイム監視
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) {
@@ -108,24 +137,72 @@ function initSlave(id) {
   });
 }
 
+// Slave画面の描画
 function renderSlave(data, id) {
+  // 投票ボタンの表示制御
+  const alreadyVotedMessage = document.getElementById('already-voted-message');
+  const shouldHideButtons = alreadyVotedMessage !== null;
+  
   let chtml = '';
   for (let i=0; i<4; ++i) {
-    chtml += `<button class="vote-btn" onclick="vote(${i})"><b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b>に投票</button><br>`;
+    const buttonStyle = shouldHideButtons ? 'style="display:none;"' : '';
+    chtml += `<button class="vote-btn" ${buttonStyle} onclick="vote(${i})"><b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b>に投票</button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
+  
+  // 投票状況表示
   let rhtml = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
     rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span>票<br>`;
   }
   document.getElementById('results').innerHTML = rhtml;
-  window.vote = idx => {
+  
+  // 投票関数をグローバルに設定
+  window.vote = async function(idx) {
+    // デバイスフィンガープリントが取得できていない場合
+    if (!window.deviceFingerprint) {
+      alert('デバイス情報の取得中です。しばらくお待ちください。');
+      return;
+    }
+    
+    // 二重チェック：既に投票済みか確認
+    const alreadyVoted = await hasVotedByFingerprint(id, window.deviceFingerprint);
+    if (alreadyVoted) {
+      alert('既に投票済みです');
+      return;
+    }
+    
+    // 投票処理
     const ref = db.ref(`votes/${id}`);
-    ref.child('votes').transaction(arr => {
-      if (!arr) arr = [0,0,0,0];
-      arr[idx] = (arr[idx]||0)+1;
-      return arr;
-    });
-    ref.update({ lastVoted: Date.now() });
+    
+    try {
+      // 投票数を増やす
+      await ref.child('votes').transaction(arr => {
+        if (!arr) arr = [0,0,0,0];
+        arr[idx] = (arr[idx]||0)+1;
+        return arr;
+      });
+      
+      // タイムスタンプ更新
+      await ref.update({ lastVoted: Date.now() });
+      
+      // フィンガープリントを記録
+      await recordFingerprint(id, window.deviceFingerprint);
+      
+      // Cookieにも記録（二重防御）
+      setCookie(`voted_${id}`, 'true', 365);
+      
+      // UIを更新（ボタンを非表示に）
+      const buttons = document.querySelectorAll('.vote-btn');
+      buttons.forEach(btn => btn.style.display = 'none');
+      
+      showAlreadyVotedMessage();
+      
+      alert('投票が完了しました！');
+      
+    } catch (error) {
+      console.error('投票エラー:', error);
+      alert('投票に失敗しました。もう一度お試しください。');
+    }
   };
 }
