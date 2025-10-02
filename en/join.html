@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,10 +13,11 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="./../images/ogp-icon-1200x630.png">
 
-  <title>オンライン投票サービス(Slave)</title>
+  <title>Online Voting Service (Slave)</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="./vote.js"></script>
+  <script src="./fingerprint.js"></script>
   <link rel="manifest" href="./manifest.json">
   
   <link rel="shortcut icon" href="./../images/favicon.ico" type="image/x-icon">
@@ -74,46 +75,23 @@
       transform: translateY(0) scale(1);
       pointer-events: auto;
     }
-  </style>
-</head>
-<body>
-  <div id="offline-notice">The Internet connection has lost.<br>Please check your Internet.</div>
-
-  <h2>Voting Page</h2>
-  <div>Voting ID: <span id="voteId" style="font-family: Courier; text-decoration: underline;"></span></div>
-  <div id="choices"></div>
-  <hr>
-  <div id="results"></div>
-  <script>
-    // ページロード時に初期化
-    const url = new URL(location.href);
-    const id = url.searchParams.get('id');
-    document.getElementById('voteId').textContent = id;
-    initSlave(id);
-
-    // service workerの登録関係
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./../service_worker.js').then(function(registration) {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-    }).catch(function(err) {
-        console.log('ServiceWorker registration failed: ', err);
-    });
+    #fingerprint-loading {
+      padding: 16px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      margin: 16px 0;
+      text-align: center;
+      color: #1976d2;
     }
-
-    function updateOnlineStatus() {
-      const notice = document.getElementById('offline-notice');
-      if (navigator.onLine) {
-        notice.classList.remove('show');
-      } else {
-        notice.classList.add('show');
-      }
+    #already-voted-message {
+      padding: 16px 24px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      border-radius: 4px;
+      margin: 16px 0;
+      font-weight: bold;
+      color: #856404;
     }
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
-  </script>
-
-  <style>
     .footer-container {
       position: fixed;
       left: 0; right: 0; bottom: 0;
@@ -163,34 +141,80 @@
       padding: 4px 0 4px;
     }
     .button-link {
-    display: inline-block;
-    padding: 8px 32px;
-    border-radius: 6px;
-    background: #1976d2;
-    color: #fff;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1rem;
-    border: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.14);
-    transition: background 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-  }
-
-  .button-link:hover,
-  .button-link:focus {
-    background: #1560a8;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-    text-decoration: none;
-    color: #fff;
-  }
+      display: inline-block;
+      padding: 8px 32px;
+      border-radius: 6px;
+      background: #1976d2;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1rem;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+      transition: background 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .button-link:hover,
+    .button-link:focus {
+      background: #1560a8;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      text-decoration: none;
+      color: #fff;
+    }
   </style>
+</head>
+<body>
+  <div id="offline-notice">The Internet connection has lost.<br>Please check your Internet.</div>
+
+  <h2>Voting Page</h2>
+  <div>Voting ID: <span id="voteId" style="font-family: Courier; text-decoration: underline;"></span></div>
+  <div id="choices"></div>
+  <hr>
+  <div id="results"></div>
+  
+  <script>
+    // Initialize on page load
+    const url = new URL(location.href);
+    const id = url.searchParams.get('id');
+    document.getElementById('voteId').textContent = id;
+    
+    // Check voting status with device fingerprint
+    initVotingUIWithFingerprint(id).then(result => {
+      window.deviceFingerprint = result.fingerprint;
+      console.log('Device fingerprint:', result.fingerprint);
+      
+      // Start Firebase data monitoring
+      initSlave(id);
+    });
+
+    // Service worker registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./../service_worker.js').then(function(registration) {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      }).catch(function(err) {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    }
+
+    function updateOnlineStatus() {
+      const notice = document.getElementById('offline-notice');
+      if (navigator.onLine) {
+        notice.classList.remove('show');
+      } else {
+        notice.classList.add('show');
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+  </script>
+
   <div class="footer-container">
     <div class="footer-tab" id="footerTab">▲ 言語 | ことば | Language ▲</div>
-      <footer class="footer" id="footer">
+    <footer class="footer" id="footer">
       <div class="footer-content">
         <p>
-          <b><u>日本語(漢字)</u></b>を使用中<br>
+          <b><u>English</u></b> in use<br>
         <div class="footer-content">
           <a id="master-jp" class="button-link">日本語(漢字)に切り替える</a>
         </div>
