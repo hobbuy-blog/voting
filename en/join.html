@@ -221,9 +221,6 @@
         <div class="footer-content">
           <a id="master-kana" class="button-link"><ruby>日本語<rt>にほんご</rt></ruby>(ひらがな)にきりかえる</a>
         </div>
-        <div class="footer-content">
-          <a id="master-en" class="button-link">Change to English</a>
-        </div>
       </p>
       </div>
     </footer>
@@ -238,7 +235,6 @@
     const voteId = urlParams.get('id');
     document.getElementById("master-jp").href = `${domain}/slave.html?id=${voteId}`;
     document.getElementById("master-kana").href = `${domain}/hiragana/slave-hiragana.html?id=${voteId}`;
-    document.getElementById("master-en").href = `${domain}/en/join.html?id=${voteId}`;
 
     footerTab.addEventListener('click', () => {
       isOpen = !isOpen;
