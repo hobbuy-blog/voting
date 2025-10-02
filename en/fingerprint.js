@@ -118,6 +118,11 @@ function getCookie(name) {
   return null;
 }
 
+// Delete cookie function
+function deleteCookie(name) {
+  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
 // Check if already voted via Firebase
 async function hasVotedByFingerprint(voteId, fingerprint) {
   try {
@@ -195,19 +200,19 @@ async function initVotingUIWithFingerprint(voteId) {
   // Generate fingerprint
   const fingerprint = await generateFingerprint();
   
-  // Cookie check (fast)
-  const cookieVoted = getCookie(`voted_${voteId}`) === 'true';
-  
-  // Firebase check (reliable)
+  // Firebase check (prioritize as the source of truth)
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
   
-  const hasVoted = cookieVoted || fingerprintVoted;
+  // If not voted in Firebase, clear cookie (sync)
+  if (!fingerprintVoted) {
+    deleteCookie(`voted_${voteId}`);
+  }
   
   hideLoadingMessage();
   
-  if (hasVoted) {
+  if (fingerprintVoted) {
     showAlreadyVotedMessage();
   }
   
-  return { fingerprint, hasVoted };
+  return { fingerprint, hasVoted: fingerprintVoted };
 }
