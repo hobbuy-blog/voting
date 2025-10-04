@@ -72,7 +72,7 @@ function renderSlave(data, id) {
   }
   document.getElementById('choices').innerHTML = chtml;
 
-  let html = "<h3>Voting Status</h3>";
+  let html = "<h3><ruby>投票<rt>とうひょう</rt></ruby>の<ruby>様子<rt>ようす</rt></ruby></h3>";
   
   // Calculate total votes
   const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
@@ -87,7 +87,7 @@ function renderSlave(data, id) {
       percentageText = ` | ${percentage}%`;
     }
     
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span><ruby>票<rt>ひょう</rt></ruby>${percentageText}<br>`;
   }
   
   // 投票関数をグローバルに設定
