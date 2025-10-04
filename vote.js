@@ -113,7 +113,6 @@ function renderMaster(data, id) {
     
     html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>票${percentageText}<br>`;
   }
-  document.getElementById('results').innerHTML = html;
   
   // 投票済みデバイス数を表示
   if (data.votedFingerprints) {
