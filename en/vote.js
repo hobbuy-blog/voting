@@ -56,12 +56,11 @@ function initMaster(id) {
   };
 
   window.resetVotes = () => {
-    if (confirm('Are you sure to reset the vote?')) {
+    if (confirm('Reset vote counts?\n※Fingerprint records will also be cleared')) {
       ref.update({
         votes: [0,0,0,0],
         votedFingerprints: null
       });
-      setCookie(`voted_${voteId}`, 'false', -1);
     }
   };
 }
@@ -87,9 +86,23 @@ function renderMaster(data, id) {
     labelsDiv.innerHTML += 
       `Item ${i+1}: <input type="text" style="font-size: 1em; margin: 1px; height: 22px;" id="label${i}" value="${escapeHtml(data.labels[i]||defaultLabels[i])}"><br>`;
   }
+  
   let html = "<h3>Voting Status</h3>";
+  
+  // Calculate total votes
+  const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+  
   for (let i=0; i<4; ++i) {
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span><br>`;
+    const voteCount = data.votes[i] || 0;
+    let percentageText = '';
+    
+    // Show percentage only if there is at least 1 vote
+    if (totalVotes > 0) {
+      const percentage = (voteCount / totalVotes * 100).toFixed(1);
+      percentageText = ` | ${percentage}%`;
+    }
+    
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
   }
   
   // Display voted device count
@@ -137,23 +150,26 @@ function renderSlave(data, id) {
   }
   document.getElementById('choices').innerHTML = chtml;
   
-  let rhtml = "<h3>Voting Status</h3>";
-  for (let i=0; i<4; ++i) {
-    rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span><br>`;
-  }
-  document.getElementById('results').innerHTML = rhtml;
+  // Render voting status with percentage
   let html = "<h3>Voting Status</h3>";
+  
+  // Calculate total votes
   const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+  
   for (let i=0; i<4; ++i) {
     const voteCount = data.votes[i] || 0;
     let percentageText = '';
     
+    // Show percentage only if there is at least 1 vote
     if (totalVotes > 0) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
     }
+    
     html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
   }
+  
+  document.getElementById('results').innerHTML = html;
   
   window.vote = async function(idx) {
     // Check if device fingerprint is ready
