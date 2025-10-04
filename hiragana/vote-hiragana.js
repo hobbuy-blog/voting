@@ -89,6 +89,7 @@ function renderSlave(data, id) {
     
     html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span><ruby>票<rt>ひょう</rt></ruby>${percentageText}<br>`;
   }
+  document.getElementById('results').innerHTML = html;
   
   // 投票関数をグローバルに設定
   window.vote = async function(idx) {
