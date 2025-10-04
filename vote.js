@@ -98,7 +98,7 @@ function renderMaster(data, id) {
   let html = "<h3>投票状況</h3>";
   for (let i=0; i<4; ++i) {
     if (data.votes[i]!=0) {
-      let percent = "$ | {data.votes[i] / Object.keys(data.votedFingerprints).length}%;
+      let percent = "$ | {data.votes[i] / Object.keys(data.votedFingerprints).length}%";
     }
     html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span>票${escapeHtml(percent||)}<br>`;
   }
