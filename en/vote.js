@@ -142,6 +142,18 @@ function renderSlave(data, id) {
     rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span><br>`;
   }
   document.getElementById('results').innerHTML = rhtml;
+  let html = "<h3>Voting Status</h3>";
+  const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+  for (let i=0; i<4; ++i) {
+    const voteCount = data.votes[i] || 0;
+    let percentageText = '';
+    
+    if (totalVotes > 0) {
+      const percentage = (voteCount / totalVotes * 100).toFixed(1);
+      percentageText = ` | ${percentage}%`;
+    }
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
+  }
   
   window.vote = async function(idx) {
     // Check if device fingerprint is ready
