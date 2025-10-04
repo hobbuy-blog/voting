@@ -71,13 +71,24 @@ function renderSlave(data, id) {
     chtml += `<button class="vote-btn" ${buttonStyle} onclick="vote(${i})"><b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b>に<ruby>投票<rt>とうひょう</rt></ruby></button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
+
+  let html = "<h3>Voting Status</h3>";
   
-  // 投票状況表示
-  let rhtml = "<h3><ruby>投票<rt>とうひょう</rt></ruby>の<ruby>様子<rt>ようす</rt></ruby></h3>";
+  // Calculate total votes
+  const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+  
   for (let i=0; i<4; ++i) {
-    rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(data.votes[i]||0)}</span><ruby>票<rt>ひょう</rt></ruby><br>`;
+    const voteCount = data.votes[i] || 0;
+    let percentageText = '';
+    
+    // Show percentage only if there is at least 1 vote
+    if (totalVotes > 0) {
+      const percentage = (voteCount / totalVotes * 100).toFixed(1);
+      percentageText = ` | ${percentage}%`;
+    }
+    
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
   }
-  document.getElementById('results').innerHTML = rhtml;
   
   // 投票関数をグローバルに設定
   window.vote = async function(idx) {
