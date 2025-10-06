@@ -18,58 +18,39 @@ const db = firebase.database();
 
 const defaultLabels = ["1", "2", "3", "4"];
 
-function initSlave(id) {
+// ============================================
+// Master (管理者) 画面の初期化
+// ============================================
+function initMaster(id) {
   const ref = db.ref(`votes/${id}`);
   
-  // 3日経過チェック
+  // Check for 3-day expiration and auto-delete
   ref.once('value', snap => {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("The server had reset. Please ask the host to create again.");
+      alert("The server had reset. Please create a server again.");
       window.location.href = "index.html";
       return;
     }
+    // Create initial data if not exists
+    if (!data) {
+      ref.set({
+        labels: defaultLabels,
+        votes: [0,0,0,0],
+        lastVoted: Date.now()
+      });
+    }
   });
 
-  // リセット検知用の変数
-  let previousTotalVotes = null;
-  let hadFingerprints = false;
-
+  // Real-time monitoring
   ref.on('value', snap => {
     const data = snap.val();
-    if (!data) {
-      document.getElementById('choices').textContent = "Voting ID is invalid.";
-      document.getElementById('results').textContent = "";
-      return;
-    }
-    
-    // 現在の状態を取得
-    const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
-    const hasFingerprints = data.votedFingerprints && 
-                           Object.keys(data.votedFingerprints).length > 0;
-    
-    // リセット検知: 投票数が減少 または フィンガープリントが削除
-    const votesDecreased = previousTotalVotes !== null && 
-                          currentTotalVotes < previousTotalVotes;
-    const fingerprintsCleared = hadFingerprints && !hasFingerprints;
-    
-    if (votesDecreased || fingerprintsCleared) {
-      console.log('Reset detected:', { votesDecreased, fingerprintsCleared });
-      // 通知なしで静かにリロード
-      location.reload();
-      return;
-    }
-    
-    // 状態を記録
-    previousTotalVotes = currentTotalVotes;
-    hadFingerprints = hasFingerprints;
-    
-    // 通常の描画
-    renderSlave(data, id);
+    if (!data) return;
+    renderMaster(data, id);
   });
-}
 
+  // Label update form
   document.getElementById('labelForm').onsubmit = e => {
     e.preventDefault();
     const labels = [];
@@ -79,6 +60,7 @@ function initSlave(id) {
     ref.update({labels});
   };
 
+  // Reset votes function
   window.resetVotes = () => {
     if (confirm('Reset vote counts?\n※Fingerprint records will also be cleared')) {
       ref.update({
@@ -89,6 +71,7 @@ function initSlave(id) {
   };
 }
 
+// HTML escape function
 function escapeHtml(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/[&<>"']/g, function(match) {
@@ -103,6 +86,7 @@ function escapeHtml(str) {
   });
 }
 
+// Render Master screen
 function renderMaster(data, id) {
   const labelsDiv = document.getElementById('labels');
   labelsDiv.innerHTML = '';
@@ -138,8 +122,12 @@ function renderMaster(data, id) {
   document.getElementById('results').innerHTML = html;
 }
 
+// ============================================
+// Slave (投票者) 画面の初期化
+// ============================================
 function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
+  
   // Check for 3-day expiration and auto-delete
   ref.once('value', snap => {
     const data = snap.val();
@@ -151,6 +139,10 @@ function initSlave(id) {
     }
   });
 
+  // Reset detection variables
+  let previousTotalVotes = null;
+  let hadFingerprints = false;
+
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) {
@@ -158,10 +150,33 @@ function initSlave(id) {
       document.getElementById('results').textContent = "";
       return;
     }
+    
+    // Get current state
+    const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+    const hasFingerprints = data.votedFingerprints && 
+                           Object.keys(data.votedFingerprints).length > 0;
+    
+    // Reset detection: votes decreased or fingerprints cleared
+    const votesDecreased = previousTotalVotes !== null && 
+                          currentTotalVotes < previousTotalVotes;
+    const fingerprintsCleared = hadFingerprints && !hasFingerprints;
+    
+    if (votesDecreased || fingerprintsCleared) {
+      console.log('Reset detected:', { votesDecreased, fingerprintsCleared });
+      location.reload();
+      return;
+    }
+    
+    // Record current state
+    previousTotalVotes = currentTotalVotes;
+    hadFingerprints = hasFingerprints;
+    
+    // Normal rendering
     renderSlave(data, id);
   });
 }
 
+// Render Slave screen
 function renderSlave(data, id) {
   // Control button visibility
   const alreadyVotedMessage = document.getElementById('already-voted-message');
@@ -195,6 +210,7 @@ function renderSlave(data, id) {
   
   document.getElementById('results').innerHTML = html;
   
+  // Vote function
   window.vote = async function(idx) {
     // Check if device fingerprint is ready
     if (!window.deviceFingerprint) {
