@@ -1,3 +1,7 @@
 # .gitignore
 /node_modules
 .DS_Store
+
+/vote.js
+/hiragana/vote-hiragana.js
+/en/vote.js
