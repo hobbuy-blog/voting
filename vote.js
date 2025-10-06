@@ -61,12 +61,11 @@ function initMaster(id) {
   
   // 投票リセット
   window.resetVotes = () => {
-    if (confirm('投票を全てリセットしますか？')) {
+    if (confirm('投票数をリセットしますか？\n※フィンガープリント記録もクリアされます')) {
       ref.update({
         votes: [0,0,0,0],
         votedFingerprints: null
       });
-      setCookie(`voted_${voteId}`, 'false', -1);
     }
   };
 }
@@ -95,17 +94,16 @@ function renderMaster(data, id) {
       `項目${i+1}: <input type="text" style="font-size: 1em; margin: 1px; height: 22px;" id="label${i}" value="${escapeHtml(data.labels[i]||defaultLabels[i])}"><br>`;
   }
   
-  // 投票状況表示
   let html = "<h3>投票状況</h3>";
   
-  // Calculate total votes
+  // 総投票数を計算
   const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
   
   for (let i=0; i<4; ++i) {
     const voteCount = data.votes[i] || 0;
     let percentageText = '';
     
-    // Show percentage only if there is at least 1 vote
+    // 投票が1以上ある場合のみパーセンテージを表示
     if (totalVotes > 0) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
@@ -140,6 +138,10 @@ function initSlave(id) {
     }
   });
   
+  // リセット検知用の変数
+  let previousTotalVotes = null;
+  let hadFingerprints = false;
+  
   // リアルタイム監視
   ref.on('value', snap => {
     const data = snap.val();
@@ -148,6 +150,28 @@ function initSlave(id) {
       document.getElementById('results').textContent = "";
       return;
     }
+    
+    // 現在の状態を取得
+    const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+    const hasFingerprints = data.votedFingerprints && 
+                           Object.keys(data.votedFingerprints).length > 0;
+    
+    // リセット検知: 投票数が減少 または フィンガープリントが削除
+    const votesDecreased = previousTotalVotes !== null && 
+                          currentTotalVotes < previousTotalVotes;
+    const fingerprintsCleared = hadFingerprints && !hasFingerprints;
+    
+    if (votesDecreased || fingerprintsCleared) {
+      console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
+      location.reload();
+      return;
+    }
+    
+    // 状態を記録
+    previousTotalVotes = currentTotalVotes;
+    hadFingerprints = hasFingerprints;
+    
+    // 通常の描画
     renderSlave(data, id);
   });
 }
@@ -166,25 +190,25 @@ function renderSlave(data, id) {
   document.getElementById('choices').innerHTML = chtml;
   
   // 投票状況表示
-  let html = "<h3>投票状況</h3>";
+  let rhtml = "<h3>投票状況</h3>";
   
-  // Calculate total votes
+  // 総投票数を計算
   const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
   
   for (let i=0; i<4; ++i) {
     const voteCount = data.votes[i] || 0;
     let percentageText = '';
     
-    // Show percentage only if there is at least 1 vote
+    // 投票が1以上ある場合のみパーセンテージを表示
     if (totalVotes > 0) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
     }
     
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>票${percentageText}<br>`;
+    rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>票${percentageText}<br>`;
   }
-  document.getElementById('results').innerHTML = html;
-
+  document.getElementById('results').innerHTML = rhtml;
+  
   // 投票関数をグローバルに設定
   window.vote = async function(idx) {
     // デバイスフィンガープリントが取得できていない場合
