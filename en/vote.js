@@ -18,33 +18,57 @@ const db = firebase.database();
 
 const defaultLabels = ["1", "2", "3", "4"];
 
-function initMaster(id) {
+function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
-  // Check for 3-day expiration and auto-delete
+  
+  // 3日経過チェック
   ref.once('value', snap => {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("The server had reset. Please create a server again.");
+      alert("The server had reset. Please ask the host to create again.");
       window.location.href = "index.html";
       return;
     }
-    // Create initial data if not exists
-    if (!data) {
-      ref.set({
-        labels: defaultLabels,
-        votes: [0,0,0,0],
-        lastVoted: Date.now()
-      });
-    }
   });
 
-  // Real-time monitoring
+  // リセット検知用の変数
+  let previousTotalVotes = null;
+  let hadFingerprints = false;
+
   ref.on('value', snap => {
     const data = snap.val();
-    if (!data) return;
-    renderMaster(data, id);
+    if (!data) {
+      document.getElementById('choices').textContent = "Voting ID is invalid.";
+      document.getElementById('results').textContent = "";
+      return;
+    }
+    
+    // 現在の状態を取得
+    const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+    const hasFingerprints = data.votedFingerprints && 
+                           Object.keys(data.votedFingerprints).length > 0;
+    
+    // リセット検知: 投票数が減少 または フィンガープリントが削除
+    const votesDecreased = previousTotalVotes !== null && 
+                          currentTotalVotes < previousTotalVotes;
+    const fingerprintsCleared = hadFingerprints && !hasFingerprints;
+    
+    if (votesDecreased || fingerprintsCleared) {
+      console.log('Reset detected:', { votesDecreased, fingerprintsCleared });
+      // 通知なしで静かにリロード
+      location.reload();
+      return;
+    }
+    
+    // 状態を記録
+    previousTotalVotes = currentTotalVotes;
+    hadFingerprints = hasFingerprints;
+    
+    // 通常の描画
+    renderSlave(data, id);
   });
+}
 
   document.getElementById('labelForm').onsubmit = e => {
     e.preventDefault();
