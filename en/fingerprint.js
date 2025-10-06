@@ -40,6 +40,16 @@ async function generateFingerprint() {
   // 10. WebGL fingerprint
   const webglFingerprint = getWebGLFingerprint();
   components.push(webglFingerprint);
+
+  // 11. IP address
+  applican.wifi.getCurrentIPv4Address(getCurrentIPv4Address_Success, getCurrentIPv4Address_Error);
+  function getCurrentIPv4Address_Success(ip){
+  	const ipAddress = ip;
+    components.push(ip);
+  }
+  function getCurrentIPv4Address_Error(err){
+	  alert("IP address couldn't be loaded.\nPlease reload the page.);
+  }
   
   // Combine all components and hash
   const fingerprint = await hashString(components.join('|||'));
