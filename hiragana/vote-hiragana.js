@@ -47,6 +47,10 @@ function initSlave(id) {
     }
   });
   
+  // リセット検知用の変数
+  let previousTotalVotes = null;
+  let hadFingerprints = false;
+  
   // リアルタイム監視
   ref.on('value', snap => {
     const data = snap.val();
@@ -55,6 +59,28 @@ function initSlave(id) {
       document.getElementById('results').textContent = "";
       return;
     }
+    
+    // 現在の状態を取得
+    const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
+    const hasFingerprints = data.votedFingerprints && 
+                           Object.keys(data.votedFingerprints).length > 0;
+    
+    // リセット検知: 投票数が減少 または フィンガープリントが削除
+    const votesDecreased = previousTotalVotes !== null && 
+                          currentTotalVotes < previousTotalVotes;
+    const fingerprintsCleared = hadFingerprints && !hasFingerprints;
+    
+    if (votesDecreased || fingerprintsCleared) {
+      console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
+      location.reload();
+      return;
+    }
+    
+    // 状態を記録
+    previousTotalVotes = currentTotalVotes;
+    hadFingerprints = hasFingerprints;
+    
+    // 通常の描画
     renderSlave(data, id);
   });
 }
@@ -71,38 +97,39 @@ function renderSlave(data, id) {
     chtml += `<button class="vote-btn" ${buttonStyle} onclick="vote(${i})"><b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b>に<ruby>投票<rt>とうひょう</rt></ruby></button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
-
-  let html = "<h3><ruby>投票<rt>とうひょう</rt></ruby>の<ruby>様子<rt>ようす</rt></ruby></h3>";
   
-  // Calculate total votes
+  // 投票状況表示
+  let rhtml = "<h3><ruby>投票<rt>とうひょう</rt></ruby>の<ruby>様子<rt>ようす</rt></ruby></h3>";
+  
+  // 総投票数を計算
   const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
   
   for (let i=0; i<4; ++i) {
     const voteCount = data.votes[i] || 0;
     let percentageText = '';
     
-    // Show percentage only if there is at least 1 vote
+    // 投票が1以上ある場合のみパーセンテージを表示
     if (totalVotes > 0) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
     }
     
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span><ruby>票<rt>ひょう</rt></ruby>${percentageText}<br>`;
+    rhtml += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span><ruby>票<rt>ひょう</rt></ruby>${percentageText}<br>`;
   }
-  document.getElementById('results').innerHTML = html;
+  document.getElementById('results').innerHTML = rhtml;
   
   // 投票関数をグローバルに設定
   window.vote = async function(idx) {
     // デバイスフィンガープリントが取得できていない場合
     if (!window.deviceFingerprint) {
-      alert('とうひょうのじゅんびちゅうです。しばらくおまちください。');
+      alert('デバイスじょうほうのしゅとくちゅうです。しばらくおまちください。');
       return;
     }
     
     // 二重チェック：既に投票済みか確認
     const alreadyVoted = await hasVotedByFingerprint(id, window.deviceFingerprint);
     if (alreadyVoted) {
-      alert('すでにとうひょうされています');
+      alert('すでに投票ずみです');
       return;
     }
     
@@ -132,11 +159,11 @@ function renderSlave(data, id) {
       
       showAlreadyVotedMessage();
       
-      alert('とうひょうがかんりょうしました！');
+      alert('投票がかんりょうしました！');
       
     } catch (error) {
       console.error('投票エラー:', error);
-      alert('とうひょうにしっぱいしました。もう1どとうひょうしください。');
+      alert('投票にしっぱいしました。もういちどおためしください。');
     }
   };
 }
