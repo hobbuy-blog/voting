@@ -169,7 +169,11 @@ function initSlave(id) {
   // Cookieとの比較処理
   ref.once('value', snap => {
     const data = snap.val();
-    if (!data) return;
+    if (!data) {
+      clearAllCookies();
+      setCookie(`totalVotes_${id}`, 0, 365);
+      return;
+    }
 
     const totalVotesNow = data.votes.reduce((sum, v) => sum + (v || 0), 0);
     const storedTotal = parseInt(getCookie(`totalVotes_${id}`) || '0', 10);
