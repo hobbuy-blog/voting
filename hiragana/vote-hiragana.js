@@ -32,6 +32,11 @@ function escapeHtml(str) {
   });
 }
 
+// Delete cookie function
+function deleteCookie(name) {
+  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
 // Slave（投票者）画面の初期化
 function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
@@ -72,6 +77,7 @@ function initSlave(id) {
     
     if (votesDecreased || fingerprintsCleared) {
       console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
+      delateCookie(`voted_${voteId}`);
       location.reload();
       return;
     }

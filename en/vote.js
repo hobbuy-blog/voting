@@ -18,7 +18,7 @@ const db = firebase.database();
 
 const defaultLabels = ["1", "2", "3", "4"];
 
-// Delete cookie function
+// Cookie削除
 function deleteCookie(name) {
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 }
