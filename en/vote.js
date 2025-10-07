@@ -161,6 +161,7 @@ function initSlave(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
+      clearAllCookies()
       alert("The server had reset. Please ask the host to create again.");
       window.location.href = "index.html";
       return;
@@ -214,7 +215,7 @@ function initSlave(id) {
     
     if (votesDecreased || fingerprintsCleared) {
       console.log('Reset detected:', { votesDecreased, fingerprintsCleared });
-      deleteCookie(`voted_${voteId}`);
+      clearAllCookies();
       location.reload();
       return;
     }

@@ -68,6 +68,7 @@ function initSlave(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
+      clearAllCookies();
       alert("サーバーがリセットされました．サーバーにはいりなおしてください．");
       window.location.href = "index.html";
       return;
@@ -121,7 +122,7 @@ function initSlave(id) {
     
     if (votesDecreased || fingerprintsCleared) {
       console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
-      delateCookie(`voted_${voteId}`);
+      clearAllCookies();
       location.reload();
       return;
     }
