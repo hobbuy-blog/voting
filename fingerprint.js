@@ -193,21 +193,27 @@ function showAlreadyVotedMessage() {
   }
 }
 
-// 投票UIの初期化（フィンガープリント版）
+// 投票UIの初期化（Cookie + Firebase 両方チェック版）
 async function initVotingUIWithFingerprint(voteId) {
   showLoadingMessage();
   
   // フィンガープリント生成
   const fingerprint = await generateFingerprint();
   
-  // Firebase チェック（信頼できる情報源として優先）
+  // Cookie チェック
+  const cookieVoted = getCookie(`voted_${voteId}`) === 'true';
+  
+  // Firebase チェック
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
-    
+  
+  // どちらか一方でも投票済みならブロック
+  const hasVoted = cookieVoted || fingerprintVoted;
+  
   hideLoadingMessage();
   
-  if (fingerprintVoted) {
+  if (hasVoted) {
     showAlreadyVotedMessage();
   }
   
-  return { fingerprint, hasVoted: fingerprintVoted };
+  return { fingerprint, hasVoted };
 }
