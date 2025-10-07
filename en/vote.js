@@ -176,7 +176,7 @@ function initSlave(id) {
     const storedTotal = parseInt(getCookie(`totalVotes_${id}`) || '0', 10);
 
     // Cookieの値が現在の投票数より少ない場合 → Cookieを全削除してリロード
-    if (storedTotal < totalVotesNow) {
+    if (storedTotal > totalVotesNow) {
       console.log('Cookieリセット検知: CookieのtotalVotesが現在より少ない');
       clearAllCookies();
       location.reload();
