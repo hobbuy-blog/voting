@@ -160,6 +160,7 @@ function initSlave(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
+      clearAllCookies()
       alert("サーバーがリセットされました．サーバーを再度作成してください．");
       window.location.href = "index.html";
       return;
