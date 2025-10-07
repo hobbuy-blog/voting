@@ -181,13 +181,13 @@ function initSlave(id) {
                            Object.keys(data.votedFingerprints).length > 0;
 
     // サイトクローズ対策
-    const totalVotesLog = getCookie(`totalVotes_${id}`);
+    /*const totalVotesLog = getCookie(`totalVotes_${id}`);
     if (totalVotesLog <= currentTotalVotes) {
       delateCookie(`totalVotes_${id}`);
       delateCookie(`voted_${id}`);
       location.reload();
       return;
-    }
+    }*/
     
     // リセット検知: 投票数が減少 または フィンガープリントが削除
     const votesDecreased = previousTotalVotes !== null && 
@@ -215,6 +215,7 @@ function renderSlave(data, id) {
   // 投票ボタンの表示制御
   const alreadyVotedMessage = document.getElementById('already-voted-message');
   const shouldHideButtons = alreadyVotedMessage !== null;
+  setCookie(`totalVotes_${id}`, 1, 365);
   
   let chtml = '';
   for (let i=0; i<4; ++i) {
