@@ -307,7 +307,7 @@ function renderSlave(data, id) {
       const updatedSnap = await ref.once('value');
       const updatedData = updatedSnap.val();
       const totalVotesNow = updatedData.votes.reduce((sum, v) => sum + (v || 0), 0);
-      setCookie('totalVotes', totalVotesNow, 365);
+      setCookie(`totalVotes_${id}`, totalVotesNow, 365);
       
       alert('Vote completed!');
       
