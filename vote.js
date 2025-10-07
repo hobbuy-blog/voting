@@ -17,25 +17,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const defaultLabels = ["1", "2", "3", "4"];
 
-// Cookie操作
-function setCookie(name, value, days) {
-  const date = new Date();
-  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-  const expires = "expires=" + date.toUTCString();
-  document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-function getCookie(name) {
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(';');
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-  }
-  return null;
-}
-
 // Cookie削除
 function deleteCookie(name) {
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -179,15 +160,6 @@ function initSlave(id) {
     const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
     const hasFingerprints = data.votedFingerprints && 
                            Object.keys(data.votedFingerprints).length > 0;
-
-    // サイトクローズ対策
-    /*const totalVotesLog = getCookie(`totalVotes_${id}`);
-    if (totalVotesLog <= currentTotalVotes) {
-      delateCookie(`totalVotes_${id}`);
-      delateCookie(`voted_${id}`);
-      location.reload();
-      return;
-    }*/
     
     // リセット検知: 投票数が減少 または フィンガープリントが削除
     const votesDecreased = previousTotalVotes !== null && 
@@ -196,7 +168,7 @@ function initSlave(id) {
     
     if (votesDecreased || fingerprintsCleared) {
       console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
-      deleteCookie(`voted_${id}`);
+      deleteCookie(`voted_${voteId}`);
       location.reload();
       return;
     }
@@ -215,7 +187,6 @@ function renderSlave(data, id) {
   // 投票ボタンの表示制御
   const alreadyVotedMessage = document.getElementById('already-voted-message');
   const shouldHideButtons = alreadyVotedMessage !== null;
-  setCookie(`totalVotes_${id}`, 1, 365);
   
   let chtml = '';
   for (let i=0; i<4; ++i) {
@@ -267,7 +238,6 @@ function renderSlave(data, id) {
       await ref.child('votes').transaction(arr => {
         if (!arr) arr = [0,0,0,0];
         arr[idx] = (arr[idx]||0)+1;
-        setCookie(`totalVotes_${id}`, totalVotes, 365);
         return arr;
       });
       
