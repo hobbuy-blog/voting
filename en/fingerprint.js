@@ -160,7 +160,7 @@ async function recordFingerprint(voteId, fingerprint) {
 function showLoadingMessage() {
   const msg = document.createElement('div');
   msg.id = 'fingerprint-loading';
-  msg.textContent = '投票状況を確認中...';
+  msg.textContent = 'Perparing the vote...';
   const choices = document.getElementById('choices');
   if (choices) {
     choices.parentElement.insertBefore(msg, choices);
@@ -180,9 +180,9 @@ function showAlreadyVotedMessage() {
   const message = document.createElement('div');
   message.id = 'already-voted-message';
   message.innerHTML = `
-    ⚠️ 既に投票済みです<br>
+    ⚠️ You had been voted<br>
     <small style="font-weight: normal; font-size: 0.9em;">
-      このデバイスから既に投票が完了しています
+      Your device logged as the voted device
     </small>
   `;
   const choices = document.getElementById('choices');
