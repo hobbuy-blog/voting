@@ -172,10 +172,10 @@ function initSlave(id) {
     if (!data) return;
 
     const totalVotesNow = data.votes.reduce((sum, v) => sum + (v || 0), 0);
-    const storedTotal = parseInt(getCookie('totalVotes') || '0', 10);
+    const storedTotal = parseInt(getCookie(`totalVotes_${id}`) || '0', 10);
 
     // Cookieの値が現在の投票数より少ない場合 → Cookieを全削除してリロード
-    if (storedTotal < totalVotesNow) {
+    if (storedTotal > totalVotesNow) {
       console.log('Cookieリセット検知: CookieのtotalVotesが現在より少ない');
       clearAllCookies();
       location.reload();
@@ -183,8 +183,8 @@ function initSlave(id) {
     }
 
     // 初回記録（Cookieが存在しない場合）
-    if (!getCookie('totalVotes')) {
-      setCookie('totalVotes', totalVotesNow, 365);
+    if (!getCookie(`totalVotes_${id}`)) {
+      setCookie(`totalVotes_${id}`, totalVotesNow, 365);
     }
   });
 
