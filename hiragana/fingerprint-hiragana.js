@@ -6,52 +6,32 @@
 async function generateFingerprint() {
   const components = [];
   
-  // 1. User Agent
   components.push(navigator.userAgent);
-  
-  // 2. 言語設定
   components.push(navigator.language);
   components.push(navigator.languages.join(','));
-  
-  // 3. 画面解像度
   components.push(screen.width + 'x' + screen.height);
   components.push(screen.colorDepth);
   components.push(screen.pixelDepth);
-  
-  // 4. タイムゾーン
   components.push(new Date().getTimezoneOffset());
-  
-  // 5. プラットフォーム
   components.push(navigator.platform);
-  
-  // 6. ハードウェア並行性（CPUコア数）
   components.push(navigator.hardwareConcurrency || 0);
-  
-  // 7. デバイスメモリ
   components.push(navigator.deviceMemory || 0);
-  
-  // 8. タッチサポート
   components.push(navigator.maxTouchPoints || 0);
   
-  // 9. Canvas フィンガープリント
   const canvasFingerprint = await getCanvasFingerprint();
   components.push(canvasFingerprint);
   
-  // 10. WebGL フィンガープリント
   const webglFingerprint = getWebGLFingerprint();
   components.push(webglFingerprint);
   
-  // すべてのコンポーネントを結合してハッシュ化
   const fingerprint = await hashString(components.join('|||'));
   return fingerprint;
 }
 
-// Canvas フィンガープリント
 async function getCanvasFingerprint() {
   try {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
     ctx.textBaseline = 'top';
     ctx.font = '14px Arial';
     ctx.textBaseline = 'alphabetic';
@@ -61,7 +41,6 @@ async function getCanvasFingerprint() {
     ctx.fillText('Canvas Fingerprint', 2, 15);
     ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
     ctx.fillText('Canvas Fingerprint', 4, 17);
-    
     const dataURL = canvas.toDataURL();
     return await hashString(dataURL);
   } catch (e) {
@@ -69,27 +48,21 @@ async function getCanvasFingerprint() {
   }
 }
 
-// WebGL フィンガープリント
 function getWebGLFingerprint() {
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    
     if (!gl) return 'no-webgl';
-    
     const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
     if (!debugInfo) return 'no-debug-info';
-    
     const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
     const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-    
     return vendor + '|||' + renderer;
   } catch (e) {
     return 'webgl-error';
   }
 }
 
-// 文字列をハッシュ化（SHA-256）
 async function hashString(str) {
   const encoder = new TextEncoder();
   const data = encoder.encode(str);
@@ -99,7 +72,6 @@ async function hashString(str) {
   return hashHex;
 }
 
-// Cookie操作
 function setCookie(name, value, days) {
   const date = new Date();
   date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -118,19 +90,15 @@ function getCookie(name) {
   return null;
 }
 
-// Cookieを削除する関数
 function deleteCookie(name) {
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 }
 
-// Firebaseで投票済みかチェック
 async function hasVotedByFingerprint(voteId, fingerprint) {
   try {
     const votedFingerprintsRef = firebase.database().ref(`votes/${voteId}/votedFingerprints`);
     const snapshot = await votedFingerprintsRef.once('value');
     const votedFingerprints = snapshot.val() || {};
-    
-    // フィンガープリントが既に記録されているかチェック
     for (let key in votedFingerprints) {
       if (votedFingerprints[key].fingerprint === fingerprint) {
         return true;
@@ -143,7 +111,6 @@ async function hasVotedByFingerprint(voteId, fingerprint) {
   }
 }
 
-// フィンガープリントを記録
 async function recordFingerprint(voteId, fingerprint) {
   try {
     const votedFingerprintsRef = firebase.database().ref(`votes/${voteId}/votedFingerprints`);
@@ -156,7 +123,6 @@ async function recordFingerprint(voteId, fingerprint) {
   }
 }
 
-// ローディングメッセージ表示（ひらがな版）
 function showLoadingMessage() {
   const msg = document.createElement('div');
   msg.id = 'fingerprint-loading';
@@ -169,13 +135,11 @@ function showLoadingMessage() {
   }
 }
 
-// ローディングメッセージ非表示
 function hideLoadingMessage() {
   const msg = document.getElementById('fingerprint-loading');
   if (msg) msg.remove();
 }
 
-// 投票済みメッセージ表示（ひらがな版）
 function showAlreadyVotedMessage() {
   const message = document.createElement('div');
   message.id = 'already-voted-message';
@@ -193,21 +157,27 @@ function showAlreadyVotedMessage() {
   }
 }
 
-// 投票UIの初期化（フィンガープリント版・ひらがな）
+// 投票UIの初期化（Cookie + Firebase 両方チェック版）
 async function initVotingUIWithFingerprint(voteId) {
   showLoadingMessage();
   
   // フィンガープリント生成
   const fingerprint = await generateFingerprint();
   
-  // Firebase チェック（信頼できる情報源として優先）
+  // Cookie チェック
+  const cookieVoted = getCookie(`voted_${voteId}`) === 'true';
+  
+  // Firebase チェック
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
-    
+  
+  // どちらか一方でも投票済みならブロック
+  const hasVoted = cookieVoted || fingerprintVoted;
+  
   hideLoadingMessage();
   
-  if (fingerprintVoted) {
+  if (hasVoted) {
     showAlreadyVotedMessage();
   }
   
-  return { fingerprint, hasVoted: fingerprintVoted };
+  return { fingerprint, hasVoted };
 }
