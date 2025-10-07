@@ -202,12 +202,7 @@ async function initVotingUIWithFingerprint(voteId) {
   
   // Firebase チェック（信頼できる情報源として優先）
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
-  
-  // Firebaseで投票済みでない場合、Cookieをクリア（同期）
-  if (!fingerprintVoted) {
-    deleteCookie(`voted_${voteId}`);
-  }
-  
+    
   hideLoadingMessage();
   
   if (fingerprintVoted) {

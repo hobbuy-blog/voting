@@ -163,6 +163,7 @@ function initSlave(id) {
     
     if (votesDecreased || fingerprintsCleared) {
       console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
+      deleteCookie(`voted_${voteId}`);
       location.reload();
       return;
     }
