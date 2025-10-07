@@ -203,11 +203,6 @@ async function initVotingUIWithFingerprint(voteId) {
   // Firebase check (prioritize as the source of truth)
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
   
-  // If not voted in Firebase, clear cookie (sync)
-  if (!fingerprintVoted) {
-    deleteCookie(`voted_${voteId}`);
-  }
-  
   hideLoadingMessage();
   
   if (fingerprintVoted) {

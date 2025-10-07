@@ -18,6 +18,11 @@ const db = firebase.database();
 
 const defaultLabels = ["1", "2", "3", "4"];
 
+// Delete cookie function
+function deleteCookie(name) {
+  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
 // ============================================
 // Master (管理者) 画面の初期化
 // ============================================
@@ -163,6 +168,7 @@ function initSlave(id) {
     
     if (votesDecreased || fingerprintsCleared) {
       console.log('Reset detected:', { votesDecreased, fingerprintsCleared });
+      deleteCookie(`voted_${voteId}`);
       location.reload();
       return;
     }
