@@ -18,6 +18,29 @@ const db = firebase.database();
 
 const defaultLabels = ["1", "2", "3", "4"];
 
+// Cookie取得
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+// Cookie設定
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days*24*60*60*1000));
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
+}
+
+// 全Cookie削除
+function clearAllCookies() {
+  document.cookie.split(";").forEach(function(c) {
+    document.cookie = c
+      .replace(/^ +/, "")
+      .replace(/=.*/, "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/");
+  });
+}
+
+
 // Cookie削除
 function deleteCookie(name) {
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -144,6 +167,29 @@ function initSlave(id) {
     }
   });
 
+  // --- Cookieとの比較処理 ---
+  ref.once('value', snap => {
+    const data = snap.val();
+    if (!data) return;
+
+    const totalVotesNow = data.votes.reduce((sum, v) => sum + (v || 0), 0);
+    const storedTotal = parseInt(getCookie(`totalVotes_${id}`) || '0', 10);
+
+    // Cookieの値が現在の投票数より少ない場合 → Cookieを全削除してリロード
+    if (storedTotal < totalVotesNow) {
+      console.log('Cookieリセット検知: CookieのtotalVotesが現在より少ない');
+      clearAllCookies();
+      location.reload();
+      return;
+    }
+
+    // 初回記録（Cookieが存在しない場合）
+    if (!getCookie(`totalVotes_${id}`)) {
+      setCookie(`totalVotes_${id}`, totalVotesNow, 365);
+    }
+  });
+
+
   // Reset detection variables
   let previousTotalVotes = null;
   let hadFingerprints = false;
@@ -256,6 +302,12 @@ function renderSlave(data, id) {
       buttons.forEach(btn => btn.style.display = 'none');
       
       showAlreadyVotedMessage();
+
+      // 総投票数をCookieに更新
+      const updatedSnap = await ref.once('value');
+      const updatedData = updatedSnap.val();
+      const totalVotesNow = updatedData.votes.reduce((sum, v) => sum + (v || 0), 0);
+      setCookie('totalVotes', totalVotesNow, 365);
       
       alert('Vote completed!');
       
