@@ -143,8 +143,6 @@ function renderMaster(data, id) {
     const votedCount = Object.keys(data.votedFingerprints).length;
     html += `<hr><small>投票済みデバイス数: ${votedCount}</small><br>`;
   }
-
-  html += `<small>リセット回数: ${escapeHtml(data.resetCount || 0)}</small>`;
   
   document.getElementById('results').innerHTML = html;
 }
