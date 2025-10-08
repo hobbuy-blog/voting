@@ -1,11 +1,9 @@
 // ============================================
-// fingerprint-hiragana.js - デバイスフィンガープリント機能（ひらがな版）
+// fingerprint-hiragana.js - デバイスフィンガープリント機能（ひらがな版・LocalStorage）
 // ============================================
 
-// デバイスフィンガープリント生成
 async function generateFingerprint() {
   const components = [];
-  
   components.push(navigator.userAgent);
   components.push(navigator.language);
   components.push(navigator.languages.join(','));
@@ -72,26 +70,30 @@ async function hashString(str) {
   return hashHex;
 }
 
-function setCookie(name, value, days) {
-  const date = new Date();
-  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-  const expires = "expires=" + date.toUTCString();
-  document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-function getCookie(name) {
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(';');
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+// LocalStorage操作
+function setLocalStorage(name, value) {
+  try {
+    localStorage.setItem(name, value);
+  } catch (e) {
+    console.error('LocalStorage保存エラー:', e);
   }
-  return null;
 }
 
-function deleteCookie(name) {
-  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+function getLocalStorage(name) {
+  try {
+    return localStorage.getItem(name);
+  } catch (e) {
+    console.error('LocalStorage取得エラー:', e);
+    return null;
+  }
+}
+
+function deleteLocalStorage(name) {
+  try {
+    localStorage.removeItem(name);
+  } catch (e) {
+    console.error('LocalStorage削除エラー:', e);
+  }
 }
 
 async function hasVotedByFingerprint(voteId, fingerprint) {
@@ -157,21 +159,21 @@ function showAlreadyVotedMessage() {
   }
 }
 
-// 投票UIの初期化（Cookie + Firebase 両方チェック版）
+// 投票UIの初期化（LocalStorage優先版）
 async function initVotingUIWithFingerprint(voteId) {
   showLoadingMessage();
   
   // フィンガープリント生成
   const fingerprint = await generateFingerprint();
   
-  // Cookie チェック
-  const cookieVoted = getCookie(`voted_${voteId}`) === 'true';
+  // LocalStorage チェック（優先）
+  const localStorageVoted = getLocalStorage(`voted_${voteId}`) === 'true';
   
-  // Firebase チェック
+  // Firebase チェック（補助）
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
   
-  // どちらか一方でも投票済みならブロック
-  const hasVoted = cookieVoted || fingerprintVoted;
+  // LocalStorageを優先
+  const hasVoted = localStorageVoted || fingerprintVoted;
   
   hideLoadingMessage();
   
