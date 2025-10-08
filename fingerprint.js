@@ -179,7 +179,7 @@ async function initVotingUIWithFingerprint(voteId) {
   
   // LocalStorageを優先：LocalStorageが投票済みなら必ずブロック
   // LocalStorageが未投票でもFirebaseが投票済みならブロック
-  const hasVoted = localStorageVoted || fingerprintVoted;
+  const hasVoted = localStorageVoted;
   
   hideLoadingMessage();
   
