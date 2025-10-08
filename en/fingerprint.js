@@ -1,57 +1,35 @@
 // ============================================
-// fingerprint.js - デバイスフィンガープリント機能
+// fingerprint-en.js - Device Fingerprint (English Version, LocalStorage)
 // ============================================
 
-// デバイスフィンガープリント生成
 async function generateFingerprint() {
   const components = [];
-  
-  // 1. User Agent
   components.push(navigator.userAgent);
-  
-  // 2. 言語設定
   components.push(navigator.language);
   components.push(navigator.languages.join(','));
-  
-  // 3. 画面解像度
   components.push(screen.width + 'x' + screen.height);
   components.push(screen.colorDepth);
   components.push(screen.pixelDepth);
-  
-  // 4. タイムゾーン
   components.push(new Date().getTimezoneOffset());
-  
-  // 5. プラットフォーム
   components.push(navigator.platform);
-  
-  // 6. ハードウェア並行性（CPUコア数）
   components.push(navigator.hardwareConcurrency || 0);
-  
-  // 7. デバイスメモリ
   components.push(navigator.deviceMemory || 0);
-  
-  // 8. タッチサポート
   components.push(navigator.maxTouchPoints || 0);
   
-  // 9. Canvas フィンガープリント
   const canvasFingerprint = await getCanvasFingerprint();
   components.push(canvasFingerprint);
   
-  // 10. WebGL フィンガープリント
   const webglFingerprint = getWebGLFingerprint();
   components.push(webglFingerprint);
   
-  // すべてのコンポーネントを結合してハッシュ化
   const fingerprint = await hashString(components.join('|||'));
   return fingerprint;
 }
 
-// Canvas フィンガープリント
 async function getCanvasFingerprint() {
   try {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
     ctx.textBaseline = 'top';
     ctx.font = '14px Arial';
     ctx.textBaseline = 'alphabetic';
@@ -61,7 +39,6 @@ async function getCanvasFingerprint() {
     ctx.fillText('Canvas Fingerprint', 2, 15);
     ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
     ctx.fillText('Canvas Fingerprint', 4, 17);
-    
     const dataURL = canvas.toDataURL();
     return await hashString(dataURL);
   } catch (e) {
@@ -69,27 +46,21 @@ async function getCanvasFingerprint() {
   }
 }
 
-// WebGL フィンガープリント
 function getWebGLFingerprint() {
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    
     if (!gl) return 'no-webgl';
-    
     const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
     if (!debugInfo) return 'no-debug-info';
-    
     const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
     const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-    
     return vendor + '|||' + renderer;
   } catch (e) {
     return 'webgl-error';
   }
 }
 
-// 文字列をハッシュ化（SHA-256）
 async function hashString(str) {
   const encoder = new TextEncoder();
   const data = encoder.encode(str);
@@ -99,38 +70,37 @@ async function hashString(str) {
   return hashHex;
 }
 
-// Cookie操作
-function setCookie(name, value, days) {
-  const date = new Date();
-  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-  const expires = "expires=" + date.toUTCString();
-  document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-function getCookie(name) {
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(';');
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+// LocalStorage operations
+function setLocalStorage(name, value) {
+  try {
+    localStorage.setItem(name, value);
+  } catch (e) {
+    console.error('LocalStorage save error:', e);
   }
-  return null;
 }
 
-// Cookieを削除する関数
-function deleteCookie(name) {
-  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+function getLocalStorage(name) {
+  try {
+    return localStorage.getItem(name);
+  } catch (e) {
+    console.error('LocalStorage get error:', e);
+    return null;
+  }
 }
 
-// Firebaseで投票済みかチェック
+function deleteLocalStorage(name) {
+  try {
+    localStorage.removeItem(name);
+  } catch (e) {
+    console.error('LocalStorage delete error:', e);
+  }
+}
+
 async function hasVotedByFingerprint(voteId, fingerprint) {
   try {
     const votedFingerprintsRef = firebase.database().ref(`votes/${voteId}/votedFingerprints`);
     const snapshot = await votedFingerprintsRef.once('value');
     const votedFingerprints = snapshot.val() || {};
-    
-    // フィンガープリントが既に記録されているかチェック
     for (let key in votedFingerprints) {
       if (votedFingerprints[key].fingerprint === fingerprint) {
         return true;
@@ -138,12 +108,11 @@ async function hasVotedByFingerprint(voteId, fingerprint) {
     }
     return false;
   } catch (error) {
-    console.error('投票チェックエラー:', error);
+    console.error('Vote check error:', error);
     return false;
   }
 }
 
-// フィンガープリントを記録
 async function recordFingerprint(voteId, fingerprint) {
   try {
     const votedFingerprintsRef = firebase.database().ref(`votes/${voteId}/votedFingerprints`);
@@ -152,15 +121,14 @@ async function recordFingerprint(voteId, fingerprint) {
       timestamp: Date.now()
     });
   } catch (error) {
-    console.error('フィンガープリント記録エラー:', error);
+    console.error('Fingerprint record error:', error);
   }
 }
 
-// ローディングメッセージ表示
 function showLoadingMessage() {
   const msg = document.createElement('div');
   msg.id = 'fingerprint-loading';
-  msg.textContent = 'Perparing the vote...';
+  msg.textContent = 'Checking voting status...';
   const choices = document.getElementById('choices');
   if (choices) {
     choices.parentElement.insertBefore(msg, choices);
@@ -169,20 +137,18 @@ function showLoadingMessage() {
   }
 }
 
-// ローディングメッセージ非表示
 function hideLoadingMessage() {
   const msg = document.getElementById('fingerprint-loading');
   if (msg) msg.remove();
 }
 
-// 投票済みメッセージ表示
 function showAlreadyVotedMessage() {
   const message = document.createElement('div');
   message.id = 'already-voted-message';
   message.innerHTML = `
-    ⚠️ You had been voted<br>
+    ⚠️ You have already voted<br>
     <small style="font-weight: normal; font-size: 0.9em;">
-      Your device logged as the voted device
+      This device has already completed voting
     </small>
   `;
   const choices = document.getElementById('choices');
@@ -193,21 +159,21 @@ function showAlreadyVotedMessage() {
   }
 }
 
-// 投票UIの初期化（Cookie + Firebase 両方チェック版）
+// Initialize voting UI (LocalStorage priority version)
 async function initVotingUIWithFingerprint(voteId) {
   showLoadingMessage();
   
-  // フィンガープリント生成
+  // Generate fingerprint
   const fingerprint = await generateFingerprint();
   
-  // Cookie チェック
-  const cookieVoted = getCookie(`voted_${voteId}`) === 'true';
+  // LocalStorage check (priority)
+  const localStorageVoted = getLocalStorage(`voted_${voteId}`) === 'true';
   
-  // Firebase チェック
+  // Firebase check (auxiliary)
   const fingerprintVoted = await hasVotedByFingerprint(voteId, fingerprint);
   
-  // どちらか一方でも投票済みならブロック
-  const hasVoted = cookieVoted || fingerprintVoted;
+  // LocalStorage takes priority
+  const hasVoted = localStorageVoted || fingerprintVoted;
   
   hideLoadingMessage();
   
