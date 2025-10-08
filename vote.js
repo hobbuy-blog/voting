@@ -190,7 +190,7 @@ function renderSlave(data, id) {
       return;
     }
     
-    const alreadyVoted = await hasVotedByFingerprint(id, window.deviceFingerprint);
+    const alreadyVoted = localStorageVoted;
     if (alreadyVoted) {
       alert('既に投票済みです');
       return;
