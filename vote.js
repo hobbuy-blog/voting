@@ -40,8 +40,10 @@ function initMaster(id) {
       ref.set({
         labels: defaultLabels,
         votes: [0,0,0,0],
-        lastVoted: Date.now()
+        lastVoted: Date.now(),
+        reset: 0
       });
+      const = data.reset;
     }
   });
   
@@ -62,9 +64,11 @@ function initMaster(id) {
   
   window.resetVotes = () => {
     if (confirm('投票数をリセットしますか？\n※フィンガープリント記録もクリアされます')) {
+      const reset = reset + 1;
       ref.update({
         votes: [0,0,0,0],
-        votedFingerprints: null
+        votedFingerprints: null,
+        reset: reset
       });
     }
   };
@@ -128,6 +132,18 @@ function initSlave(id) {
   
   let previousTotalVotes = null;
   let hadFingerprints = false;
+
+  ref.on('value', snap => {
+    if (!`reset_${id}`) {
+      setLocalStorage(`reset_${id}`, 0);
+    }
+
+    if (`reset_${id}` != data.reset) {
+      setLocalStorage(`reset_${id}`, data.reset);
+      location.reload();
+      return;
+    }
+  });
   
   ref.on('value', snap => {
     const data = snap.val();
@@ -213,6 +229,7 @@ function renderSlave(data, id) {
       
       // LocalStorageに記録
       setLocalStorage(`voted_${id}`, 'true');
+      setLocalStorage(`reset_${id}`, data.reset);
       
       const buttons = document.querySelectorAll('.vote-btn');
       buttons.forEach(btn => btn.style.display = 'none');
