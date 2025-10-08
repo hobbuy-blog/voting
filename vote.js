@@ -190,7 +190,10 @@ function renderSlave(data, id) {
       return;
     }
     
-    const alreadyVoted = await hasVotedByFingerprint(id, window.deviceFingerprint);
+    // 二重チェック：LocalStorageのみで投票済み判定
+    const localStorageKey = `voted_${id}`;
+    const alreadyVoted = localStorage.getItem(localStorageKey) === 'true';
+
     if (alreadyVoted) {
       alert('既に投票済みです');
       return;
