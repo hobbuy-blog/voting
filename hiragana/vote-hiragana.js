@@ -32,31 +32,13 @@ function escapeHtml(str) {
   });
 }
 
-// Cookie取得
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-// Cookie設定
-function setCookie(name, value, days) {
-  const d = new Date();
-  d.setTime(d.getTime() + (days*24*60*60*1000));
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
-}
-
-// 全Cookie削除
-function clearAllCookies() {
-  document.cookie.split(";").forEach(function(c) {
-    document.cookie = c
-      .replace(/^ +/, "")
-      .replace(/=.*/, "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/");
-  });
-}
-
-// Delete cookie function
-function deleteCookie(name) {
-  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+// LocalStorage削除
+function deleteLocalStorage(name) {
+  try {
+    localStorage.removeItem(name);
+  } catch (e) {
+    console.error('LocalStorage削除エラー:', e);
+  }
 }
 
 // Slave（投票者）画面の初期化
@@ -68,32 +50,9 @@ function initSlave(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      clearAllCookies();
       alert("サーバーがリセットされました．サーバーにはいりなおしてください．");
       window.location.href = "index.html";
       return;
-    }
-  });
-
-  // --- Cookieとの比較処理 ---
-  ref.once('value', snap => {
-    const data = snap.val();
-    if (!data) return;
-
-    const totalVotesNow = data.votes.reduce((sum, v) => sum + (v || 0), 0);
-    const storedTotal = parseInt(getCookie(`totalVotes_${id}`) || '0', 10);
-
-    // Cookieの値が現在の投票数より少ない場合 → Cookieを全削除してリロード
-    if (storedTotal > totalVotesNow) {
-      console.log('Cookieリセット検知: CookieのtotalVotesが現在より少ない');
-      clearAllCookies();
-      location.reload();
-      return;
-    }
-
-    // 初回記録（Cookieが存在しない場合）
-    if (!getCookie(`totalVotes_${id}`)) {
-      setCookie(`totalVotes_${id}`, totalVotesNow, 365);
     }
   });
   
@@ -122,7 +81,7 @@ function initSlave(id) {
     
     if (votesDecreased || fingerprintsCleared) {
       console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
-      clearAllCookies();
+      deleteLocalStorage(`voted_${id}`);  // LocalStorageをクリア
       location.reload();
       return;
     }
@@ -201,20 +160,14 @@ function renderSlave(data, id) {
       // フィンガープリントを記録
       await recordFingerprint(id, window.deviceFingerprint);
       
-      // Cookieにも記録（二重防御）
-      setCookie(`voted_${id}`, 'true', 365);
+      // LocalStorageに記録
+      setLocalStorage(`voted_${id}`, 'true');
       
       // UIを更新（ボタンを非表示に）
       const buttons = document.querySelectorAll('.vote-btn');
       buttons.forEach(btn => btn.style.display = 'none');
       
       showAlreadyVotedMessage();
-
-      // 総投票数をCookieに更新
-      const updatedSnap = await ref.once('value');
-      const updatedData = updatedSnap.val();
-      const totalVotesNow = updatedData.votes.reduce((sum, v) => sum + (v || 0), 0);
-      setCookie(`totalVotes_${id}`, totalVotesNow, 365);
       
       alert('投票がかんりょうしました！');
       
