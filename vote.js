@@ -144,7 +144,7 @@ function renderMaster(data, id) {
     html += `<hr><small>投票済みデバイス数: ${votedCount}</small><br>`;
   }
 
-  html += `<small>リセット回数: ${data.resetCount || 0}</small>`;
+  html += `<small>リセット回数: ${escapeHtml(data.resetCount || 0)}</small>`;
   
   document.getElementById('results').innerHTML = html;
 }
