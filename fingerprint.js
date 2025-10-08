@@ -40,17 +40,6 @@ async function generateFingerprint() {
   // 10. WebGL フィンガープリント
   const webglFingerprint = getWebGLFingerprint();
   components.push(webglFingerprint);
-
-  // 11. バッテリー残量
-  navigator.getBattery().then(function(battery) {
-    components.push(battery.level * 100);
-
-    if (battery.charging) {
-      components.push('charging');
-    } else {
-      components.push('using');
-    }
-  });
   
   // すべてのコンポーネントを結合してハッシュ化
   const fingerprint = await hashString(components.join('|||'));
