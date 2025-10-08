@@ -1,5 +1,5 @@
 // ============================================
-// vote.js - Firebase投票システム（LocalStorage版）
+// vote.js - Firebase投票システム（LocalStorage＋リセット検知対応）
 // ============================================
 
 const firebaseConfig = {
@@ -16,7 +16,9 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const defaultLabels = ["1", "2", "3", "4"];
 
-// LocalStorage削除（fingerprintから移動）
+// --------------------------------------------
+// LocalStorage操作
+// --------------------------------------------
 function deleteLocalStorage(name) {
   try {
     localStorage.removeItem(name);
@@ -24,7 +26,17 @@ function deleteLocalStorage(name) {
     console.error('LocalStorage削除エラー:', e);
   }
 }
+function setLocalStorage(name, value) {
+  try {
+    localStorage.setItem(name, value);
+  } catch (e) {
+    console.error('LocalStorage保存エラー:', e);
+  }
+}
 
+// --------------------------------------------
+// Master初期化
+// --------------------------------------------
 function initMaster(id) {
   const ref = db.ref(`votes/${id}`);
   
@@ -40,8 +52,11 @@ function initMaster(id) {
       ref.set({
         labels: defaultLabels,
         votes: [0,0,0,0],
-        lastVoted: Date.now()
+        lastVoted: Date.now(),
+        resetCount: 0 // ★追加: リセット回数
       });
+    } else if (data.resetCount === undefined) {
+      ref.update({ resetCount: 0 });
     }
   });
   
@@ -60,17 +75,32 @@ function initMaster(id) {
     ref.update({labels});
   };
   
-  window.resetVotes = () => {
+  // --------------------------------------------
+  // ★ リセットボタン押下時処理
+  // --------------------------------------------
+  window.resetVotes = async () => {
     if (confirm('投票数をリセットしますか？\n※フィンガープリント記録もクリアされます')) {
-      const reset = reset + 1;
-      ref.update({
-        votes: [0,0,0,0],
-        votedFingerprints: null,
-      });
+      try {
+        await ref.transaction(data => {
+          if (!data) return data;
+          const currentReset = data.resetCount || 0;
+          data.votes = [0,0,0,0];
+          data.votedFingerprints = null;
+          data.resetCount = currentReset + 1; // ★ リセット回数を +1
+          return data;
+        });
+        alert('リセットが完了しました。');
+      } catch (err) {
+        console.error('リセットエラー:', err);
+        alert('リセットに失敗しました。');
+      }
     }
   };
 }
 
+// --------------------------------------------
+// Utility
+// --------------------------------------------
 function escapeHtml(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/[&<>"']/g, function(match) {
@@ -85,6 +115,9 @@ function escapeHtml(str) {
   });
 }
 
+// --------------------------------------------
+// Masterレンダリング
+// --------------------------------------------
 function renderMaster(data, id) {
   const labelsDiv = document.getElementById('labels');
   labelsDiv.innerHTML = '';
@@ -110,25 +143,35 @@ function renderMaster(data, id) {
     const votedCount = Object.keys(data.votedFingerprints).length;
     html += `<hr><small>投票済みデバイス数: ${votedCount}</small>`;
   }
+
+  html += `<hr><small>リセット回数: ${data.resetCount || 0}</small>`; // ★表示追加
   
   document.getElementById('results').innerHTML = html;
 }
 
+// --------------------------------------------
+// Slave初期化（★ リセット検知追加）
+// --------------------------------------------
 function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
   
-  ref.once('value', snap => {
+  ref.once('value', async snap => {
     const data = snap.val();
-    if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
-      ref.remove();
-      alert("サーバーがリセットされました．サーバーを再度作成してください．");
-      window.location.href = "index.html";
+    if (!data) return;
+
+    const firebaseReset = data.resetCount || 0;
+    const localResetKey = `reset_${id}`;
+    const localReset = parseInt(localStorage.getItem(localResetKey) || "0", 10);
+
+    // ★差分検知
+    if (firebaseReset !== localReset) {
+      console.log("リセット検知: LocalとFirebaseのresetCount不一致", { firebaseReset, localReset });
+      deleteLocalStorage(`voted_${id}`);
+      setLocalStorage(localResetKey, firebaseReset);
+      location.reload();
       return;
     }
   });
-  
-  let previousTotalVotes = null;
-  let hadFingerprints = false;
   
   ref.on('value', snap => {
     const data = snap.val();
@@ -137,29 +180,13 @@ function initSlave(id) {
       document.getElementById('results').textContent = "";
       return;
     }
-    
-    const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
-    const hasFingerprints = data.votedFingerprints && 
-                           Object.keys(data.votedFingerprints).length > 0;
-    
-    const votesDecreased = previousTotalVotes !== null && 
-                          currentTotalVotes < previousTotalVotes;
-    const fingerprintsCleared = hadFingerprints && !hasFingerprints;
-    
-    if (votesDecreased || fingerprintsCleared) {
-      console.log('リセット検知:', { votesDecreased, fingerprintsCleared });
-      deleteLocalStorage(`voted_${id}`);  // LocalStorageをクリア
-      location.reload();
-      return;
-    }
-    
-    previousTotalVotes = currentTotalVotes;
-    hadFingerprints = hasFingerprints;
-    
     renderSlave(data, id);
   });
 }
 
+// --------------------------------------------
+// Slaveレンダリング
+// --------------------------------------------
 function renderSlave(data, id) {
   const alreadyVotedMessage = document.getElementById('already-voted-message');
   const shouldHideButtons = alreadyVotedMessage !== null;
@@ -191,10 +218,8 @@ function renderSlave(data, id) {
       return;
     }
     
-    // 二重チェック：LocalStorageのみで投票済み判定
     const localStorageKey = `voted_${id}`;
     const alreadyVoted = localStorage.getItem(localStorageKey) === 'true';
-
     if (alreadyVoted) {
       alert('既に投票済みです');
       return;
@@ -208,19 +233,16 @@ function renderSlave(data, id) {
         arr[idx] = (arr[idx]||0)+1;
         return arr;
       });
-      
       await ref.update({ lastVoted: Date.now() });
-      await recordFingerprint(id, window.deviceFingerprint);
-      
-      // LocalStorageに記録
+
+      // ★ FirebaseのresetCountを取得してLocalにも保存
+      const snap = await ref.once('value');
+      const firebaseReset = snap.val().resetCount || 0;
+      setLocalStorage(`reset_${id}`, firebaseReset);
+
       setLocalStorage(`voted_${id}`, 'true');
-      
-      const buttons = document.querySelectorAll('.vote-btn');
-      buttons.forEach(btn => btn.style.display = 'none');
-      
-      showAlreadyVotedMessage();
+      document.querySelectorAll('.vote-btn').forEach(btn => btn.style.display = 'none');
       alert('投票が完了しました！');
-      
     } catch (error) {
       console.error('投票エラー:', error);
       alert('投票に失敗しました。もう一度お試しください。');
