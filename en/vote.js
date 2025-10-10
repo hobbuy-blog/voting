@@ -228,7 +228,7 @@ function renderSlave(data, id) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
     }
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; text-decoration: bold; font-family: Courier; color: #f20;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
   }
 
   document.getElementById('results').innerHTML = html;
