@@ -60,7 +60,7 @@ function initMaster(id) {
         labels: defaultLabels,
         votes: [0,0,0,0],
         lastVoted: Date.now(),
-        resetCount: 0, // ★追加: リセット回数を記録
+        resetCount: 0, // リセット回数を記録
       });
     } else if (data.resetCount === undefined) {
       ref.update({ resetCount: 0 });

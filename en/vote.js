@@ -1,5 +1,5 @@
 // ============================================
-// vote-en.js - English Version with Fingerprint + Reset Detection
+// vote-en.js - (English Version with Fingerprint + Reset Detection)
 // ============================================
 
 // 1. Firebase initialization
