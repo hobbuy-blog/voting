@@ -1,5 +1,5 @@
 // ============================================
-// vote-en.js - English Version with Fingerprint
+// vote-en.js - English Version with Fingerprint + Reset Detection
 // ============================================
 
 // 1. Firebase initialization
@@ -18,7 +18,7 @@ const db = firebase.database();
 
 const defaultLabels = ["1", "2", "3", "4"];
 
-// LocalStorage削除
+// Utility: delete localStorage
 function deleteLocalStorage(name) {
   try {
     localStorage.removeItem(name);
@@ -27,13 +27,22 @@ function deleteLocalStorage(name) {
   }
 }
 
+// Utility: set localStorage
+function setLocalStorage(name, value) {
+  try {
+    localStorage.setItem(name, value);
+  } catch (e) {
+    console.error('LocalStorage write error:', e);
+  }
+}
+
 // ============================================
-// Master (管理者) 画面の初期化
+// Master screen initialization
 // ============================================
 function initMaster(id) {
   const ref = db.ref(`votes/${id}`);
   
-  // Check for 3-day expiration and auto-delete
+  // 3-day expiration check
   ref.once('value', snap => {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
@@ -42,24 +51,26 @@ function initMaster(id) {
       window.location.href = "index.html";
       return;
     }
-    // Create initial data if not exists
     if (!data) {
       ref.set({
         labels: defaultLabels,
         votes: [0,0,0,0],
-        lastVoted: Date.now()
+        lastVoted: Date.now(),
+        resetCount: 0
       });
+    } else if (data.resetCount === undefined) {
+      ref.update({ resetCount: 0 });
     }
   });
 
-  // Real-time monitoring
+  // Live monitoring
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) return;
     renderMaster(data, id);
   });
 
-  // Label update form
+  // Label editing
   document.getElementById('labelForm').onsubmit = e => {
     e.preventDefault();
     const labels = [];
@@ -69,18 +80,25 @@ function initMaster(id) {
     ref.update({labels});
   };
 
-  // Reset votes function
-  window.resetVotes = () => {
+  // Reset votes (increment resetCount)
+  window.resetVotes = async () => {
     if (confirm('Reset vote counts?\n※Fingerprint records will also be cleared')) {
-      ref.update({
+      const snapshot = await ref.once('value');
+      const currentResetCount = (snapshot.val()?.resetCount || 0) + 1;
+
+      await ref.update({
         votes: [0,0,0,0],
-        votedFingerprints: null
+        votedFingerprints: null,
+        resetCount: currentResetCount,
+        lastVoted: Date.now()
       });
+
+      alert('Votes have been reset.');
     }
   };
 }
 
-// HTML escape function
+// Escape HTML
 function escapeHtml(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/[&<>"']/g, function(match) {
@@ -95,7 +113,7 @@ function escapeHtml(str) {
   });
 }
 
-// Render Master screen
+// Render Master
 function renderMaster(data, id) {
   const labelsDiv = document.getElementById('labels');
   labelsDiv.innerHTML = '';
@@ -105,164 +123,149 @@ function renderMaster(data, id) {
   }
   
   let html = "<h3>Voting Status</h3>";
-  
-  // Calculate total votes
   const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
   
   for (let i=0; i<4; ++i) {
     const voteCount = data.votes[i] || 0;
     let percentageText = '';
-    
-    // Show percentage only if there is at least 1 vote
     if (totalVotes > 0) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
     }
-    
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
   }
   
-  // Display voted device count
   if (data.votedFingerprints) {
     const votedCount = Object.keys(data.votedFingerprints).length;
-    html += `<hr><small>Voted devices: ${votedCount}</small>`;
+    html += `<hr><small>Voted devices: ${votedCount}</small><br>`;
   }
+
+  html += `<small>Reset count: ${data.resetCount || 0}</small>`;
   
   document.getElementById('results').innerHTML = html;
 }
 
 // ============================================
-// Slave (投票者) 画面の初期化
+// Slave screen initialization
 // ============================================
-function initSlave(id) {
+async function initSlave(id) {
   const ref = db.ref(`votes/${id}`);
-  
-  // Check for 3-day expiration and auto-delete
-  ref.once('value', snap => {
-    const data = snap.val();
-    if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
-      ref.remove();
-      alert("The server had reset. Please ask the host to create again.");
-      window.location.href = "index.html";
-      return;
-    }
-  });
 
-  // Reset detection variables
+  // Load reset count from Firebase
+  const snapshot = await ref.once('value');
+  const data = snapshot.val();
+  if (!data) {
+    alert("Invalid voting ID.");
+    return;
+  }
+
+  const firebaseResetCount = data.resetCount || 0;
+  const localResetCountKey = `reset_${id}`;
+  const localResetCount = parseInt(localStorage.getItem(localResetCountKey) || "0");
+
+  // Check reset difference
+  if (firebaseResetCount !== localResetCount) {
+    console.log("Reset detected (by reset count). Clearing vote record...");
+    deleteLocalStorage(`voted_${id}`);
+    setLocalStorage(localResetCountKey, firebaseResetCount);
+    location.reload();
+    return;
+  }
+
+  // Save Firebase resetCount locally
+  setLocalStorage(localResetCountKey, firebaseResetCount);
+
+  // Continue normal listener
   let previousTotalVotes = null;
   let hadFingerprints = false;
 
   ref.on('value', snap => {
     const data = snap.val();
     if (!data) {
-      document.getElementById('choices').textContent = "Voting ID is invalid.";
+      document.getElementById('choices').textContent = "Invalid voting ID.";
       document.getElementById('results').textContent = "";
       return;
     }
-    
-    // Get current state
+
+    // Check for live reset (votes decreased or cleared)
     const currentTotalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
-    const hasFingerprints = data.votedFingerprints && 
-                           Object.keys(data.votedFingerprints).length > 0;
-    
-    // Reset detection: votes decreased or fingerprints cleared
-    const votesDecreased = previousTotalVotes !== null && 
-                          currentTotalVotes < previousTotalVotes;
+    const hasFingerprints = data.votedFingerprints && Object.keys(data.votedFingerprints).length > 0;
+
+    const votesDecreased = previousTotalVotes !== null && currentTotalVotes < previousTotalVotes;
     const fingerprintsCleared = hadFingerprints && !hasFingerprints;
-    
+
     if (votesDecreased || fingerprintsCleared) {
-      console.log('Reset detected:', { votesDecreased, fingerprintsCleared });
-      deleteLocalStorage(`voted_${id}`);  // Clear LocalStorage
+      console.log('Live reset detected. Clearing local vote record...');
+      deleteLocalStorage(`voted_${id}`);
       location.reload();
       return;
     }
-    
-    // Record current state
+
     previousTotalVotes = currentTotalVotes;
     hadFingerprints = hasFingerprints;
-    
-    // Normal rendering
+
     renderSlave(data, id);
   });
 }
 
-// Render Slave screen
+// Render Slave
 function renderSlave(data, id) {
-  // Control button visibility
   const alreadyVotedMessage = document.getElementById('already-voted-message');
   const shouldHideButtons = alreadyVotedMessage !== null;
-  
+
   let chtml = '';
   for (let i=0; i<4; ++i) {
     const buttonStyle = shouldHideButtons ? 'style="display:none;"' : '';
     chtml += `<button class="vote-btn" ${buttonStyle} onclick="vote(${i})">Vote <b><u>${escapeHtml(data.labels[i]||defaultLabels[i])}</u></b></button><br>`;
   }
   document.getElementById('choices').innerHTML = chtml;
-  
-  // Render voting status with percentage
+
   let html = "<h3>Voting Status</h3>";
-  
-  // Calculate total votes
   const totalVotes = data.votes.reduce((sum, count) => sum + (count || 0), 0);
-  
+
   for (let i=0; i<4; ++i) {
     const voteCount = data.votes[i] || 0;
     let percentageText = '';
-    
-    // Show percentage only if there is at least 1 vote
     if (totalVotes > 0) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
     }
-    
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20; text-decoration: bold; font-family: Courier;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
   }
-  
+
   document.getElementById('results').innerHTML = html;
-  
-  // Vote function
+
+  // Voting process
   window.vote = async function(idx) {
-    // Check if device fingerprint is ready
     if (!window.deviceFingerprint) {
       alert('Device information is being retrieved. Please wait a moment.');
       return;
     }
-    
-    // Double check: already voted?
-    const alreadyVoted = await hasVotedByFingerprint(id, window.deviceFingerprint);
+
+    const localStorageKey = `voted_${id}`;
+    const alreadyVoted = localStorage.getItem(localStorageKey) === 'true';
     if (alreadyVoted) {
-      alert('You have already voted');
+      alert('You have already voted.');
       return;
     }
-    
-    // Voting process
+
     const ref = db.ref(`votes/${id}`);
-    
+
     try {
-      // Increment vote count
       await ref.child('votes').transaction(arr => {
         if (!arr) arr = [0,0,0,0];
         arr[idx] = (arr[idx]||0)+1;
         return arr;
       });
-      
-      // Update timestamp
+
       await ref.update({ lastVoted: Date.now() });
-      
-      // Record fingerprint
       await recordFingerprint(id, window.deviceFingerprint);
-      
-      // Record in LocalStorage
-      setLocalStorage(`voted_${id}`, 'true');
-      
-      // Update UI (hide buttons)
-      const buttons = document.querySelectorAll('.vote-btn');
-      buttons.forEach(btn => btn.style.display = 'none');
-      
+
+      setLocalStorage(localStorageKey, 'true');
+
+      document.querySelectorAll('.vote-btn').forEach(btn => btn.style.display = 'none');
       showAlreadyVotedMessage();
-      
       alert('Vote completed!');
-      
     } catch (error) {
       console.error('Voting error:', error);
       alert('Failed to vote. Please try again.');
