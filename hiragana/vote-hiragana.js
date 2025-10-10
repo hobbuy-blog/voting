@@ -79,10 +79,9 @@ function initMaster(id) {
           data.resetCount = currentReset + 1; // ★カウントアップ
           return data;
         });
-        alert('投票データをリセットしました');
       } catch (err) {
         console.error('リセットエラー:', err);
-        alert('リセットにしっぱいしました');
+        alert("リセットに失敗しました。")
       }
     }
   };
