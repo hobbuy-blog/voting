@@ -51,7 +51,7 @@ function initMaster(id) {
     const data = snap.val();
     if (data && data.lastVoted && Date.now() - data.lastVoted > 3*24*60*60*1000) {
       ref.remove();
-      alert("サーバーがリセットされました．サーバーを再度さくせいしてください．");
+      alert("サーバーがリセットされました．サーバーを再度作成してください．");
       window.location.href = "index.html";
       return;
     }
@@ -69,7 +69,7 @@ function initMaster(id) {
 
   // リセットボタン
   window.resetVotes = async () => {
-    if (confirm('投票データをリセットしますか？\n※すべての記録がけされます')) {
+    if (confirm('投票データをリセットしますか？\n※すべての記録が消されます')) {
       try {
         await ref.transaction(data => {
           if (!data) return data;

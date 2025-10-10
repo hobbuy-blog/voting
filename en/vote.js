@@ -132,15 +132,13 @@ function renderMaster(data, id) {
       const percentage = (voteCount / totalVotes * 100).toFixed(1);
       percentageText = ` | ${percentage}%`;
     }
-    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; color: #f20;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
+    html += `${escapeHtml(data.labels[i]||defaultLabels[i])} : <span style="font-size: 2em; text-decoration: bold; font-family: Courier; color: #f20;">${escapeHtml(voteCount)}</span>${percentageText}<br>`;
   }
   
   if (data.votedFingerprints) {
     const votedCount = Object.keys(data.votedFingerprints).length;
     html += `<hr><small>Voted devices: ${votedCount}</small><br>`;
   }
-
-  html += `<small>Reset count: ${data.resetCount || 0}</small>`;
   
   document.getElementById('results').innerHTML = html;
 }
