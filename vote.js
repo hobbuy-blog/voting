@@ -3,7 +3,7 @@
 // ============================================
 
 const firebaseConfig = {
-  apiKey: process.env.API_KEY,
+  apiKey: "AIzaSyDav5Vz9EOrXLXJwlR-FmHZAvKTm05yEM0",
   authDomain: "voting-app-c3be3.firebaseapp.com",
   databaseURL: "https://voting-app-c3be3-default-rtdb.firebaseio.com",
   projectId: "voting-app-c3be3",
