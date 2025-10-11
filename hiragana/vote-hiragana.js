@@ -4,7 +4,7 @@
 
 // 1. Firebase初期化
 const firebaseConfig = {
-  apiKey: "AIzaSyDav5Vz9EOrXLXJwlR-FmHZAvKTm05yEM0",
+  apiKey: process.env.API_KEY,
   authDomain: "voting-app-c3be3.firebaseapp.com",
   databaseURL: "https://voting-app-c3be3-default-rtdb.firebaseio.com",
   projectId: "voting-app-c3be3",
