@@ -17,76 +17,115 @@
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';</script>
 </head>
 <body>
-    <div class="app-container">
-        <header class="ribbon-bar">
-            <div class="tabs-header">
-                <button class="tab-link active" onclick="openTab(event, 'tab-home')">Home</button>
-                <button class="tab-link" onclick="openTab(event, 'tab-insert')">Insert</button>
-                <button class="tab-link" onclick="openTab(event, 'tab-design')">Design</button>
-                <button class="tab-link" onclick="openTab(event, 'tab-animation')">Animation</button>
-                <button class="tab-link" onclick="openTab(event, 'tab-slideshow')">Slideshow</button>
+    <div id="app-container" class="app-container">
+        <header id="ribbon" class="ribbon-bar">
+            <div class="tabs tabs-header">
+                <button class="tab-link active" onclick="openTab(event, 'home-tab')">Home</button>
+                <button class="tab-link" onclick="openTab(event, 'insert-tab')">Insert</button>
+                <button class="tab-link" onclick="openTab(event, 'format-tab')">Format</button>
+                <button class="tab-link" onclick="openTab(event, 'paragraph-tab')">Paragraph</button>
+                <button class="tab-link" onclick="openTab(event, 'arrange-tab')">Arrange</button>
+                <button class="tab-link" onclick="openTab(event, 'media-tab')">Media</button>
+                <button class="tab-link" onclick="openTab(event, 'design-tab')">Design</button>
+                <button class="tab-link" onclick="openTab(event, 'anim-tab')">Animation</button>
+                <button class="tab-link" onclick="openTab(event, 'slideshow-tab')">Slideshow</button>
+                <button class="tab-link" onclick="openTab(event, 'review-tab')">Review</button>
+                <button class="tab-link" onclick="openTab(event, 'export-tab')">Export</button>
             </div>
-
-            <div class="tabs-content">
-                <div id="tab-home" class="tab-pane active">
+            
+            <div class="tab-content tabs-content">
+                <div id="home-tab" class="tab-pane active">
                     <div class="tool-group">
-                        <div class="group-title">Add Elements</div>
-                        <button id="add-text-btn" class="tool-btn">✎ Text</button>
-                        <button id="add-rect-btn" class="tool-btn">■ Rectangle</button>
-                        <button id="add-circle-btn" class="tool-btn">● Circle</button>
-                        <button id="add-line-btn" class="tool-btn">― Line</button>
-                    </div>
-                    <div class="tool-group text-only-tools" style="display: none;">
-                        <div class="group-title">Typography & Color</div>
-                        <select id="font-family" class="prop-input" style="width:110px;">
-                            <option value="'Noto Sans JP', sans-serif">Standard</option>
-                            <option value="'Noto Serif JP', serif">Serif</option>
-                            <option value="'M PLUS 1p', sans-serif">M PLUS</option>
-                            <option value="'DotGothic16', sans-serif">Gothic</option>
-                        </select>
-                        <input type="number" id="font-size" class="prop-input" style="width:50px;" value="32">
-                        <input type="color" id="element-color" value="#0f172a" title="Text Color">
-                        <button id="bold-btn" class="tool-btn compact"><b>B</b></button>
-                        <button id="italic-btn" class="tool-btn compact"><i>I</i></button>
-                        <button id="align-left-btn" class="tool-btn compact">▤ L</button>
-                        <button id="align-center-btn" class="tool-btn compact">▥ C</button>
-                        <button id="align-right-btn" class="tool-btn compact">▥ R</button>
+                        <div class="group-title">Slides</div>
+                        <button id="btn-add-slide" class="ribbon-btn tool-btn">New Slide</button>
+                        <button id="btn-del-slide" class="ribbon-btn tool-btn danger-action">Delete Slide</button>
                     </div>
                     <div class="tool-group">
-                        <div class="group-title">Arrange</div>
-                        <button id="bring-front-btn" class="tool-btn">▲ Front</button>
-                        <button id="send-back-btn" class="tool-btn">▼ Back</button>
-                        <button id="duplicate-btn" class="tool-btn">⧉ Duplicate</button>
-                        <button id="delete-btn" class="tool-btn danger">✕ Delete</button>
+                        <div class="group-title">History</div>
+                        <button id="btn-undo" class="ribbon-btn tool-btn">Undo</button>
+                        <button id="btn-redo" class="ribbon-btn tool-btn">Redo</button>
+                    </div>
+                    <div class="tool-group">
+                        <div class="group-title">Edit</div>
+                        <button id="duplicate-btn" class="ribbon-btn tool-btn">⧉ Duplicate</button>
+                        <button id="delete-btn" class="ribbon-btn tool-btn danger">✕ Delete</button>
                     </div>
                     <div class="tool-group">
                         <div class="group-title">Options</div>
                         <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem;">
                             <input type="checkbox" id="snap-toggle" checked> Snap Grid
                         </label>
-                        <button id="run-proofread-btn" class="tool-btn">📊 Statistics</button>
+                    </div>
+                </div>
+                
+                <div id="insert-tab" class="tab-pane">
+                    <div class="tool-group">
+                        <div class="group-title">Basic Shapes</div>
+                        <button id="add-text-btn" class="ribbon-btn tool-btn">✎ Text</button>
+                        <button id="add-rect-btn" class="ribbon-btn tool-btn">■ Rectangle</button>
+                        <button id="add-circle-btn" class="ribbon-btn tool-btn">● Circle</button>
+                        <button id="add-line-btn" class="ribbon-btn tool-btn">― Line</button>
+                    </div>
+                    <div class="tool-group">
+                        <div class="group-title">Advanced Shapes</div>
+                        <button id="insert-arrow-btn" class="ribbon-btn tool-btn">➔ Arrow</button>
+                        <button id="insert-star-btn" class="ribbon-btn tool-btn">★ Star</button>
+                    </div>
+                    <button id="btn-insert-text" style="display:none;"></button>
+                    <button id="btn-insert-rect" style="display:none;"></button>
+                    <button id="btn-insert-circle" style="display:none;"></button>
+                </div>
+
+                <div id="format-tab" class="tab-pane">
+                    <div class="tool-group">
+                        <div class="group-title">Typography</div>
+                        <select id="font-family" class="prop-input ribbon-select" style="width:110px;">
+                            <option value="'Noto Sans JP', sans-serif">Standard</option>
+                            <option value="'Noto Serif JP', serif">Serif</option>
+                            <option value="'M PLUS 1p', sans-serif">M PLUS</option>
+                            <option value="'DotGothic16', sans-serif">Gothic</option>
+                        </select>
+                        <input type="number" id="font-size" class="prop-input" style="width:50px;" value="32">
+                        <button id="bold-btn" class="ribbon-btn tool-btn compact"><b>B</b></button>
+                        <button id="italic-btn" class="ribbon-btn tool-btn compact"><i>I</i></button>
+                    </div>
+                    <div class="tool-group">
+                        <div class="group-title">Color</div>
+                        <input type="color" id="element-color" value="#0f172a" title="Text Color">
                     </div>
                 </div>
 
-                <div id="tab-insert" class="tab-pane">
+                <div id="paragraph-tab" class="tab-pane">
                     <div class="tool-group">
-                        <div class="group-title">Shapes</div>
-                        <button id="insert-arrow-btn" class="tool-btn">➔ Arrow</button>
-                        <button id="insert-star-btn" class="tool-btn">★ Star</button>
+                        <div class="group-title">Alignment</div>
+                        <button id="align-left-btn" class="ribbon-btn tool-btn compact">▤ Left</button>
+                        <button id="align-center-btn" class="ribbon-btn tool-btn compact">▥ Center</button>
+                        <button id="align-right-btn" class="ribbon-btn tool-btn compact">▥ Right</button>
                     </div>
+                </div>
+
+                <div id="arrange-tab" class="tab-pane">
+                    <div class="tool-group">
+                        <div class="group-title">Order</div>
+                        <button id="bring-front-btn" class="ribbon-btn tool-btn">▲ Front</button>
+                        <button id="send-back-btn" class="ribbon-btn tool-btn">▼ Back</button>
+                    </div>
+                </div>
+
+                <div id="media-tab" class="tab-pane">
                     <div class="tool-group">
                         <div class="group-title">Media & Documents</div>
-                        <button id="add-image-btn" class="tool-btn">🖼 Insert Image</button>
-                        <input type="file" id="image-upload" accept="image/*" class="hidden">
-                        <button id="btn-import-pdf" class="tool-btn">🗎 Import PDF Pages</button>
-                        <input type="file" id="pdf-file-input" accept=".pdf" class="hidden">
+                        <button id="add-image-btn" class="ribbon-btn tool-btn">⧉ Insert Image</button>
+                        <input type="file" id="image-upload" accept="image/*" class="hidden" style="display:none;">
+                        <button id="btn-import-pdf" class="ribbon-btn tool-btn">📄 Import PDF Pages</button>
+                        <input type="file" id="pdf-file-input" accept=".pdf" class="hidden" style="display:none;">
                     </div>
                 </div>
 
-                <div id="tab-design" class="tab-pane">
+                <div id="design-tab" class="tab-pane">
                     <div class="tool-group">
                         <div class="group-title">Canvas Resolution Size</div>
-                        <select id="slide-size-select" class="prop-input" style="width:160px; padding:4px; font-weight:bold;">
+                        <select id="slide-size-select" class="prop-input ribbon-select" style="width:160px; padding:4px; font-weight:bold;">
                             <option value="1920x1080" selected>16:9 Landscape (1920 × 1080)</option>
                             <option value="1024x768">4:3 Desktop (1024 × 768)</option>
                         </select>
@@ -107,79 +146,138 @@
                     </div>
                 </div>
 
-                <div id="tab-animation" class="tab-pane">
+                <div id="anim-tab" class="tab-pane">
                     <div class="tool-group">
                         <div class="group-title">Entrance Effects</div>
-                        <button class="tool-btn anim-set-btn" data-anim="none">None</button>
-                        <button class="tool-btn anim-set-btn" data-anim="fade">⟳ Fade In</button>
-                        <button class="tool-btn anim-set-btn" data-anim="pop">💥 Pop Up</button>
-                        <button class="tool-btn anim-set-btn" data-anim="slide-up">↑ Slide Up</button>
+                        <button class="ribbon-btn tool-btn anim-set-btn" data-anim="none">None</button>
+                        <button class="ribbon-btn tool-btn anim-set-btn" data-anim="fade">⟳ Fade In</button>
+                        <button class="ribbon-btn tool-btn anim-set-btn" data-anim="pop">✦ Pop Up</button>
+                        <button class="ribbon-btn tool-btn anim-set-btn" data-anim="slide-up">↑ Slide Up</button>
                     </div>
                 </div>
 
-                <div id="tab-slideshow" class="tab-pane">
+                <div id="slideshow-tab" class="tab-pane">
                     <div class="tool-group">
                         <div class="group-title">Run Presentation</div>
-                        <button id="present-btn" class="tool-btn primary">🖵 Play From Current</button>
+                        <button id="present-btn" class="ribbon-btn tool-btn primary">▻ Play From Current</button>
+                        <button id="btn-present" style="display:none;"></button>
                     </div>
+                </div>
+
+                <div id="review-tab" class="tab-pane">
+                    <div class="tool-group">
+                        <div class="group-title">Analysis</div>
+                        <button id="run-proofread-btn" class="ribbon-btn tool-btn">▤ Statistics</button>
+                    </div>
+                </div>
+
+                <div id="export-tab" class="tab-pane">
                     <div class="tool-group">
                         <div class="group-title">File Export</div>
-                        <button id="export-pdf-btn" class="tool-btn">🖺 Export PDF</button>
-                        <button id="export-pptx-btn" class="tool-btn">📊 Export PPTX</button>
+                        <button id="export-pdf-btn" class="ribbon-btn tool-btn">📄 Export PDF</button>
+                        <button id="export-pptx-btn" class="ribbon-btn tool-btn">▤ Export PPTX</button>
+                        <button id="btn-export-pdf" style="display:none;"></button>
+                        <button id="btn-export-pptx" style="display:none;"></button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <div class="workspace">
-            <aside class="sidebar">
+        <div id="main-workspace" class="workspace">
+            <aside id="sidebar" class="sidebar">
                 <div class="sidebar-header">Slides Deck</div>
-                <div id="slide-list"></div>
-                <button id="add-slide-btn" class="sidebar-action-btn">+ New Slide</button>
-                <button id="delete-slide-btn" class="sidebar-action-btn danger-btn">✕ Delete Current</button>
-                
+                <div id="thumb-container"></div>
+                <div id="slide-list" style="display:none;"></div>
+                <button id="add-slide-btn" style="display:none;"></button>
+                <button id="delete-slide-btn" style="display:none;"></button>
                 <div id="proofread-result" style="margin-top:20px; font-size:0.75rem; color:var(--text-muted); line-height:1.4;"></div>
             </aside>
 
             <main id="canvas-container" class="canvas-area-wrapper">
-                <div id="canvas" class="canvas-area">
-                    </div>
-
+                <div id="canvas-wrapper">
+                    <div id="canvas" class="slide-canvas canvas-area">
+                        </div>
+                </div>
+                
                 <div class="zoom-indicator">
                     <button id="zoom-out" title="Zoom Out"> ― </button>
                     <span id="zoom-val">100%</span>
                     <button id="zoom-in" title="Zoom In"> + </button>
                     <button id="zoom-reset" style="font-size:0.68rem; padding:2px 4px;">Reset</button>
                 </div>
+
+                <div id="floating-menu" class="hidden">
+                    <button id="btn-layer-up" title="Front">▲ Front</button>
+                    <button id="btn-layer-down" title="Back">▼ Back</button>
+                    <button id="btn-delete-element" class="danger" title="Delete">✕ Delete</button>
+                    
+                    <input type="color" id="float-color" value="#0f172a" style="display:none;">
+                    <select id="float-anim-select" style="display:none;">
+                        <option value="none">No Anim</option>
+                    </select>
+                    <input type="number" id="anim-delay" style="display:none;" value="0">
+                    <button id="float-delete-btn" style="display:none;">✕</button>
+                </div>
             </main>
 
-            <aside class="properties-panel">
+            <aside id="properties-panel" class="properties-panel">
                 <div class="panel-header">Properties Panel</div>
                 <div id="props-no-select" class="panel-empty">Select any object to modify properties</div>
-                <div id="props-content" class="panel-main hidden">
-                    <div class="prop-section">
+                <div id="props-content" class="panel-body">
+                    <div id="common-props" class="prop-section">
                         <div class="section-title">Geometry Mapping</div>
-                        <div class="prop-row"><label>X Position</label><input type="number" id="prop-x" class="prop-input"></div>
-                        <div class="prop-row"><label>Y Position</label><input type="number" id="prop-y" class="prop-input"></div>
-                        <div class="prop-row"><label>Width (W)</label><input type="number" id="prop-w" class="prop-input"></div>
-                        <div class="prop-row"><label>Height (H)</label><input type="number" id="prop-h" class="prop-input"></div>
+                        <div class="prop-row">
+                            <label>X Position</label>
+                            <input type="number" id="prop-left" class="prop-input">
+                            <input type="number" id="prop-x" style="display:none;">
+                        </div>
+                        <div class="prop-row">
+                            <label>Y Position</label>
+                            <input type="number" id="prop-top" class="prop-input">
+                            <input type="number" id="prop-y" style="display:none;">
+                        </div>
+                        <div class="prop-row">
+                            <label>Width (W)</label>
+                            <input type="number" id="prop-width" class="prop-input">
+                            <input type="number" id="prop-w" style="display:none;">
+                        </div>
+                        <div class="prop-row">
+                            <label>Height (H)</label>
+                            <input type="number" id="prop-height" class="prop-input">
+                            <input type="number" id="prop-h" style="display:none;">
+                        </div>
                     </div>
+
                     <div id="text-props" class="prop-section hidden">
                         <div class="section-title">Text Options</div>
+                        <div class="prop-row">
+                            <label>Font</label>
+                            <select id="prop-fontfamily" class="prop-input">
+                                <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
+                                <option value="'Noto Serif JP', serif">Noto Serif JP</option>
+                                <option value="'M PLUS 1p', sans-serif">M PLUS 1p</option>
+                                <option value="'DotGothic16', sans-serif">DotGothic16</option>
+                                <option value="'Kaisei Tokumin', serif">Kaisei Tokumin</option>
+                                <option value="'Kiwi Maru', serif">Kiwi Maru</option>
+                                <option value="'RocknRoll One', sans-serif">RocknRoll One</option>
+                                <option value="'Yuji Syuku', serif">Yuji Syuku</option>
+                            </select>
+                        </div>
                         <div class="prop-row">
                             <label>Size (px)</label>
                             <input type="number" id="prop-fontsize" class="prop-input">
                         </div>
                         <div class="prop-row">
                             <label>Text Color</label>
-                            <input type="color" id="prop-color">
+                            <div class="color-picker-wrapper"><input type="color" id="prop-color"></div>
                         </div>
                     </div>
+
                     <div id="shape-props" class="prop-section hidden">
                         <div class="section-title">Fill Style</div>
                         <div class="prop-row">
                             <label>Background</label>
-                            <input type="color" id="prop-fill">
+                            <div class="color-picker-wrapper"><input type="color" id="prop-fill"></div>
                         </div>
                         <div class="prop-row">
                             <label>Opacity</label>
@@ -189,18 +287,6 @@
                     </div>
                 </div>
             </aside>
-        </div>
-
-        <div id="floating-menu" class="hidden">
-            <input type="color" id="float-color" value="#0f172a" title="Quick Color Picker">
-            <select id="float-anim-select" class="prop-input" style="width:85px; font-size:0.68rem; height:22px;">
-                <option value="none">No Anim</option>
-                <option value="fade">Fade</option>
-                <option value="pop">Pop</option>
-                <option value="slide-up">SlideUp</option>
-            </select>
-            <input type="number" id="anim-delay" class="prop-input" style="width:36px; height:22px; font-size:0.68rem;" value="0" step="0.1" title="Delay (sec)">
-            <button id="float-delete-btn" class="danger" title="Delete Element">✕</button>
         </div>
 
         <div id="presenter-controls" class="hidden">
