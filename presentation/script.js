@@ -1,3 +1,14 @@
+// --- 1. リボンUI タブ切り替え ---
+// JS全体のクラッシュに巻き込まれないよう、DOMContentLoadedの外（最上部）に配置して確実にグローバル化
+window.openTab = function(evt, tabName) {
+    const panes = document.querySelectorAll(".tab-pane");
+    panes.forEach(p => p.classList.remove("active"));
+    const links = document.querySelectorAll(".tab-link");
+    links.forEach(l => l.classList.remove("active"));
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+};
+
 // --- アプリケーション状態管理 ---
 let slides = [{ html: "", bg: "", undoStack: [], redoStack: [] }];
 let currentSlideIndex = 0;
@@ -10,16 +21,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('canvas');
     const floatingMenu = document.getElementById('floating-menu');
-    
-    // --- 1. リボンUI タブ切り替え ---
-    window.openTab = function(evt, tabName) {
-        const panes = document.querySelectorAll(".tab-pane");
-        panes.forEach(p => p.classList.remove("active"));
-        const links = document.querySelectorAll(".tab-link");
-        links.forEach(l => l.classList.remove("active"));
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
-    };
 
     // --- 2. 履歴管理 (Undo/Redo) ---
     function saveState() {
@@ -32,8 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUndoRedoUI() {
-        document.getElementById('undo-btn').disabled = slides[currentSlideIndex].undoStack.length === 0;
-        document.getElementById('redo-btn').disabled = slides[currentSlideIndex].redoStack.length === 0;
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        if (undoBtn) undoBtn.disabled = slides[currentSlideIndex].undoStack.length === 0;
+        if (redoBtn) redoBtn.disabled = slides[currentSlideIndex].redoStack.length === 0;
     }
 
     document.getElementById('undo-btn').onclick = () => {
@@ -64,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.zIndex = maxZIndex++;
         el.setAttribute('data-animation', 'none');
         
-        // iPadでのスクロール暴発防止
+        // iPadでの画面全体のスクロール暴発を防ぐ
         el.style.touchAction = 'none';
         
         ['nw', 'ne', 'sw', 'se'].forEach(dir => {
@@ -91,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inner.innerText = "タップして編集";
         el.appendChild(inner);
         
-        // iPad向け：フォーカスが外れたら履歴保存
+        // iPad向け：文字入力が終わってフォーカスが外れたら状態を保存
         inner.onblur = () => saveState();
     };
 
@@ -121,22 +124,22 @@ document.addEventListener('DOMContentLoaded', () => {
         imageUpload.value = '';
     };
 
-    // --- 4. ポインターインタラクション（iPad/マウス両対応） ---
+    // --- 4. ドラッグ＆リサイズ（iPad/Safariで絶対にエラーを起こさない実装） ---
     function initElementEvents(el) {
         let isDragging = false, isResizing = false;
         let sx, sy, ox, oy, sw, sh, currentDir;
         
-        // iPadでの誤作動を完全に防ぐため、pointerdownを使用
         el.addEventListener('pointerdown', (e) => {
             if(e.target.classList.contains('resize-handle')) return;
             
-            // iPad対応: すでに選択済みのテキストボックスの中身（文字）を触った時は、移動モードにせずキーボードを優先する
-            if(el.classList.contains('text-element') && selectedElement === el && e.target.classList.contains('content-wrapper')) {
+            // 重要(iPad対応): すでに選択状態のテキストボックスの文字部分を触ったときは、
+            // ドラッグモードに移行させず、iPadの標準キーボード立ち上げ動作を100%優先する
+            if(el.classList.contains('text-element') && e.target.classList.contains('content-wrapper')) {
+                selectElement(el);
                 return; 
             }
             
             isDragging = true;
-            el.setPointerCapture(e.pointerId); // タッチ追跡を固定
             saveState();
             sx = e.clientX; sy = e.clientY;
             ox = el.offsetLeft; oy = el.offsetTop;
@@ -148,31 +151,24 @@ document.addEventListener('DOMContentLoaded', () => {
         handles.forEach(h => {
             h.addEventListener('pointerdown', (e) => {
                 isResizing = true;
-                h.setPointerCapture(e.pointerId);
                 saveState();
                 currentDir = h.dataset.direction;
                 sx = e.clientX; sy = e.clientY;
                 sw = el.offsetWidth; sh = el.offsetHeight;
                 ox = el.offsetLeft; oy = el.offsetTop;
-                e.stopPropagation(); e.preventDefault();
-            });
-            
-            h.addEventListener('pointerup', (e) => {
-                isResizing = false;
-                h.releasePointerCapture(e.pointerId);
+                e.stopPropagation();
+                e.preventDefault();
             });
         });
 
-        el.addEventListener('pointermove', (e) => {
-            if(isDragging) {
+        // 移動とリサイズは el ではなく document 全体で監視（指が要素から外れても滑らかに追従）
+        document.addEventListener('pointermove', (e) => {
+            if(isDragging && selectedElement === el) {
                 el.style.left = (ox + (e.clientX - sx)) + 'px';
                 el.style.top = (oy + (e.clientY - sy)) + 'px';
                 updateFloatingMenuPosition();
             }
-        });
-
-        document.addEventListener('pointermove', (e) => {
-            if(isResizing) {
+            if(isResizing && isResizing === true && selectedElement === el) {
                 const dx = e.clientX - sx; const dy = e.clientY - sy;
                 if(currentDir === 'se') {
                     el.style.width = Math.max(40, sw + dx) + 'px'; el.style.height = Math.max(40, sh + dy) + 'px';
@@ -193,15 +189,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        el.addEventListener('pointerup', (e) => {
+        document.addEventListener('pointerup', () => {
             isDragging = false;
-            el.releasePointerCapture(e.pointerId);
+            isResizing = false;
+            currentDir = null;
         });
     }
 
     // --- 5. UI同期とフローティングメニュー ---
     function selectElement(el) {
-        if(selectedElement) selectedElement.classList.remove('selected');
+        if(selectedElement && selectedElement !== el) selectedElement.classList.remove('selected');
         selectedElement = el;
         el.classList.add('selected');
         
@@ -298,17 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 7. インポート（PDFスライド自動コンバート） ---
     const pdfFileInput = document.getElementById('pdf-file-input');
-    document.getElementById('btn-import-pdf').onclick = () => pdfFileInput.click();
-    
-    pdfFileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = async function() {
-            const typedarray = new Uint8Array(this.result);
-            try {
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                alert(`PDF読み込み成功: 全 ${pdf.numPages} ページを独自スライド構造へ自動展開します。`);
-                
-                for (let i = 1; i
+    if (pdfFileInput) {
+        document.getElementById('btn-import-pdf').onclick = () => pdfFileInput.click();
+        pdfFileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
