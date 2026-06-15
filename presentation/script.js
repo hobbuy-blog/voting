@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── 3. ズーム（ボタン・ホイール・ピンチ） ────────────────
     function applyZoom() {
         const isPresenting = document.fullscreenElement || document.webkitFullscreenElement
-                          || document.querySelector('.pseudo-fullscreen');
+                           || document.querySelector('.pseudo-fullscreen');
         if (isPresenting) return;
         if (canvas) {
             canvas.style.transform       = `scale(${currentZoom})`;
@@ -298,6 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const textGroup = document.querySelector('.text-only-tools');
         if (textGroup) textGroup.style.display = isText ? 'flex' : 'none';
 
+        // ★ テキスト選択時にリボンUIを「Home」タブに戻す処理を追加
+        if (isText) {
+            openTab(null, 'tab-home');
+        }
+
         if (style && isText) {
             const fs = document.getElementById('font-size'); if (fs) fs.value = parseInt(style.fontSize) || 32;
             const ec = document.getElementById('element-color'); if (ec) ec.value = rgbToHex(style.color);
@@ -410,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inner) inner.style[key] = val;
         updatePropsPanel(); renderSlideList();
     };
-    bindClick('align-left-btn',   () => patchText('textAlign', 'left'));
+    bindClick('align-left-btn',    () => patchText('textAlign', 'left'));
     bindClick('align-center-btn', () => patchText('textAlign', 'center'));
     bindClick('align-right-btn',  () => patchText('textAlign', 'right'));
     bindClick('bold-btn',   () => { const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) patchText('fontWeight', window.getComputedStyle(inner).fontWeight === '700' ? '400' : '700'); });
