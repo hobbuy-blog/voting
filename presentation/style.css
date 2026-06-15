@@ -23,7 +23,16 @@ body {
 }
 
 /* リボンUI構造 */
-.ribbon { background-color: var(--ribbon-bg); border-bottom: 1px solid var(--ribbon-border); display: flex; flex-direction: column; }
+.ribbon { 
+    background-color: var(--ribbon-bg); 
+    border-bottom: 1px solid var(--ribbon-border); 
+    display: flex; 
+    flex-direction: column; 
+    
+    /* iPad対策：リボンを明確に最前面に引っ張り出す */
+    position: relative;
+    z-index: 1000; 
+}
 .ribbon-tabs { display: flex; padding-left: 24px; background: #ffffff; border-bottom: 1px solid var(--ribbon-border); }
 .tab-link { padding: 10px 24px; border: none; background: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.15s ease; }
 .tab-link:hover { color: var(--text-main); }
