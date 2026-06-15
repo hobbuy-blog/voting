@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Tool Pro MVP</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js"></script>
+</head>
+<body>
+    <header class="toolbar">
+        <div class="logo">✨ DesignPro Pro</div>
+        <div class="tools">
+            <button id="undo-btn" title="戻る (Ctrl+Z)">↩️</button>
+            <button id="redo-btn" title="進む (Ctrl+Y)">↪️</button>
+            <div class="divider"></div>
+            
+            <button id="add-text-btn">📝 テキスト</button>
+            <button id="add-rect-btn">⬛ 図形</button>
+            <button id="add-image-btn">🖼️ 画像</button>
+            <input type="file" id="image-upload" accept="image/*" style="display:none;">
+            <div class="divider"></div>
+            
+            <button id="present-btn" class="accent-btn">▶ プレゼン開始</button>
+            <div class="export-group">
+                <button id="export-pdf-btn" class="primary-btn">📄 PDF</button>
+                <button id="export-pptx-btn" class="primary-btn">📊 PPTX</button>
+            </div>
+            <button id="clear-btn" class="danger-btn">🗑️ 消去</button>
+        </div>
+    </header>
+
+    <main class="workspace">
+        <nav class="slide-nav">
+            <div id="slide-list"></div>
+            <button id="add-slide-btn">+ スライド追加</button>
+        </nav>
+
+        <div class="sidebar">
+            <h3>プロパティ</h3>
+            
+            <div class="property-group" id="color-property" style="display: none;">
+                <label>色:</label>
+                <input type="color" id="element-color" value="#333333">
+            </div>
+
+            <div class="property-group" id="text-properties" style="display: none;">
+                <label>フォント:</label>
+                <select id="font-family">
+                    <option value="Arial">Arial (Sans)</option>
+                    <option value="Times New Roman">Times New Roman (Serif)</option>
+                    <option value="Courier New">Courier New (Mono)</option>
+                </select>
+                <label>サイズ:</label>
+                <input type="number" id="font-size" value="24" min="8" max="144">
+                <label>スタイル:</label>
+                <div class="format-controls">
+                    <button id="bold-btn" title="太字"><b>B</b></button>
+                    <button id="italic-btn" title="斜体"><i>I</i></button>
+                    <button id="underline-btn" title="下線"><u>U</u></button>
+                </div>
+                <label>配置:</label>
+                <div class="format-controls">
+                    <button id="align-left-btn" title="左揃え">左</button>
+                    <button id="align-center-btn" title="中央揃え">中</button>
+                    <button id="align-right-btn" title="右揃え">右</button>
+                </div>
+            </div>
+
+            <div class="property-group" id="image-properties" style="display: none;">
+                <label>編集:</label>
+                <button id="crop-start-btn" class="secondary-btn">✂️ 画像をトリミング</button>
+                <label>明るさ:</label>
+                <input type="range" id="img-brightness" min="0" max="200" value="100">
+                <label>コントラスト:</label>
+                <input type="range" id="img-contrast" min="0" max="200" value="100">
+                <label>彩度:</label>
+                <input type="range" id="img-saturate" min="0" max="200" value="100">
+            </div>
+
+            <div class="property-group">
+                <label>重なり順:</label>
+                <div class="layer-controls">
+                    <button id="bring-front-btn">🔼 前面</button>
+                    <button id="send-back-btn">🔽 背面</button>
+                </div>
+            </div>
+            <button id="delete-btn" class="danger-btn-outline">要素を削除</button>
+        </div>
+        
+        <div class="canvas-container" id="canvas-view">
+            <div id="canvas" class="canvas"></div>
+        </div>
+    </main>
+
+    <div id="presenter-controls" class="hidden">
+        <button id="prev-slide">◀ 前へ</button>
+        <span id="slide-number">1 / 1</span>
+        <button id="next-slide">次へ ▶</button>
+        <button id="exit-present-btn">終了 (Esc)</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
