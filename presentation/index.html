@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesignPro - Ultimate Font & Animation Edition</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Tokumin&family=Kiwi+Maru&family=M+PLUS+1p:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&family=RocknRoll+One&family=Yuji+Syuku&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="ribbon">
+            <div class="ribbon-tabs">
+                <button class="tab-link active" onclick="openTab(event, 'tab-home')">ホーム</button>
+                <button class="tab-link" onclick="openTab(event, 'tab-insert')">挿入</button>
+                <button class="tab-link" onclick="openTab(event, 'tab-animation')">アニメーション</button>
+                <button class="tab-link" onclick="openTab(event, 'tab-export')">ファイル / 出入</button>
+            </div>
+
+            <div class="ribbon-content">
+                <div id="tab-home" class="tab-pane active">
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="undo-btn" title="元に戻す">元に戻す</button>
+                            <button id="redo-btn" title="やり直し">やり直し</button>
+                        </div>
+                        <span class="group-label">履歴</span>
+                    </div>
+                    <div class="ribbon-group" id="text-tools">
+                        <div class="group-buttons">
+                            <select id="font-family">
+                                <option value="'Noto Sans JP', sans-serif">Noto Sans JP (標準ゴシック)</option>
+                                <option value="'Noto Serif JP', serif">Noto Serif JP (標準明朝)</option>
+                                <option value="'M PLUS 1p', sans-serif">M PLUS 1p (モダン角丸)</option>
+                                <option value="'Kaisei Tokumin', serif">解星特ミン (レトロ明朝)</option>
+                                <option value="'RocknRoll One', sans-serif">ロックンロール (躍動ポップ)</option>
+                                <option value="'DotGothic16', sans-serif">DotGothic16 (ドット・ゲーム風)</option>
+                                <option value="'Kiwi Maru', serif">キウイ丸 (やさしい丸文字)</option>
+                                <option value="'Yuji Syuku', serif">栁宿 / Yuji Syuku (本格筆文字)</option>
+                            </select>
+                            <input type="number" id="font-size" value="32" style="width: 60px;">
+                            <button id="bold-btn" class="font-style-btn">B</button>
+                            <button id="italic-btn" class="font-style-btn">I</button>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="element-color" title="色を選択">
+                            </div>
+                        </div>
+                        <span class="group-label">フォント</span>
+                    </div>
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="bring-front-btn">最前面へ</button>
+                            <button id="send-back-btn">最背面へ</button>
+                            <button id="delete-btn" class="danger">削除</button>
+                        </div>
+                        <span class="group-label">配置と編集</span>
+                    </div>
+                </div>
+
+                <div id="tab-insert" class="tab-pane">
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="add-text-btn">テキストボックス</button>
+                            <button id="add-rect-btn">長方形</button>
+                            <button id="add-image-btn">画像アップロード</button>
+                            <input type="file" id="image-upload" accept="image/*" style="display:none;">
+                        </div>
+                        <span class="group-label">基本要素</span>
+                    </div>
+                </div>
+
+                <div id="tab-animation" class="tab-pane">
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button class="anim-set-btn" data-anim="none">なし</button>
+                            <button class="anim-set-btn" data-anim="fade">フェード</button>
+                            <button class="anim-set-btn" data-anim="pop">ポップ</button>
+                            <button class="anim-set-btn" data-anim="slide-up">スライド上昇</button>
+                            <button class="anim-set-btn" data-anim="zoom-in">ズームイン</button>
+                        </div>
+                        <span class="group-label">選択要素へのエフェクト (Canva風)</span>
+                    </div>
+                </div>
+
+                <div id="tab-export" class="tab-pane">
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="btn-import-pdf" class="secondary">PDFからスライド生成</button>
+                            <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
+                            <button id="btn-import-pptx" class="secondary" onclick="alert('PPTXインポート機能のインターフェースです。現状は上位互換であるPDFインポートからの展開を推奨しています。')">PPTXインポート</button>
+                        </div>
+                        <span class="group-label">インポート（読み込み）</span>
+                    </div>
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="present-btn" class="primary">スライドショー開始</button>
+                        </div>
+                        <span class="group-label">プレゼンテーション</span>
+                    </div>
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="export-pdf-btn">PDF形式で保存</button>
+                            <button id="export-pptx-btn">PowerPoint形式 (.pptx)</button>
+                        </div>
+                        <span class="group-label">ファイル出力</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-body">
+            <aside class="slide-navigator">
+                <div id="slide-list"></div>
+                <button id="add-slide-btn">新規スライド</button>
+            </aside>
+
+            <section class="canvas-area">
+                <div id="canvas-container">
+                    <div id="canvas" class="slide-canvas"></div>
+                    
+                    <div id="floating-menu" class="floating-menu hidden">
+                        <div class="float-group text-only-tools">
+                            <button id="float-bold" class="font-style-btn">B</button>
+                            <button id="float-italic" class="font-style-btn">I</button>
+                        </div>
+                        <div class="float-group">
+                            <div class="color-picker-wrapper mini">
+                                <input type="color" id="float-color" title="色">
+                            </div>
+                            <select id="float-anim-select" style="padding: 2px; font-size: 0.75rem;">
+                                <option value="none">アニメなし</option>
+                                <option value="fade">フェード</option>
+                                <option value="pop">ポップ</option>
+                                <option value="slide-up">スライド上昇</option>
+                                <option value="zoom-in">ズームイン</option>
+                            </select>
+                            <button id="float-layer-front" title="前面へ">前面</button>
+                            <button id="float-delete" class="danger" title="削除">削除</button>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+        </div>
+
+        <div id="presenter-controls" class="hidden">
+            <button id="prev-slide">前へ</button>
+            <span id="slide-number">1 / 1</span>
+            <button id="next-slide">次へ</button>
+            <button id="exit-present-btn">終了</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
