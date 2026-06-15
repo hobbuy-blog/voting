@@ -64,6 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.zIndex = maxZIndex++;
         el.setAttribute('data-animation', 'none');
         
+        // iPadでのスクロール暴発防止
+        el.style.touchAction = 'none';
+        
         ['nw', 'ne', 'sw', 'se'].forEach(dir => {
             const handle = document.createElement('div');
             handle.className = `resize-handle ${dir}`;
@@ -84,9 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
         inner.contentEditable = true;
         inner.style.fontSize = "32px";
         inner.style.color = "#0f172a";
-        inner.style.fontFamily = "'Noto Sans JP', sans-serif"; // 初期フォント
-        inner.innerText = "クリックして編集";
+        inner.style.fontFamily = "'Noto Sans JP', sans-serif";
+        inner.innerText = "タップして編集";
         el.appendChild(inner);
+        
+        // iPad向け：フォーカスが外れたら履歴保存
+        inner.onblur = () => saveState();
     };
 
     document.getElementById('add-rect-btn').onclick = () => {
@@ -115,42 +121,57 @@ document.addEventListener('DOMContentLoaded', () => {
         imageUpload.value = '';
     };
 
-    // --- 4. マウスインタラクション（移動・マルチリサイズ） ---
+    // --- 4. ポインターインタラクション（iPad/マウス両対応） ---
     function initElementEvents(el) {
         let isDragging = false, isResizing = false;
         let sx, sy, ox, oy, sw, sh, currentDir;
         
-        el.onmousedown = (e) => {
+        // iPadでの誤作動を完全に防ぐため、pointerdownを使用
+        el.addEventListener('pointerdown', (e) => {
             if(e.target.classList.contains('resize-handle')) return;
-            if(el.classList.contains('text-element') && selectedElement === el && document.activeElement === el.querySelector('.content-wrapper')) return;
+            
+            // iPad対応: すでに選択済みのテキストボックスの中身（文字）を触った時は、移動モードにせずキーボードを優先する
+            if(el.classList.contains('text-element') && selectedElement === el && e.target.classList.contains('content-wrapper')) {
+                return; 
+            }
             
             isDragging = true;
+            el.setPointerCapture(e.pointerId); // タッチ追跡を固定
             saveState();
             sx = e.clientX; sy = e.clientY;
             ox = el.offsetLeft; oy = el.offsetTop;
             selectElement(el);
             e.stopPropagation();
-        };
+        });
 
         const handles = el.querySelectorAll('.resize-handle');
         handles.forEach(h => {
-            h.onmousedown = (e) => {
+            h.addEventListener('pointerdown', (e) => {
                 isResizing = true;
+                h.setPointerCapture(e.pointerId);
                 saveState();
                 currentDir = h.dataset.direction;
                 sx = e.clientX; sy = e.clientY;
                 sw = el.offsetWidth; sh = el.offsetHeight;
                 ox = el.offsetLeft; oy = el.offsetTop;
                 e.stopPropagation(); e.preventDefault();
-            };
+            });
+            
+            h.addEventListener('pointerup', (e) => {
+                isResizing = false;
+                h.releasePointerCapture(e.pointerId);
+            });
         });
 
-        document.addEventListener('mousemove', (e) => {
+        el.addEventListener('pointermove', (e) => {
             if(isDragging) {
                 el.style.left = (ox + (e.clientX - sx)) + 'px';
                 el.style.top = (oy + (e.clientY - sy)) + 'px';
                 updateFloatingMenuPosition();
             }
+        });
+
+        document.addEventListener('pointermove', (e) => {
             if(isResizing) {
                 const dx = e.clientX - sx; const dy = e.clientY - sy;
                 if(currentDir === 'se') {
@@ -172,7 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        document.addEventListener('mouseup', () => { isDragging = false; isResizing = false; });
+        el.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            el.releasePointerCapture(e.pointerId);
+        });
     }
 
     // --- 5. UI同期とフローティングメニュー ---
@@ -185,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const style = window.getComputedStyle(inner);
         const currentAnim = el.getAttribute('data-animation') || 'none';
         
-        // アニメーションUI同期
         document.querySelectorAll('.anim-set-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.anim === currentAnim);
         });
@@ -194,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(el.classList.contains('text-element')) {
             document.getElementById('font-size').value = parseInt(style.fontSize);
             
-            // クォーテーションを考慮した高度なフォントファミリー文字列の同期
             const currentFontClean = style.fontFamily.replace(/['"]/g, '').toLowerCase();
             const fontSelect = document.getElementById('font-family');
             let fontMatched = false;
@@ -228,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         floatingMenu.style.left = Math.max(10, selectedElement.offsetLeft) + 'px';
     }
 
-    canvas.onmousedown = (e) => { if(e.target === canvas) deselect(); };
+    canvas.addEventListener('pointerdown', (e) => { if(e.target === canvas) deselect(); });
     function deselect() { if(selectedElement) selectedElement.classList.remove('selected'); selectedElement = null; floatingMenu.classList.add('hidden'); }
 
     // --- 6. アニメーション＆プロパティ設定変更 ---
@@ -241,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('float-anim-select').value = animName;
         
-        // 即時プレビュー
         selectedElement.classList.remove('play-anim');
         void selectedElement.offsetWidth;
         selectedElement.classList.add('play-anim');
@@ -262,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('float-color').oninput = (e) => { applyColor(e.target.value); document.getElementById('element-color').value = e.target.value; };
     document.getElementById('font-size').oninput = (e) => { if(selectedElement && selectedElement.classList.contains('text-element')) selectedElement.querySelector('.content-wrapper').style.fontSize = e.target.value + 'px'; };
     
-    // フォントファミリー変更の即時反映
     document.getElementById('font-family').onchange = (e) => { 
         if(selectedElement && selectedElement.classList.contains('text-element')) {
             saveState();
@@ -291,171 +311,4 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
                 alert(`PDF読み込み成功: 全 ${pdf.numPages} ページを独自スライド構造へ自動展開します。`);
                 
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 1.5 });
-                    const renderCanvas = document.createElement('canvas');
-                    const context = renderCanvas.getContext('2d');
-                    renderCanvas.width = viewport.width;
-                    renderCanvas.height = viewport.height;
-                    
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    const imgDataUrl = renderCanvas.toDataURL('image/jpeg', 0.85);
-                    
-                    if (i === 1 && slides.length === 1 && slides[0].html === "") {
-                        slides[0].bg = imgDataUrl; slides[0].html = "";
-                    } else {
-                        slides.push({ html: "", bg: imgDataUrl, undoStack: [], redoStack: [] });
-                    }
-                }
-                switchSlide(slides.length - pdf.numPages);
-            } catch (err) {
-                console.error(err);
-                alert("PDFのパースに失敗しました。ファイル構造を確認してください。");
-            }
-        };
-        reader.readAsArrayBuffer(file);
-        pdfFileInput.value = '';
-    };
-
-    // --- 8. スライド＆ナビゲーション管理 ---
-    const slideList = document.getElementById('slide-list');
-    function renderSlides() {
-        slideList.innerHTML = "";
-        slides.forEach((s, i) => {
-            const div = document.createElement('div');
-            div.className = `slide-thumb ${i === currentSlideIndex ? 'active' : ''}`;
-            if (s.bg) div.style.backgroundImage = `url(${s.bg})`;
-            div.onclick = () => switchSlide(i);
-            slideList.appendChild(div);
-        });
-    }
-
-    function switchSlide(idx) {
-        slides[currentSlideIndex].html = canvas.innerHTML;
-        slides[currentSlideIndex].bg = canvas.style.backgroundImage ? canvas.style.backgroundImage.slice(5, -2) : "";
-        
-        currentSlideIndex = idx;
-        canvas.innerHTML = slides[idx].html;
-        canvas.style.backgroundImage = slides[idx].bg ? `url(${slides[idx].bg})` : "";
-        
-        reattachEvents();
-        renderSlides();
-    }
-
-    document.getElementById('add-slide-btn').onclick = () => {
-        slides[currentSlideIndex].html = canvas.innerHTML;
-        slides[currentSlideIndex].bg = canvas.style.backgroundImage ? canvas.style.backgroundImage.slice(5, -2) : "";
-        slides.push({ html: "", bg: "", undoStack: [], redoStack: [] });
-        switchSlide(slides.length - 1);
-    };
-
-    function reattachEvents() {
-        Array.from(canvas.children).forEach(el => { if(el.id !== 'floating-menu') initElementEvents(el); });
-        deselect();
-    }
-
-    // --- 9. 各種高度エクスポート (PDF / PPTX) ---
-    document.getElementById('export-pdf-btn').onclick = async () => {
-        deselect();
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('l', 'px', [960, 540]);
-        const originalIndex = currentSlideIndex;
-        slides[currentSlideIndex].html = canvas.innerHTML;
-
-        for(let i=0; i<slides.length; i++) {
-            if(i > 0) pdf.addPage([960, 540], 'l');
-            canvas.innerHTML = slides[i].html;
-            canvas.style.backgroundImage = slides[i].bg ? `url(${slides[i].bg})` : "";
-            const cap = await html2canvas(canvas, { scale: 2, useCORS: true });
-            pdf.addImage(cap.toDataURL('image/png'), 'PNG', 0, 0, 960, 540);
-        }
-        pdf.save("presentation.pdf");
-        switchSlide(originalIndex);
-    };
-
-    document.getElementById('export-pptx-btn').onclick = () => {
-        deselect();
-        const pptx = new PptxGenJS();
-        pptx.layout = 'LAYOUT_16x9';
-        const originalIndex = currentSlideIndex;
-        slides[currentSlideIndex].html = canvas.innerHTML;
-
-        slides.forEach((s, i) => {
-            const slide = pptx.addSlide();
-            if(s.bg) slide.addImage({ data: s.bg, x: 0, y: 0, w: "100%", h: "100%" });
-            
-            const temp = document.createElement('div');
-            temp.innerHTML = s.html;
-            Array.from(temp.children).forEach(el => {
-                const inner = el.querySelector('.content-wrapper');
-                if(!inner) return;
-                const x = (parseInt(el.style.left)/960)*100 + "%";
-                const y = (parseInt(el.style.top)/540)*100 + "%";
-                const w = (parseInt(el.style.width)/960)*100 + "%";
-                const h = (parseInt(el.style.height)/540)*100 + "%";
-                
-                if(el.classList.contains('text-element')) {
-                    // PPTX出力向けにフォント名を適切にクレンジング
-                    const rawFont = inner.style.fontFamily || 'Arial';
-                    const fontFaceClean = rawFont.split(',')[0].replace(/['"]/g, '').trim();
-                    
-                    slide.addText(inner.innerText, { 
-                        x, y, w, h, fontSize: parseInt(inner.style.fontSize) || 24, 
-                        color: rgbToHex(inner.style.color).replace('#', ''), 
-                        fontFace: fontFaceClean
-                    });
-                } else if(el.classList.contains('image-element')) {
-                    slide.addImage({ data: inner.src, x, y, w, h });
-                } else if(el.classList.contains('rect-element')) {
-                    slide.addShape(pptx.ShapeType.rect, { x, y, w, h, fill: { color: rgbToHex(inner.style.backgroundColor).replace('#', '') } });
-                }
-            });
-        });
-        pptx.writeFile({ fileName: "presentation.pptx" });
-        switchSlide(originalIndex);
-    };
-
-    // --- 10. スライドショー＆Canva風マルチアニメーション一斉制御 ---
-    document.getElementById('present-btn').onclick = () => document.querySelector(".canvas-area").requestFullscreen();
-    
-    document.onfullscreenchange = () => {
-        const controls = document.getElementById('presenter-controls');
-        if(document.fullscreenElement) {
-            controls.classList.remove('hidden'); deselect();
-            document.getElementById('slide-number').innerText = `${currentSlideIndex + 1} / ${slides.length}`;
-            playSlideAnimations();
-        } else {
-            controls.classList.add('hidden');
-            Array.from(canvas.children).forEach(el => el.classList.remove('play-anim'));
-        }
-    };
-
-    function playSlideAnimations() {
-        Array.from(canvas.children).forEach(el => {
-            el.classList.remove('play-anim');
-            void el.offsetWidth; // リフローによる再トリガー
-            el.classList.add('play-anim');
-        });
-    }
-
-    document.getElementById('next-slide').onclick = () => { 
-        if (currentSlideIndex < slides.length - 1) { switchSlide(currentSlideIndex + 1); playSlideAnimations(); }
-        document.getElementById('slide-number').innerText = `${currentSlideIndex + 1} / ${slides.length}`;
-    };
-    document.getElementById('prev-slide').onclick = () => { 
-        if (currentSlideIndex > 0) { switchSlide(currentSlideIndex - 1); playSlideAnimations(); }
-        document.getElementById('slide-number').innerText = `${currentSlideIndex + 1} / ${slides.length}`;
-    };
-    document.getElementById('exit-present-btn').onclick = () => document.exitFullscreen();
-
-    function rgbToHex(rgb) {
-        if (!rgb || rgb === "transparent") return "#000000";
-        let match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-        if (!match) return '#000000';
-        return "#" + (("0" + parseInt(match[1]).toString(16)).slice(-2)) + (("0" + parseInt(match[2]).toString(16)).slice(-2)) + (("0" + parseInt(match[3]).toString(16)).slice(-2));
-    }
-
-    renderSlides();
-    updateUndoRedoUI();
-});
+                for (let i = 1; i
