@@ -19,13 +19,32 @@
     <div id="app">
         <header class="ribbon">
             <div class="ribbon-tabs">
+                <button class="tab-link" onclick="openTab(event, 'tab-file')">File</button>
                 <button class="tab-link active" onclick="openTab(event, 'tab-home')">Home</button>
                 <button class="tab-link" onclick="openTab(event, 'tab-insert')">Insert</button>
                 <button class="tab-link" onclick="openTab(event, 'tab-animation')">Animation</button>
-                <button class="tab-link" onclick="openTab(event, 'tab-export')">FailIO</button>
+                <button class="tab-link" onclick="openTab(event, 'tab-export')">Presentation</button>
             </div>
 
             <div class="ribbon-content">
+                <div id="tab-file" class="tab-pane">
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="btn-import-pdf" class="secondary">Import PDF</button>
+                            <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
+                            <button id="btn-import-pptx" class="secondary" onclick="alert('Importing PPTX file is now developing. For this time, please import PDF instead of PPTX.')">Import PPTX</button>
+                        </div>
+                        <span class="group-label">Import</span>
+                    </div>
+                    <div class="ribbon-group">
+                        <div class="group-buttons">
+                            <button id="export-pdf-btn">Export PDF</button>
+                            <button id="export-pptx-btn">Export PPTX</button>
+                        </div>
+                        <span class="group-label">Export</span>
+                    </div>
+                </div>
+        
                 <div id="tab-home" class="tab-pane active">
                     <div class="ribbon-group">
                         <div class="group-buttons">
@@ -93,24 +112,9 @@
                 <div id="tab-export" class="tab-pane">
                     <div class="ribbon-group">
                         <div class="group-buttons">
-                            <button id="btn-import-pdf" class="secondary">Import PDF</button>
-                            <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
-                            <button id="btn-import-pptx" class="secondary" onclick="alert('Importing PPTX file is now developing. For this time, please import PDF instead of PPTX.')">Import PPTX</button>
-                        </div>
-                        <span class="group-label">Import</span>
-                    </div>
-                    <div class="ribbon-group">
-                        <div class="group-buttons">
                             <button id="present-btn" class="primary">Slideshow</button>
                         </div>
                         <span class="group-label">Presentation</span>
-                    </div>
-                    <div class="ribbon-group">
-                        <div class="group-buttons">
-                            <button id="export-pdf-btn">Export PDF</button>
-                            <button id="export-pptx-btn">Export PPTX</button>
-                        </div>
-                        <span class="group-label">Export</span>
                     </div>
                 </div>
             </div>
