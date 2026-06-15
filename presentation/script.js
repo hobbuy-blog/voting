@@ -301,6 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // ★ テキスト選択時にリボンUIを「Home」タブに戻す処理を追加
         if (isText) {
             openTab(null, 'tab-home');
+            const homeButton = document.querySelector("button[onclick*='tab-home']");
+            if (homeButton) {
+              homeButton.click(); // JavaScriptからクリックイベントを強制発生させる
+            }
         }
 
         if (style && isText) {
