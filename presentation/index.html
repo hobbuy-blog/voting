@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDMincho&family=BIZ+UDPMincho&family=DotGothic16&family=Kaisei+Tokumin&family=Kiwi+Maru&family=M+PLUS+1p:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&family=RocknRoll+One&family=Yuji+Syuku&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Tokumin&family=Kiwi+Maru&family=M+PLUS+1p:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&family=RocknRoll+One&family=Yuji+Syuku&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js"></script>
@@ -18,7 +18,6 @@
 <body>
 <div id="app">
 
-    <!-- カラーパレット フロートウィンドウ -->
     <div id="color-picker-float" class="color-float hidden">
         <div class="color-float-header">
             <span id="color-float-title">Color</span>
@@ -35,65 +34,51 @@
     <header class="ribbon">
         <div class="ribbon-tabs">
             <div class="ribbon-logo">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <rect width="18" height="18" rx="4" fill="#2563eb"/>
-                    <rect x="3" y="3" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
-                    <rect x="10" y="3" width="5" height="5" rx="1" fill="white" opacity="0.55"/>
-                    <rect x="3" y="10" width="5" height="5" rx="1" fill="white" opacity="0.55"/>
-                    <rect x="10" y="10" width="5" height="5" rx="1" fill="#93c5fd" opacity="0.9"/>
-                </svg>
-                <span>Leaslide</span>
+                <span style="color:#2563eb; font-weight:bold; font-size:16px;">Leaslide</span>
             </div>
-            <button class="tab-link" id="tab-btn-file" onclick="openTab(event,'tab-file')">File</button>
-            <button class="tab-link active" id="tab-btn-home" onclick="openTab(event,'tab-home')">Home</button>
+            <button class="tab-link" onclick="openTab(event,'tab-file')">File</button>
+            <button class="tab-link active" onclick="openTab(event,'tab-home')">Home</button>
             <button class="tab-link" onclick="openTab(event,'tab-insert')">Insert</button>
             <button class="tab-link" onclick="openTab(event,'tab-design')">Design</button>
             <button class="tab-link" onclick="openTab(event,'tab-trans')">Transition</button>
             <button class="tab-link" onclick="openTab(event,'tab-animation')">Animation</button>
             <button class="tab-link" onclick="openTab(event,'tab-slideshow')">Slideshow</button>
-            <button class="tab-link" onclick="openTab(event,'tab-proofread')">Proofreading</button>
+            <button class="tab-link" onclick="openTab(event,'tab-display')">Display</button>
         </div>
 
         <div class="ribbon-content">
-
-            <!-- FILE -->
             <div id="tab-file" class="tab-pane">
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="btn-import-pdf" class="icon-btn secondary">📄 Import PDF</button>
+                        <button id="btn-import-pdf" class="icon-btn secondary">🗎 Import PDF</button>
                         <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
-                        <button id="btn-import-pptx" class="icon-btn secondary">📊 Import PPTX</button>
+                        <button id="btn-import-pptx" class="icon-btn secondary">🗐 Import PPTX</button>
                         <input type="file" id="pptx-file-input" accept=".pptx" style="display:none;">
                     </div>
                     <span class="group-label">Import</span>
                 </div>
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="export-pdf-btn" class="icon-btn">⬇ Export PDF</button>
-                        <button id="export-pptx-btn" class="icon-btn">⬇ Export PPTX</button>
+                        <button id="export-pdf-btn" class="icon-btn">📄 Export PDF</button>
+                        <button id="export-pptx-btn" class="icon-btn">⧉ Export PPTX</button>
                     </div>
                     <span class="group-label">Export</span>
                 </div>
             </div>
 
-            <!-- HOME (初期タブ) -->
             <div id="tab-home" class="tab-pane active">
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="undo-btn" class="icon-btn" title="Ctrl+Z">↩ Undo</button>
-                        <button id="redo-btn" class="icon-btn" title="Ctrl+Y">↪ Redo</button>
+                        <button id="undo-btn" class="icon-btn" title="Ctrl+Z">⟲ Undo</button>
+                        <button id="redo-btn" class="icon-btn" title="Ctrl+Y">⟳ Redo</button>
                     </div>
                     <span class="group-label">History</span>
                 </div>
-                <div class="ribbon-group">
+                <div class="ribbon-group" id="text-tools">
                     <div class="group-buttons">
                         <select id="font-family" title="フォント">
                             <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
                             <option value="'Noto Serif JP', serif">Noto Serif JP</option>
-                            <option value="'BIZ UDGothic', sans-serif">BIZ UDゴシック</option>
-                            <option value="'BIZ UDPGothic', sans-serif">BIZ UDP ゴシック</option>
-                            <option value="'BIZ UDMincho', serif">BIZ UD明朝</option>
-                            <option value="'BIZ UDPMincho', serif">BIZ UDP明朝</option>
                             <option value="'M PLUS 1p', sans-serif">M PLUS 1p</option>
                             <option value="'Kaisei Tokumin', serif">解星特ミン</option>
                             <option value="'RocknRoll One', sans-serif">RocknRoll</option>
@@ -105,25 +90,24 @@
                         <button id="bold-btn" class="font-style-btn" title="太字"><b>B</b></button>
                         <button id="italic-btn" class="font-style-btn" title="斜体"><i>I</i></button>
                         <button id="text-color-btn" class="color-trigger-btn" title="文字色" data-target="text">
-                            <span class="color-preview" id="text-color-preview" style="background:#0f172a;"></span>
-                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 2l3 4 3-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                            <span class="color-preview" id="text-color-preview" style="background:#0f172a;"></span> ▾
                         </button>
                     </div>
                     <span class="group-label">Font</span>
                 </div>
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="align-left-btn" class="icon-btn icon-only" title="左揃え">≡</button>
-                        <button id="align-center-btn" class="icon-btn icon-only" title="中央揃え">☰</button>
-                        <button id="align-right-btn" class="icon-btn icon-only" title="右揃え">≡</button>
+                        <button id="align-left-btn" class="icon-btn icon-only" title="左揃え">⫷</button>
+                        <button id="align-center-btn" class="icon-btn icon-only" title="中央揃え">≡</button>
+                        <button id="align-right-btn" class="icon-btn icon-only" title="右揃え">⫸</button>
                     </div>
-                    <span class="group-label">Align</span>
+                    <span class="group-label">Align Text</span>
                 </div>
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="bring-front-btn" class="icon-btn" title="前面へ">▲ Forward</button>
-                        <button id="send-back-btn" class="icon-btn" title="背面へ">▼ Backward</button>
-                        <button id="duplicate-elem-btn" class="icon-btn" title="複製 (Ctrl+D)">⧉ Duplicate</button>
+                        <button id="bring-front-btn" class="icon-btn" title="前面へ">▲ Front</button>
+                        <button id="send-back-btn" class="icon-btn" title="背面へ">▼ Back</button>
+                        <button id="duplicate-btn" class="icon-btn" title="複製 (Ctrl+D)">⧉ Duplicate</button>
                         <button id="delete-btn" class="icon-btn danger" title="削除 (Del)">✕ Delete</button>
                     </div>
                     <span class="group-label">Element</span>
@@ -131,46 +115,34 @@
                 <div class="ribbon-group">
                     <div class="group-buttons">
                         <button id="shape-color-btn" class="color-trigger-btn" title="図形色" data-target="shape">
-                            <span class="color-preview" id="shape-color-preview" style="background:#2563eb;"></span>
-                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 2l3 4 3-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                            <span class="color-preview" id="shape-color-preview" style="background:#2563eb;"></span> ▾
                         </button>
-                        <label style="font-size:0.72rem;color:var(--text-muted)">Fill</label>
                     </div>
-                    <span class="group-label">Shape</span>
-                </div>
-                <div class="ribbon-group">
-                    <div class="group-buttons">
-                        <label style="font-size:0.72rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;">
-                            <input type="checkbox" id="snap-toggle" checked> Snap
-                        </label>
-                    </div>
-                    <span class="group-label">Options</span>
+                    <span class="group-label">Shape Fill</span>
                 </div>
             </div>
 
-            <!-- INSERT -->
             <div id="tab-insert" class="tab-pane">
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="add-text-btn" class="icon-btn">✎ Text</button>
+                        <button id="add-text-btn" class="icon-btn">✎ Textbox</button>
                         <button id="add-rect-btn" class="icon-btn">■ Rectangle</button>
                         <button id="add-circle-btn" class="icon-btn">● Circle</button>
                         <button id="add-line-btn" class="icon-btn">― Line</button>
-                        <button id="add-image-btn" class="icon-btn">🖼 Image</button>
-                        <input type="file" id="image-upload" accept="image/*" style="display:none;">
-                    </div>
-                    <span class="group-label">Basic</span>
-                </div>
-                <div class="ribbon-group">
-                    <div class="group-buttons">
                         <button id="insert-arrow-btn" class="icon-btn">➔ Arrow</button>
                         <button id="insert-star-btn" class="icon-btn">★ Star</button>
                     </div>
                     <span class="group-label">Shapes</span>
                 </div>
+                <div class="ribbon-group">
+                    <div class="group-buttons">
+                        <button id="add-image-btn" class="icon-btn">🖼 Image</button>
+                        <input type="file" id="image-upload" accept="image/*" style="display:none;">
+                    </div>
+                    <span class="group-label">Media</span>
+                </div>
             </div>
 
-            <!-- DESIGN -->
             <div id="tab-design" class="tab-pane">
                 <div class="ribbon-group">
                     <div class="group-buttons">
@@ -185,10 +157,8 @@
                 <div class="ribbon-group">
                     <div class="group-buttons">
                         <button id="bg-color-btn" class="color-trigger-btn" title="背景色" data-target="bg">
-                            <span class="color-preview" id="bg-color-preview" style="background:#ffffff;border:1px solid #e2e8f0;"></span>
-                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 2l3 4 3-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                            <span class="color-preview" id="bg-color-preview" style="background:#ffffff;border:1px solid #e2e8f0;"></span> ▾
                         </button>
-                        <label style="font-size:0.72rem;color:var(--text-muted)">BG</label>
                     </div>
                     <span class="group-label">Background</span>
                 </div>
@@ -203,95 +173,58 @@
                     </div>
                     <span class="group-label">Themes</span>
                 </div>
-                <div class="ribbon-group">
-                    <div class="group-buttons">
-                        <button id="opacity-down-btn" class="icon-btn icon-only">−</button>
-                        <span id="opacity-label" style="font-size:0.72rem;color:var(--text-muted);min-width:32px;text-align:center;">100%</span>
-                        <button id="opacity-up-btn" class="icon-btn icon-only">＋</button>
-                    </div>
-                    <span class="group-label">Opacity</span>
-                </div>
             </div>
 
-            <!-- TRANSITION -->
             <div id="tab-trans" class="tab-pane">
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button class="trans-btn icon-btn" data-trans="none">⊙ None</button>
-                        <button class="trans-btn icon-btn" data-trans="fade">◌ Fade</button>
-                        <button class="trans-btn icon-btn" data-trans="slide">→ Slide</button>
-                        <button class="trans-btn icon-btn" data-trans="zoom">⊕ Zoom</button>
+                        <button class="trans-btn icon-btn active" data-trans="none">None</button>
+                        <button class="trans-btn icon-btn" data-trans="fade">Fade</button>
+                        <button class="trans-btn icon-btn" data-trans="slide">Slide</button>
+                        <button class="trans-btn icon-btn" data-trans="zoom">Zoom</button>
                     </div>
                     <span class="group-label">Slide Transition</span>
                 </div>
-                <div class="ribbon-group">
-                    <div class="group-buttons">
-                        <label style="font-size:0.72rem;color:var(--text-muted)">Speed</label>
-                        <select id="trans-speed" style="font-size:0.76rem;padding:4px 6px;border-radius:5px;border:1px solid var(--ribbon-border);">
-                            <option value="0.4">Fast</option>
-                            <option value="0.7" selected>Normal</option>
-                            <option value="1.2">Slow</option>
-                        </select>
-                    </div>
-                    <span class="group-label">Duration</span>
-                </div>
             </div>
 
-            <!-- ANIMATION -->
             <div id="tab-animation" class="tab-pane">
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button class="anim-set-btn icon-btn" data-anim="none">✕ None</button>
-                        <button class="anim-set-btn icon-btn" data-anim="fade">◌ Fade</button>
-                        <button class="anim-set-btn icon-btn" data-anim="pop">✦ Pop</button>
-                        <button class="anim-set-btn icon-btn" data-anim="slide-up">↑ Slide Up</button>
-                        <button class="anim-set-btn icon-btn" data-anim="zoom-in">⊕ Zoom In</button>
+                        <button class="anim-set-btn icon-btn active" data-anim="none">None</button>
+                        <button class="anim-set-btn icon-btn" data-anim="fade">Fade</button>
+                        <button class="anim-set-btn icon-btn" data-anim="pop">Pop</button>
+                        <button class="anim-set-btn icon-btn" data-anim="slide-up">Slide Up</button>
                     </div>
                     <span class="group-label">Element Effect</span>
                 </div>
-                <div class="ribbon-group">
-                    <div class="group-buttons">
-                        <label style="font-size:0.72rem;color:var(--text-muted)">Delay</label>
-                        <input type="number" id="anim-delay" value="0" min="0" max="5" step="0.1" style="width:54px;">
-                        <label style="font-size:0.72rem;color:var(--text-muted)">s</label>
-                    </div>
-                    <span class="group-label">Delay</span>
-                </div>
             </div>
 
-            <!-- SLIDESHOW -->
             <div id="tab-slideshow" class="tab-pane">
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="present-btn" class="icon-btn primary">▶ Start Slideshow</button>
-                        <button id="present-from-start-btn" class="icon-btn secondary">⏮ From Beginning</button>
+                        <button id="present-btn" class="icon-btn primary">▻ Start Slideshow</button>
+                        <button id="present-from-start-btn" class="icon-btn secondary">► From Beginning</button>
                     </div>
                     <span class="group-label">Presentation</span>
                 </div>
-                <div class="ribbon-group">
-                    <div class="group-buttons">
-                        <label style="font-size:0.72rem;color:var(--text-muted)">Auto</label>
-                        <input type="number" id="auto-advance" value="0" min="0" max="60" style="width:52px;">
-                        <label style="font-size:0.72rem;color:var(--text-muted)">s</label>
-                    </div>
-                    <span class="group-label">Timer</span>
-                </div>
             </div>
 
-            <!-- PROOFREADING -->
-            <div id="tab-proofread" class="tab-pane">
+            <div id="tab-display" class="tab-pane">
                 <div class="ribbon-group">
                     <div class="group-buttons">
-                        <button id="word-count-btn" class="icon-btn">☰ Word Count</button>
-                        <button id="spellcheck-btn" class="icon-btn secondary">📋 Stats</button>
+                        <button id="toggle-grid-btn" class="icon-btn secondary">⊞ Grid</button>
+                        <button id="toggle-ruler-btn" class="icon-btn secondary">📏 Ruler</button>
                     </div>
-                    <span class="group-label">Text Tools</span>
+                    <span class="group-label">View</span>
                 </div>
-                <div id="proofread-result" class="ribbon-group" style="display:none;">
-                    <div class="group-buttons">
-                        <span id="proofread-text" style="font-size:0.76rem;color:var(--text-muted);max-width:220px;"></span>
+                <div class="ribbon-group">
+                    <div class="group-buttons" style="gap:10px;">
+                        <input type="range" id="zoom-slider" min="10" max="200" value="50" style="width:80px;">
+                        <span id="zoom-slider-val" style="font-size:0.75rem; min-width:30px;">50%</span>
+                        <button id="zoom-fit-btn" class="icon-btn secondary">Fit</button>
+                        <button id="zoom-100-btn" class="icon-btn secondary">100%</button>
                     </div>
-                    <span class="group-label">Result</span>
+                    <span class="group-label">Zoom</span>
                 </div>
             </div>
 
@@ -299,64 +232,30 @@
     </header>
 
     <div class="main-body">
-
-        <!-- 左：スライドパネル -->
         <aside class="slide-navigator">
             <div class="slide-nav-header">
                 <span>Slides</span>
-                <div style="display:flex;gap:3px;">
-                    <button id="duplicate-slide-btn" class="slide-nav-add" title="スライド複製" style="font-size:11px;">⧉</button>
-                    <button id="add-slide-btn" class="slide-nav-add" title="スライド追加">＋</button>
-                </div>
+                 <button id="add-slide-btn" class="slide-nav-add" title="スライド追加">＋</button>
             </div>
             <div id="slide-list"></div>
+            <button id="duplicate-slide-btn" class="slide-nav-del" style="color:var(--text-main); border-color:var(--ribbon-border); margin-bottom: 4px;">⧉ Duplicate Slide</button>
             <button id="delete-slide-btn" class="slide-nav-del">✕ Delete Slide</button>
         </aside>
 
-        <!-- 中央：キャンバス -->
         <section class="canvas-area" id="canvas-area">
-            <!-- ルーラー (Canvas外・固定) -->
-            <div id="ruler-corner" class="ruler-corner"></div>
             <canvas id="ruler-h" class="ruler-canvas ruler-h hidden"></canvas>
             <canvas id="ruler-v" class="ruler-canvas ruler-v hidden"></canvas>
-            <!-- ガイドライン -->
+            
             <div id="guide-container" class="guide-container"></div>
 
-            <div id="canvas-scroll-area" class="canvas-scroll-area">
-                <div id="canvas-container">
-                    <div id="canvas" class="slide-canvas"></div>
-
-                    <!-- フローティングメニュー -->
-                    <div id="floating-menu" class="floating-menu hidden">
-                        <div class="float-group text-only-tools" style="display:none;">
-                            <button id="float-bold" class="font-style-btn"><b>B</b></button>
-                            <button id="float-italic" class="font-style-btn"><i>I</i></button>
-                        </div>
-                        <div class="float-group">
-                            <button class="color-trigger-btn float-color-btn" id="float-color-trigger" data-target="float" title="色">
-                                <span class="color-preview" id="float-color-preview" style="background:#0f172a;"></span>
-                            </button>
-                            <select id="float-anim-select" style="padding:2px 4px;font-size:0.7rem;border-radius:4px;border:1px solid #e2e8f0;">
-                                <option value="none">No Anim</option>
-                                <option value="fade">Fade</option>
-                                <option value="pop">Pop</option>
-                                <option value="slide-up">Slide Up</option>
-                                <option value="zoom-in">Zoom In</option>
-                            </select>
-                            <button id="float-layer-front" title="前面へ">▲</button>
-                            <button id="float-send-back" title="背面へ">▼</button>
-                            <button id="float-delete" class="danger" title="削除">✕</button>
-                        </div>
-                    </div>
-                </div>
+            <div id="canvas-container">
+                <div id="canvas" class="slide-canvas"></div>
             </div>
         </section>
 
-        <!-- 右：プロパティパネル -->
         <aside class="props-panel" id="props-panel">
             <div class="props-header">Properties</div>
             <div id="props-no-select" class="props-empty">
-                <svg width="28" height="28" viewBox="0 0 32 32" fill="none" opacity="0.2"><rect x="6" y="6" width="20" height="20" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 16h10M16 11v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                 <p>Select an element</p>
             </div>
             <div id="props-content" class="props-content hidden">
@@ -368,68 +267,21 @@
                     <label>W</label><input type="number" id="prop-w" class="prop-input">
                     <label>H</label><input type="number" id="prop-h" class="prop-input">
                 </div>
-                <div class="prop-divider"></div>
                 <div id="text-props" class="prop-section hidden">
-                    <div class="prop-row">
-                        <label>Font</label>
-                        <select id="prop-fontfamily" class="prop-input" style="width:auto;flex:1;font-size:0.7rem;">
-                            <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
-                            <option value="'Noto Serif JP', serif">Noto Serif JP</option>
-                            <option value="'BIZ UDGothic', sans-serif">BIZ UDゴシック</option>
-                            <option value="'BIZ UDPGothic', sans-serif">BIZ UDP ゴシック</option>
-                            <option value="'BIZ UDMincho', serif">BIZ UD明朝</option>
-                            <option value="'BIZ UDPMincho', serif">BIZ UDP明朝</option>
-                            <option value="'M PLUS 1p', sans-serif">M PLUS 1p</option>
-                            <option value="'DotGothic16', sans-serif">DotGothic16</option>
-                            <option value="'Kaisei Tokumin', serif">Kaisei Tokumin</option>
-                            <option value="'Kiwi Maru', serif">Kiwi Maru</option>
-                            <option value="'RocknRoll One', sans-serif">RocknRoll</option>
-                            <option value="'Yuji Syuku', serif">Yuji Syuku</option>
-                        </select>
-                    </div>
                     <div class="prop-row">
                         <label>Size</label><input type="number" id="prop-fontsize" class="prop-input">
                     </div>
-                    <div class="prop-row">
-                        <label>Color</label>
-                        <button class="color-trigger-btn prop-color-btn" id="prop-text-color-btn" data-target="prop-text">
-                            <span class="color-preview" id="prop-text-color-preview" style="background:#000000;"></span>
-                            <svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1 2l3 4 3-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                        </button>
-                    </div>
                 </div>
                 <div id="shape-props" class="prop-section hidden">
-                    <div class="prop-row">
-                        <label>Fill</label>
-                        <button class="color-trigger-btn prop-color-btn" id="prop-fill-btn" data-target="prop-fill">
-                            <span class="color-preview" id="prop-fill-preview" style="background:#2563eb;"></span>
-                            <svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1 2l3 4 3-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                        </button>
-                    </div>
                     <div class="prop-row" style="flex-wrap:wrap;gap:4px;">
                         <label style="width:100%">Opacity</label>
                         <input type="range" id="prop-opacity" min="0" max="100" value="100" style="flex:1;min-width:60px;">
-                        <span id="prop-opacity-val" style="font-size:0.7rem;color:var(--text-muted);min-width:26px;">100%</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- ズームコントロール（常時表示） -->
-            <div class="zoom-control-panel">
-                <div class="prop-label-sm">Zoom</div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <input type="range" id="zoom-slider" min="10" max="200" value="50" style="flex:1;">
-                    <span id="zoom-label" style="font-size:0.72rem;color:var(--text-muted);min-width:34px;text-align:right;">50%</span>
-                </div>
-                <div style="display:flex;gap:4px;margin-top:4px;">
-                    <button id="zoom-fit-btn" class="icon-btn secondary" style="flex:1;font-size:0.7rem;">⊡ Fit</button>
-                    <button id="zoom-reset-btn" class="icon-btn secondary" style="flex:1;font-size:0.7rem;">100%</button>
                 </div>
             </div>
         </aside>
     </div>
 
-    <!-- プレゼンターオーバーレイ -->
     <div id="presenter-overlay" class="presenter-overlay hidden">
         <div id="presenter-canvas-wrap" class="presenter-canvas-wrap"></div>
         <div id="presenter-controls" class="presenter-controls">
@@ -439,7 +291,6 @@
             <button id="exit-present-btn" class="danger">✕ Exit</button>
         </div>
     </div>
-
 </div>
 <script src="script.js"></script>
 </body>
