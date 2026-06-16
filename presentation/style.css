@@ -103,7 +103,8 @@ body {
 button {
     display: inline-flex; align-items: center; gap: 3px;
     padding: 4px 8px;
-    border-radius: var(--radius); border: 1px solid var(--ribbon-border);
+    border-radius: var(--radius);
+    border: 1px solid var(--ribbon-border);
     background: #fff; cursor: pointer;
     font-size: 0.76rem; font-weight: 500; color: var(--text-main);
     transition: background 0.1s, border-color 0.1s, color 0.1s;
@@ -135,7 +136,8 @@ button.icon-only { padding: 4px 6px; }
 /* ══ フォーム ══ */
 select, input[type="number"] {
     padding: 3px 6px; border-radius: var(--radius);
-    border: 1px solid var(--ribbon-border); font-size: 0.76rem;
+    border: 1px solid var(--ribbon-border);
+    font-size: 0.76rem;
     color: var(--text-main); background: #fff; outline: none; font-family: inherit;
 }
 select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
@@ -144,7 +146,8 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
 /* ══ カラートリガーボタン ══ */
 .color-trigger-btn {
     display: inline-flex; align-items: center; gap: 3px;
-    padding: 3px 5px; border-radius: var(--radius);
+    padding: 3px 5px;
+    border-radius: var(--radius);
     border: 1px solid var(--ribbon-border); background: #fff; cursor: pointer;
 }
 .color-trigger-btn:hover { border-color: #94a3b8; }
@@ -174,13 +177,15 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
 .color-float-header span { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
 .color-float-close {
     background: none; border: none; cursor: pointer;
-    font-size: 0.75rem; color: var(--text-muted); padding: 1px 4px;
+    font-size: 0.75rem; color: var(--text-muted);
+    padding: 1px 4px;
     border-radius: 3px;
 }
 .color-float-close:hover { background: #f1f5f9; }
 
 .color-swatches {
-    display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
+    display: grid; grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
     margin-bottom: 8px;
 }
 .color-swatch-item {
@@ -218,7 +223,8 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
     width: 185px; flex-shrink: 0;
     background: var(--sidebar-bg);
     border-right: 1px solid var(--ribbon-border);
-    display: flex; flex-direction: column; overflow: hidden;
+    display: flex;
+    flex-direction: column; overflow: hidden;
 }
 .slide-nav-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -248,10 +254,12 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
     transition: border-color 0.15s, transform 0.12s;
 }
 .slide-thumb:hover  { border-color: #94a3b8; transform: translateX(2px); }
-.slide-thumb.active { border-color: var(--accent-color); box-shadow: 0 0 0 2px var(--accent-light); }
+.slide-thumb.active { border-color: var(--accent-color);
+box-shadow: 0 0 0 2px var(--accent-light); }
 .thumb-preview-container {
     position: absolute; top: 0; left: 0;
-    transform-origin: top left; pointer-events: none;
+    transform-origin: top left;
+    pointer-events: none;
 }
 .thumb-preview-container .resize-handle,
 .thumb-preview-container .selected { display: none !important; }
@@ -260,7 +268,8 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
     font-size: 8px; font-weight: 600; color: rgba(0,0,0,0.25); pointer-events: none;
 }
 .slide-nav-del {
-    margin: 5px 7px 7px; padding: 5px; font-size: 0.72rem;
+    margin: 5px 7px 7px; padding: 5px;
+    font-size: 0.72rem;
     color: var(--danger-color); border: 1px dashed #fca5a5;
     background: #fff; border-radius: var(--radius); cursor: pointer;
     justify-content: center; flex-shrink: 0;
@@ -279,7 +288,8 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
 .slide-canvas {
     background: #fff;
     box-shadow: 0 6px 28px rgba(15,23,42,0.14), 0 2px 6px rgba(15,23,42,0.08);
-    position: relative; border-radius: 2px; overflow: hidden;
+    position: relative; border-radius: 2px;
+    overflow: hidden;
     flex-shrink: 0; transform-origin: center center;
 }
 .slide-canvas.show-grid {
@@ -299,7 +309,13 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
 .ruler-canvas.hidden { display: none; }
 
 /* ガイドライン */
-.guide-container { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
+.guide-container { 
+    position: absolute; 
+    inset: 0; 
+    pointer-events: none;
+    z-index: 30; 
+    overflow: hidden; /* ★キャンバス外へのはみ出し防止 */
+}
 .guide-line {
     position: absolute; background: rgba(37,99,235,0.5);
     transition: opacity 0.1s;
@@ -310,25 +326,41 @@ select:focus, input[type="number"]:focus { border-color: var(--accent-color); }
 /* ══ キャンバス要素 ══ */
 .canvas-element {
     position: absolute; cursor: grab;
-    border: 1px solid transparent; user-select: none; box-sizing: border-box; padding: 4px;
+    border: 1px solid transparent; user-select: none;
+    box-sizing: border-box; padding: 4px;
 }
 .canvas-element:active { cursor: grabbing; }
 .canvas-element.text-element,
-.canvas-element.text-element .content-wrapper { user-select: text !important; -webkit-user-select: text !important; }
+.canvas-element.text-element .content-wrapper { 
+    user-select: text !important; -webkit-user-select: text !important; 
+}
+.canvas-element.text-element {
+    height: auto !important; /* ★テキストボックスの自動高さ調整 */
+    min-height: 40px;
+}
+
 .canvas-element.selected { border: 1.5px solid var(--accent-color); }
-.content-wrapper { width: 100%; height: 100%; outline: none; display: block; word-break: break-word; box-sizing: border-box; white-space: pre-wrap; }
+.content-wrapper { 
+    width: 100%; height: 100%; outline: none; display: block; word-break: break-word; box-sizing: border-box;
+    white-space: pre-wrap; 
+}
 img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; height: 100%; display: block; }
 
+/* ★ハンドルのタップ領域を拡大し、東西(w, e)ハンドルを追加 */
 .resize-handle {
-    position: absolute; width: 8px; height: 8px; background: #fff;
-    border: 2px solid var(--accent-color); display: none; border-radius: 50%;
+    position: absolute; width: 14px; height: 14px; background: #fff;
+    border: 2px solid var(--accent-color); display: none;
+    border-radius: 50%;
     z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.18);
 }
 .canvas-element.selected .resize-handle { display: block; }
-.resize-handle.nw { top: -4px; left: -4px; cursor: nwse-resize; }
-.resize-handle.ne { top: -4px; right: -4px; cursor: nesw-resize; }
-.resize-handle.sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
-.resize-handle.se { bottom: -4px; right: -4px; cursor: nwse-resize; }
+.resize-handle.nw { top: -7px; left: -7px; cursor: nwse-resize; }
+.resize-handle.ne { top: -7px; right: -7px; cursor: nesw-resize; }
+.resize-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+.resize-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+/* 水平方向専用ハンドルの追加 */
+.resize-handle.w { top: calc(50% - 7px); left: -7px; cursor: ew-resize; }
+.resize-handle.e { top: calc(50% - 7px); right: -7px; cursor: ew-resize; }
 
 /* ══ フローティングメニュー ══ */
 .floating-menu {
@@ -364,7 +396,8 @@ img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; he
 }
 .props-empty {
     flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
+    align-items: center;
+    justify-content: center;
     gap: 8px; color: var(--text-muted); font-size: 0.72rem; text-align: center; padding: 18px;
 }
 .props-content { padding: 10px; }
@@ -378,7 +411,8 @@ img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; he
 
 /* ══ プレゼンターオーバーレイ ══ */
 .presenter-overlay {
-    position: fixed; inset: 0; z-index: 99999;
+    position: fixed;
+    inset: 0; z-index: 99999;
     background: #000;
     display: flex; align-items: center; justify-content: center;
     touch-action: none;
@@ -392,7 +426,8 @@ img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; he
     /* サイズはJSでセット */
     background: #fff;
     box-shadow: none;
-    pointer-events: none; /* 編集無効 */
+    pointer-events: none;
+    /* 編集無効 */
     transform-origin: center center;
 }
 .presenter-controls {
@@ -406,7 +441,8 @@ img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; he
 }
 .presenter-controls button {
     background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
-    color: #fff; border-radius: 20px; padding: 5px 14px; font-size: 0.78rem;
+    color: #fff;
+    border-radius: 20px; padding: 5px 14px; font-size: 0.78rem;
 }
 .presenter-controls button:hover { background: rgba(255,255,255,0.22); }
 .presenter-controls button.danger { color: #fca5a5; border-color: rgba(252,165,165,0.3); }
@@ -429,78 +465,3 @@ img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; he
 @keyframes cf-pop      { 0%{opacity:0;transform:scale(0.7)} 70%{transform:scale(1.05)} 100%{opacity:1;transform:scale(1)} }
 @keyframes cf-slide-up { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
 @keyframes cf-zoom-in  { from{opacity:0;transform:scale(0.5)} to{opacity:1;transform:scale(1)} }
-
-/* ══ 修正対応：テキストのリサイズハンドル拡充・スナップガイド・自動高さ調整 ══ */
-
-/* テキストボックスの自動高さ (Auto-Height) */
-.text-element {
-    height: auto !important; /* 文字数で行が増えるように */
-    min-height: 40px;
-}
-.content-wrapper {
-    width: 100%;
-    height: 100%;
-    outline: none;
-    word-break: break-word;
-}
-
-/* ハンドルのタップ領域を拡大し、東西(w, e)ハンドルを追加 */
-.resize-handle {
-    width: 14px;  /* ← 大きく変更 (元は8px前後) */
-    height: 14px; /* ← 大きく変更 */
-    background: #fff;
-    border: 2px solid var(--accent-color);
-    border-radius: 50%;
-    position: absolute;
-    z-index: 10;
-    display: none; /* 非選択時は隠す */
-}
-.selected > .resize-handle {
-    display: block;
-}
-
-/* 四隅のハンドル配置微調整 */
-.resize-handle.nw { top: -7px; left: -7px; cursor: nwse-resize; }
-.resize-handle.ne { top: -7px; right: -7px; cursor: nesw-resize; }
-.resize-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
-.resize-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
-
-/* 水平方向専用ハンドルの追加 */
-.resize-handle.w { top: calc(50% - 7px); left: -7px; cursor: ew-resize; }
-.resize-handle.e { top: calc(50% - 7px); right: -7px; cursor: ew-resize; }
-
-/* ズレないスナップライン (絶対座標描画用) */
-.snap-guide {
-    position: absolute;
-    background: #f43f5e;
-    z-index: 999;
-    pointer-events: none;
-}
-.snap-guide.vertical { top: 0; bottom: 0; width: 1px; }
-.snap-guide.horizontal { left: 0; right: 0; height: 1px; }
-
-/* 画面全体を縦並びのFlexboxにする */
-body {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-    background-color: var(--canvas-bg);
-}
-
-/* リボン部分（高さを固定し、絶対に縮まないようにする） */
-header, .ribbon-area { /* ※実際のHTMLのクラス・タグ名に合わせてください */
-    flex: 0 0 calc(var(--ribbon-h) + var(--ribbon-content-h));
-    width: 100%;
-    z-index: 100; /* キャンバスより前面に出す */
-    background-color: var(--ribbon-bg);
-}
-
-/* メイン領域（サイドバー＋キャンバス。残りのスペースをすべて使う） */
-.main-container { /* ※実際のHTMLのクラス名に合わせてください */
-    flex: 1;
-    display: flex;
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-}
