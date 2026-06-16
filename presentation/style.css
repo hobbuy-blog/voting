@@ -478,3 +478,29 @@ img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; he
 }
 .snap-guide.vertical { top: 0; bottom: 0; width: 1px; }
 .snap-guide.horizontal { left: 0; right: 0; height: 1px; }
+
+/* 画面全体を縦並びのFlexboxにする */
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--canvas-bg);
+}
+
+/* リボン部分（高さを固定し、絶対に縮まないようにする） */
+header, .ribbon-area { /* ※実際のHTMLのクラス・タグ名に合わせてください */
+    flex: 0 0 calc(var(--ribbon-h) + var(--ribbon-content-h));
+    width: 100%;
+    z-index: 100; /* キャンバスより前面に出す */
+    background-color: var(--ribbon-bg);
+}
+
+/* メイン領域（サイドバー＋キャンバス。残りのスペースをすべて使う） */
+.main-container { /* ※実際のHTMLのクラス名に合わせてください */
+    flex: 1;
+    display: flex;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
