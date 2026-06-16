@@ -429,3 +429,52 @@ img.content-wrapper { object-fit: contain; pointer-events: none; width: 100%; he
 @keyframes cf-pop      { 0%{opacity:0;transform:scale(0.7)} 70%{transform:scale(1.05)} 100%{opacity:1;transform:scale(1)} }
 @keyframes cf-slide-up { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
 @keyframes cf-zoom-in  { from{opacity:0;transform:scale(0.5)} to{opacity:1;transform:scale(1)} }
+
+/* ══ 修正対応：テキストのリサイズハンドル拡充・スナップガイド・自動高さ調整 ══ */
+
+/* テキストボックスの自動高さ (Auto-Height) */
+.text-element {
+    height: auto !important; /* 文字数で行が増えるように */
+    min-height: 40px;
+}
+.content-wrapper {
+    width: 100%;
+    height: 100%;
+    outline: none;
+    word-break: break-word;
+}
+
+/* ハンドルのタップ領域を拡大し、東西(w, e)ハンドルを追加 */
+.resize-handle {
+    width: 14px;  /* ← 大きく変更 (元は8px前後) */
+    height: 14px; /* ← 大きく変更 */
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    border-radius: 50%;
+    position: absolute;
+    z-index: 10;
+    display: none; /* 非選択時は隠す */
+}
+.selected > .resize-handle {
+    display: block;
+}
+
+/* 四隅のハンドル配置微調整 */
+.resize-handle.nw { top: -7px; left: -7px; cursor: nwse-resize; }
+.resize-handle.ne { top: -7px; right: -7px; cursor: nesw-resize; }
+.resize-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+.resize-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+
+/* 水平方向専用ハンドルの追加 */
+.resize-handle.w { top: calc(50% - 7px); left: -7px; cursor: ew-resize; }
+.resize-handle.e { top: calc(50% - 7px); right: -7px; cursor: ew-resize; }
+
+/* ズレないスナップライン (絶対座標描画用) */
+.snap-guide {
+    position: absolute;
+    background: #f43f5e;
+    z-index: 999;
+    pointer-events: none;
+}
+.snap-guide.vertical { top: 0; bottom: 0; width: 1px; }
+.snap-guide.horizontal { left: 0; right: 0; height: 1px; }
