@@ -1,453 +1,950 @@
 // ============================================================
-//  Leaslide — script.js (Optimized & Bug-Fixed Version)
+//  Leaslide — script.js
+//  元タブ構成維持 + Gemini追加機能統合版
 // ============================================================
 
+// --- 1. タブルーター ---
 window.openTab = function(evt, tabName) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
-    document.getElementById(tabName)?.classList.add('active');
-    
-    if (evt?.currentTarget) {
-        evt.currentTarget.classList.add('active');
-    } else {
-        const targetBtn = document.querySelector(`.tab-link[onclick*="${tabName}"]`);
-        if (targetBtn) targetBtn.classList.add('active');
-    }
+    const t = document.getElementById(tabName);
+    if (t) t.classList.add('active');
+    if (evt?.currentTarget) evt.currentTarget.classList.add('active');
 };
 
-const PALETTE = [
-    '#ffffff','#f8fafc','#f1f5f9','#e2e8f0','#cbd5e1','#94a3b8','#64748b','#475569',
-    '#334155','#1e293b','#0f172a','#000000',
-    '#fef2f2','#fee2e2','#fca5a5','#f87171','#ef4444','#dc2626','#b91c1c','#7f1d1d',
-    '#fff7ed','#ffedd5','#fed7aa','#fdba74','#fb923c','#f97316','#ea580c','#7c2d12',
-    '#fefce8','#fef9c3','#fde047','#facc15','#eab308','#ca8a04','#a16207','#713f12',
-    '#f0fdf4','#dcfce7','#86efac','#4ade80','#22c55e','#16a34a','#15803d','#14532d',
-    '#eff6ff','#dbeafe','#93c5fd','#60a5fa','#3b82f6','#2563eb','#1d4ed8','#1e3a8a',
-    '#f5f3ff','#ede9fe','#c4b5fd','#a78bfa','#8b5cf6','#7c3aed','#6d28d9','#4c1d95',
-    '#fdf4ff','#fae8ff','#e879f9','#d946ef','#a21caf','#86198f','#701a75','#4a044e',
-];
-
+// --- 状態 ---
 let currentWidth  = 1920;
 let currentHeight = 1080;
-let slides = [{ html:'', bg:'#ffffff', bgStyle:'color', transition:'none', undoStack:[], redoStack:[] }];
+let slides        = [{ html:'', bg:'#ffffff', bgStyle:'color', transition:'none', undoStack:[], redoStack:[] }];
 let currentSlideIndex = 0;
 let selectedElement   = null;
 let maxZIndex = 100;
 let currentZoom = 0.5;
 let snapEnabled = true;
-let colorTarget = null; 
+let drawMode    = null;
+let autoAdvanceTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas    = document.getElementById('canvas');
-    const container = document.getElementById('canvas-container');
-    const floatMenu = document.getElementById('floating-menu');
-    const canvasWrap= document.getElementById('canvas-wrapper');
+    const canvas       = document.getElementById('canvas');
+    const container    = document.getElementById('canvas-container');
+    const floatingMenu = document.getElementById('floating-menu');
+    const imageUpload  = document.getElementById('image-upload');
+    const pdfInput     = document.getElementById('pdf-file-input');
 
-    const bindClick = (id, fn) => { document.getElementById(id)?.addEventListener('click', fn); };
+    const bindClick = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
 
-    // ── カラーパレット設定 ─────────────────────────────────
-    const swatchContainer = document.getElementById('color-swatches');
-    PALETTE.forEach(c => {
-        const btn = document.createElement('div');
-        btn.className = 'color-swatch-item'; btn.style.background = c; btn.title = c;
-        btn.addEventListener('click', () => applyColorFromPalette(c));
-        swatchContainer.appendChild(btn);
-    });
-
-    const colorFloat = document.getElementById('color-picker-float');
-    const colorHeader= colorFloat.querySelector('.color-float-header');
-    let cfDrag=false, cfOX=0, cfOY=0;
-    colorHeader.addEventListener('mousedown', e => { cfDrag=true; cfOX=e.clientX-colorFloat.offsetLeft; cfOY=e.clientY-colorFloat.offsetTop; e.preventDefault(); });
-    document.addEventListener('mousemove', e => { if (!cfDrag) return; colorFloat.style.left = Math.max(0,e.clientX-cfOX)+'px'; colorFloat.style.top = Math.max(0,e.clientY-cfOY)+'px'; colorFloat.style.right='auto'; colorFloat.style.bottom='auto'; });
-    document.addEventListener('mouseup', () => cfDrag=false);
-    bindClick('color-float-close', () => colorFloat.classList.add('hidden'));
-    bindClick('color-custom-apply', () => applyColorFromPalette(document.getElementById('color-custom-input').value));
-
-    document.querySelectorAll('.color-trigger-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation(); colorTarget = btn.dataset.target; const rect = btn.getBoundingClientRect();
-            colorFloat.style.left = Math.min(rect.left, window.innerWidth - 240) + 'px';
-            colorFloat.style.top = (rect.bottom + 4) + 'px'; colorFloat.style.right = 'auto'; colorFloat.style.bottom = 'auto';
-            document.getElementById('color-float-title').textContent = colorTarget === 'bg' ? 'Background Color' : colorTarget === 'text' ? 'Text Color' : colorTarget === 'shape' ? 'Shape Fill' : 'Color';
-            colorFloat.classList.remove('hidden');
-        });
-    });
-    document.addEventListener('click', (e) => { if (!colorFloat.contains(e.target) && !e.target.closest('.color-trigger-btn')) colorFloat.classList.add('hidden'); });
-
-    function applyColorFromPalette(color) {
-        document.querySelectorAll('.color-swatch-item').forEach(s => s.classList.toggle('selected', s.style.background === color || s.title === color));
-        if (!colorTarget) return;
-        if (colorTarget === 'bg') { canvas.style.background = color; slides[currentSlideIndex].bg = color; document.getElementById('bg-color-preview').style.background = color; }
-        else if (colorTarget === 'text') { if (selectedElement?.classList.contains('text-element')) { const inner = selectedElement.querySelector('.content-wrapper'); if(inner) inner.style.color = color; syncPropsPanel(); } }
-        else if (colorTarget === 'shape') { if (selectedElement) { const inner = selectedElement.querySelector('.content-wrapper'); if(inner) inner.style.backgroundColor = color; syncPropsPanel(); } }
-        saveState(); renderSlideList();
-    }
-
-    // ── 解像度・履歴・ズーム ────────────────────────────────
+    // ── 解像度設定 ──────────────────────────────────────────
     function updateCanvasResolution() {
-        const sel = document.getElementById('slide-size-select'); if(!sel||!canvas) return;
-        const [w,h] = sel.value.split('x').map(Number);
-        currentWidth=w; currentHeight=h; canvas.style.width=w+'px'; canvas.style.height=h+'px';
-        applyZoom(); renderSlideList();
+        const sel = document.getElementById('slide-size-select');
+        if (!sel || !canvas) return;
+        const [w, h] = sel.value.split('x').map(Number);
+        currentWidth = w; currentHeight = h;
+        canvas.style.width  = w + 'px';
+        canvas.style.height = h + 'px';
+        applyZoom();
+        renderSlideList();
     }
-    document.getElementById('slide-size-select')?.addEventListener('change', () => { saveState(); updateCanvasResolution(); });
+    document.getElementById('slide-size-select')?.addEventListener('change', () => {
+        saveState(); updateCanvasResolution();
+    });
 
+    // ── 2. 履歴 ─────────────────────────────────────────────
     function saveState() {
         if (!canvas) return;
-        const s=slides[currentSlideIndex]; const cur=canvas.innerHTML;
-        if (s.undoStack.length>0 && s.undoStack.at(-1)===cur) return;
-        s.undoStack.push(cur); s.redoStack=[]; updateUndoRedoUI();
+        const s = slides[currentSlideIndex];
+        const cur = canvas.innerHTML;
+        if (s.undoStack.length > 0 && s.undoStack.at(-1) === cur) return;
+        s.undoStack.push(cur);
+        s.redoStack = [];
+        updateUndoRedoUI();
     }
     function updateUndoRedoUI() {
-        const s=slides[currentSlideIndex];
-        const u=document.getElementById('undo-btn'); if(u) u.disabled=!s.undoStack.length;
-        const r=document.getElementById('redo-btn'); if(r) r.disabled=!s.redoStack.length;
+        const s = slides[currentSlideIndex];
+        const u = document.getElementById('undo-btn'); if (u) u.disabled = !s.undoStack.length;
+        const r = document.getElementById('redo-btn'); if (r) r.disabled = !s.redoStack.length;
     }
-    bindClick('undo-btn', () => { const s=slides[currentSlideIndex]; if(!s.undoStack.length) return; s.redoStack.push(canvas.innerHTML); canvas.innerHTML=s.undoStack.pop(); reattachEvents(); updateUndoRedoUI(); });
-    bindClick('redo-btn', () => { const s=slides[currentSlideIndex]; if(!s.redoStack.length) return; s.undoStack.push(canvas.innerHTML); canvas.innerHTML=s.redoStack.pop(); reattachEvents(); updateUndoRedoUI(); });
+    bindClick('undo-btn', () => {
+        const s = slides[currentSlideIndex]; if (!s.undoStack.length) return;
+        s.redoStack.push(canvas.innerHTML);
+        canvas.innerHTML = s.undoStack.pop();
+        reattachEvents(); updateUndoRedoUI();
+    });
+    bindClick('redo-btn', () => {
+        const s = slides[currentSlideIndex]; if (!s.redoStack.length) return;
+        s.undoStack.push(canvas.innerHTML);
+        canvas.innerHTML = s.redoStack.pop();
+        reattachEvents(); updateUndoRedoUI();
+    });
 
+    // ── 3. ズーム（ボタン・ホイール・ピンチ） ────────────────
     function applyZoom() {
-        if (!canvas || document.querySelector('.pseudo-fullscreen')) return;
-        canvas.style.transform=`scale(${currentZoom})`; canvas.style.transformOrigin='center center';
-        const zlbl = document.getElementById('zoom-label'); if(zlbl) zlbl.textContent=Math.round(currentZoom*100)+'%';
+        const isPresenting = document.fullscreenElement || document.webkitFullscreenElement
+                           || document.querySelector('.pseudo-fullscreen');
+        if (isPresenting) return;
+        if (canvas) {
+            canvas.style.transform       = `scale(${currentZoom})`;
+            canvas.style.transformOrigin = 'center center';
+        }
+        const lbl = document.getElementById('zoom-label');
+        if (lbl) lbl.textContent = Math.round(currentZoom * 100) + '%';
     }
-    bindClick('zoom-in-btn', () => { currentZoom=Math.min(2.0,currentZoom+0.1); applyZoom(); });
-    bindClick('zoom-out-btn', () => { currentZoom=Math.max(0.1,currentZoom-0.1); applyZoom(); });
-    bindClick('zoom-reset-btn', () => { currentZoom=0.5; applyZoom(); });
+    bindClick('zoom-in-btn',    () => { currentZoom = Math.min(2.0, currentZoom + 0.1); applyZoom(); });
+    bindClick('zoom-out-btn',   () => { currentZoom = Math.max(0.15, currentZoom - 0.1); applyZoom(); });
+    bindClick('zoom-reset-btn', () => { currentZoom = 0.5; applyZoom(); });
 
-    // ── 要素操作・スナップ・テキストリサイズ連携 ───────────────────────────
+    // Ctrl+Wheel ズーム
+    container?.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            currentZoom = e.deltaY < 0
+                ? Math.min(2.0, currentZoom + 0.04)
+                : Math.max(0.15, currentZoom - 0.04);
+            applyZoom();
+        }
+    }, { passive: false });
+
+    // iPad ピンチズーム
+    let touchStartDist = 0, touchStartZoom = 1.0;
+    container?.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            touchStartDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                                        e.touches[0].clientY - e.touches[1].clientY);
+            touchStartZoom = currentZoom;
+        }
+    }, { passive: false });
+    container?.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && touchStartDist > 0) {
+            e.preventDefault();
+            const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                                 e.touches[0].clientY - e.touches[1].clientY);
+            currentZoom = Math.min(2.0, Math.max(0.15, touchStartZoom * (d / touchStartDist)));
+            applyZoom();
+        }
+    }, { passive: false });
+    container?.addEventListener('touchend', (e) => { if (e.touches.length < 2) touchStartDist = 0; });
+
+    // ── 4. 要素作成 ─────────────────────────────────────────
     function createBaseElement(typeClass, w, h) {
         saveState();
-        const el=document.createElement('div'); el.className=`canvas-element ${typeClass}`;
-        Object.assign(el.style, {width:w+'px',height:h+'px',left:'100px',top:'100px',zIndex:maxZIndex++,touchAction:'none'});
-        el.setAttribute('data-animation','none');
-        
-        // テキストは左右水平ハンドル(w, e)も追加
-        const handles = typeClass.includes('text-element') ? ['nw','ne','sw','se','w','e'] : ['nw','ne','sw','se'];
-        handles.forEach(dir => { const h2=document.createElement('div'); h2.className=`resize-handle ${dir}`; h2.dataset.direction=dir; el.appendChild(h2); });
-        
-        canvas.appendChild(el); initElementEvents(el); selectElement(el); renderSlideList();
+        const el = document.createElement('div');
+        el.className = `canvas-element ${typeClass}`;
+        Object.assign(el.style, {
+            width: w + 'px', height: h + 'px',
+            left: '120px', top: '120px',
+            zIndex: maxZIndex++, touchAction: 'none'
+        });
+        el.setAttribute('data-animation', 'none');
+        el.setAttribute('data-anim-delay', '0');
+        ['nw','ne','sw','se'].forEach(dir => {
+            const h2 = document.createElement('div');
+            h2.className = `resize-handle ${dir}`;
+            h2.dataset.direction = dir;
+            el.appendChild(h2);
+        });
+        canvas.appendChild(el);
+        initElementEvents(el);
+        selectElement(el);
+        renderSlideList();
         return el;
     }
 
     bindClick('add-text-btn', () => {
-        const el=createBaseElement('text-element',380,80);
-        const inner=document.createElement('div'); inner.className='content-wrapper'; inner.contentEditable=true;
-        Object.assign(inner.style,{fontSize:'32px',color:'#0f172a',fontFamily:"'Noto Sans JP', sans-serif",textAlign:'left'});
-        inner.innerText='テキストを入力'; el.appendChild(inner);
-        
-        inner.addEventListener('input', () => {
-            el.style.height = inner.scrollHeight + 'px'; // 自動高さ同期
-            renderSlideList();
-        });
-        inner.onblur=()=>{saveState();renderSlideList();};
+        const el = createBaseElement('text-element', 400, 90);
+        const inner = document.createElement('div');
+        inner.className = 'content-wrapper';
+        inner.contentEditable = true;
+        Object.assign(inner.style, { fontSize:'32px', color:'#0f172a', fontFamily:"'Noto Sans JP', sans-serif", textAlign:'left' });
+        inner.innerText = 'テキストを入力';
+        el.appendChild(inner);
+        inner.onblur  = () => { saveState(); renderSlideList(); };
+        inner.oninput = () => renderSlideList();
     });
 
-    bindClick('add-rect-btn', () => { const el=createBaseElement('rect-element',200,130); const inner=document.createElement('div'); inner.className='content-wrapper'; inner.style.backgroundColor='#2563eb'; inner.style.borderRadius='4px'; el.appendChild(inner); });
-    bindClick('add-circle-btn', () => { const el=createBaseElement('rect-element circle-element',140,140); const inner=document.createElement('div'); inner.className='content-wrapper'; inner.style.backgroundColor='#7c3aed'; inner.style.borderRadius='50%'; el.appendChild(inner); });
-    bindClick('add-line-btn', () => { const el=createBaseElement('rect-element line-element',240,5); const inner=document.createElement('div'); inner.className='content-wrapper'; inner.style.backgroundColor='#0f172a'; el.appendChild(inner); });
+    bindClick('add-rect-btn', () => {
+        const el = createBaseElement('rect-element', 200, 140);
+        const inner = document.createElement('div');
+        inner.className = 'content-wrapper'; inner.style.backgroundColor = '#2563eb'; inner.style.borderRadius = '4px';
+        el.appendChild(inner);
+    });
 
+    bindClick('add-circle-btn', () => {
+        const el = createBaseElement('rect-element circle-element', 150, 150);
+        const inner = document.createElement('div');
+        inner.className = 'content-wrapper'; inner.style.backgroundColor = '#7c3aed'; inner.style.borderRadius = '50%';
+        el.appendChild(inner);
+    });
+
+    bindClick('add-line-btn', () => {
+        const el = createBaseElement('rect-element line-element', 250, 5);
+        const inner = document.createElement('div');
+        inner.className = 'content-wrapper'; inner.style.backgroundColor = '#0f172a';
+        el.appendChild(inner);
+    });
+
+    bindClick('insert-arrow-btn', () => {
+        const el = createBaseElement('rect-element', 180, 45);
+        const inner = document.createElement('div');
+        inner.className = 'content-wrapper'; inner.style.display = 'flex'; inner.style.alignItems = 'center';
+        inner.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 180 45" fill="none" preserveAspectRatio="none"><path d="M4 22.5h155M143 9l18 13.5-18 13.5" stroke="#2563eb" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        el.appendChild(inner);
+    });
+
+    bindClick('insert-star-btn', () => {
+        const el = createBaseElement('rect-element', 140, 140);
+        const inner = document.createElement('div');
+        inner.className = 'content-wrapper';
+        inner.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 120 120" fill="none"><path d="M60 8l13.5 27.6 30.5 4.4-22 21.4 5.2 30.4L60 77l-27.2 14.8 5.2-30.4L16 39.9l30.5-4.4z" fill="#f59e0b" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/></svg>`;
+        el.appendChild(inner);
+    });
+
+    if (imageUpload) {
+        bindClick('add-image-btn', () => imageUpload.click());
+        imageUpload.onchange = (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const el = createBaseElement('image-element', 360, 270);
+                const img = document.createElement('img');
+                img.className = 'content-wrapper'; img.src = ev.target.result;
+                el.appendChild(img); selectElement(el);
+            };
+            reader.readAsDataURL(file); imageUpload.value = '';
+        };
+    }
+
+    // ── 5. ドラッグ＆リサイズ（setPointerCapture安定版） ────
     function initElementEvents(el) {
-        let isDrag=false, isRes=false;
+        if (el.classList.contains('drawing-element')) return;
+        let isDrag = false, isRes = false;
         let sx, sy, ox, oy, sw, sh, dir;
-        let startFontSize = 32;
 
-        el.addEventListener('pointerdown', e => {
+        el.addEventListener('pointerdown', (e) => {
             if (e.target.classList.contains('resize-handle')) return;
-            if (el.classList.contains('text-element') && e.target.classList.contains('content-wrapper') && selectedElement===el) return;
-            isDrag=true; saveState(); el.setPointerCapture(e.pointerId);
-            sx=e.clientX; sy=e.clientY; ox=el.offsetLeft; oy=el.offsetTop;
+            if (el.classList.contains('text-element') && e.target.classList.contains('content-wrapper') && selectedElement === el) return;
+            isDrag = true; saveState();
+            el.setPointerCapture(e.pointerId);
+            sx = e.clientX; sy = e.clientY;
+            ox = el.offsetLeft; oy = el.offsetTop;
             selectElement(el); e.stopPropagation();
         });
 
         el.querySelectorAll('.resize-handle').forEach(h => {
-            h.addEventListener('pointerdown', e => {
-                isRes=true; saveState(); h.setPointerCapture(e.pointerId);
-                dir=h.dataset.direction; sx=e.clientX; sy=e.clientY; sw=el.offsetWidth; sh=el.offsetHeight; ox=el.offsetLeft; oy=el.offsetTop;
-                if(el.classList.contains('text-element')){
-                    const inner=el.querySelector('.content-wrapper');
-                    startFontSize=parseFloat(window.getComputedStyle(inner).fontSize)||32;
-                }
+            h.addEventListener('pointerdown', (e) => {
+                isRes = true; saveState();
+                h.setPointerCapture(e.pointerId);
+                dir = h.dataset.direction;
+                sx = e.clientX; sy = e.clientY;
+                sw = el.offsetWidth; sh = el.offsetHeight;
+                ox = el.offsetLeft; oy = el.offsetTop;
                 e.stopPropagation(); e.preventDefault();
             });
         });
 
-        document.addEventListener('pointermove', e => {
-            if (!selectedElement || selectedElement!==el) return;
-            const dx=(e.clientX-sx)/currentZoom, dy=(e.clientY-sy)/currentZoom;
-            
+        document.addEventListener('pointermove', (e) => {
+            if (!selectedElement || selectedElement !== el) return;
+            const dx = (e.clientX - sx) / currentZoom;
+            const dy = (e.clientY - sy) / currentZoom;
+            const MIN = 15;
             if (isDrag) {
-                let nx=ox+dx, ny=oy+dy;
-                if (snapEnabled) {
-                    const snapX = [0, currentWidth*0.05, currentWidth*0.1, currentWidth/2, currentWidth*0.9, currentWidth*0.95, currentWidth];
-                    const snapY = [0, currentHeight*0.05, currentHeight*0.1, currentHeight/2, currentHeight*0.9, currentHeight*0.95, currentHeight];
-                    let closestX=nx, closestY=ny, minDx=15, minDy=15;
-                    snapX.forEach(x => { if(Math.abs(nx-x)<minDx) { closestX=x; minDx=Math.abs(nx-x); } });
-                    snapY.forEach(y => { if(Math.abs(ny-y)<minDy) { closestY=y; minDy=Math.abs(ny-y); } });
-                    nx=closestX; ny=closestY;
-                    drawGuides(nx, ny); // 絶対座標でガイド描画
-                }
-                el.style.left=nx+'px'; el.style.top=ny+'px';
-                syncPropsPanel();
+                let nx = ox + dx, ny = oy + dy;
+                if (snapEnabled) { nx = Math.round(nx / 10) * 10; ny = Math.round(ny / 10) * 10; }
+                el.style.left = nx + 'px'; el.style.top = ny + 'px';
+                updateFloatingMenuPosition(); updatePropsPosition();
             }
             if (isRes) {
-                const isText = el.classList.contains('text-element');
-                let newWidth = sw, newHeight = sh;
-                if(dir==='se') { newWidth=Math.max(20,sw+dx); if(!isText) newHeight=Math.max(20,sh+dy); }
-                else if(dir==='sw') { newWidth=Math.max(20,sw-dx); if(newWidth>20) el.style.left=(ox+dx)+'px'; if(!isText) newHeight=Math.max(20,sh+dy); }
-                else if(dir==='ne') { newWidth=Math.max(20,sw+dx); if(!isText) { newHeight=Math.max(20,sh-dy); if(newHeight>20) el.style.top=(oy+dy)+'px'; } }
-                else if(dir==='nw') { newWidth=Math.max(20,sw-dx); if(newWidth>20) el.style.left=(ox+dx)+'px'; if(!isText) { newHeight=Math.max(20,sh-dy); if(newHeight>20) el.style.top=(oy+dy)+'px'; } }
-                else if(dir==='e') { newWidth=Math.max(20,sw+dx); }
-                else if(dir==='w') { newWidth=Math.max(20,sw-dx); if(newWidth>20) el.style.left=(ox+dx)+'px'; }
-                
-                el.style.width=newWidth+'px'; if(!isText) el.style.height=newHeight+'px';
-                
-                // テキストボックスの斜めリサイズ時はフォントサイズも比例拡大
-                if(isText && ['nw','ne','sw','se'].includes(dir)) {
-                    const scale = newWidth / sw;
-                    const inner = el.querySelector('.content-wrapper');
-                    inner.style.fontSize = (startFontSize * scale) + 'px';
+                if (dir === 'se') {
+                    el.style.width  = Math.max(MIN, sw + dx) + 'px';
+                    el.style.height = Math.max(MIN, sh + dy) + 'px';
+                } else if (dir === 'sw') {
+                    const nw = Math.max(MIN, sw - dx);
+                    if (nw > MIN) { el.style.left = (ox + dx) + 'px'; el.style.width = nw + 'px'; }
+                    el.style.height = Math.max(MIN, sh + dy) + 'px';
+                } else if (dir === 'ne') {
+                    el.style.width = Math.max(MIN, sw + dx) + 'px';
+                    const nh = Math.max(MIN, sh - dy);
+                    if (nh > MIN) { el.style.top = (oy + dy) + 'px'; el.style.height = nh + 'px'; }
+                } else if (dir === 'nw') {
+                    const nw = Math.max(MIN, sw - dx), nh = Math.max(MIN, sh - dy);
+                    if (nw > MIN) { el.style.left = (ox + dx) + 'px'; el.style.width = nw + 'px'; }
+                    if (nh > MIN) { el.style.top  = (oy + dy) + 'px'; el.style.height = nh + 'px'; }
                 }
-                if (isText) el.style.height = el.querySelector('.content-wrapper').scrollHeight + 'px';
-                syncPropsPanel();
+                updateFloatingMenuPosition(); updatePropsSize();
             }
         });
-        document.addEventListener('pointerup', () => {
-            if (isDrag) { isDrag=false; clearGuides(); renderSlideList(); }
-            if (isRes)  { isRes=false; renderSlideList(); }
+
+        document.addEventListener('pointerup', (e) => {
+            if (isDrag) { try { el.releasePointerCapture(e.pointerId); } catch(_){} isDrag = false; renderSlideList(); }
+            if (isRes)  { isRes = false; renderSlideList(); }
         });
     }
 
-    function drawGuides(x, y) {
-        clearGuides();
-        if(!canvasWrap) return;
-        const gx = document.createElement('div'); gx.className = 'snap-guide vertical'; gx.style.left = x + 'px';
-        const gy = document.createElement('div'); gy.className = 'snap-guide horizontal'; gy.style.top = y + 'px';
-        canvasWrap.appendChild(gx); canvasWrap.appendChild(gy);
-    }
-    function clearGuides() { document.querySelectorAll('.snap-guide').forEach(g => g.remove()); }
-
+    // ── 6. 選択・プロパティ同期 ──────────────────────────────
     function selectElement(el) {
         if (!el) return;
-        if (selectedElement && selectedElement!==el) selectedElement.classList.remove('selected');
-        selectedElement=el; el.classList.add('selected');
-        
-        // 要素選択時に強制的にHomeタブへ戻る
-        window.openTab(null, 'tab-home');
-        
-        syncPropsPanel(); repositionFloatMenu();
+        if (selectedElement && selectedElement !== el) selectedElement.classList.remove('selected');
+        selectedElement = el; el.classList.add('selected');
+
+        const inner = el.querySelector('.content-wrapper');
+        const style  = inner ? window.getComputedStyle(inner) : null;
+        const anim   = el.getAttribute('data-animation') || 'none';
+        const delay  = el.getAttribute('data-anim-delay') || '0';
+
+        document.querySelectorAll('.anim-set-btn').forEach(b => b.classList.toggle('active', b.dataset.anim === anim));
+        const fa = document.getElementById('float-anim-select'); if (fa) fa.value = anim;
+        const ad = document.getElementById('anim-delay'); if (ad) ad.value = delay;
+
+        const isText = el.classList.contains('text-element');
+        const textGroup = document.querySelector('.text-only-tools');
+        if (textGroup) textGroup.style.display = isText ? 'flex' : 'none';
+
+        // ★ テキスト選択時にリボンUIを「Home」タブに戻す処理を追加
+        if (isText) {
+            openTab(null, 'tab-home');
+            const homeButton = document.querySelector("button[onclick*='tab-home']");
+            if (homeButton) {
+              homeButton.click(); // JavaScriptからクリックイベントを強制発生させる
+            }
+        }
+
+        if (style && isText) {
+            const fs = document.getElementById('font-size'); if (fs) fs.value = parseInt(style.fontSize) || 32;
+            const ec = document.getElementById('element-color'); if (ec) ec.value = rgbToHex(style.color);
+            const fc = document.getElementById('float-color');   if (fc) fc.value = rgbToHex(style.color);
+        }
+        updatePropsPanel(); updateFloatingMenuPosition();
     }
+
     function deselect() {
         if (selectedElement) selectedElement.classList.remove('selected');
-        selectedElement=null; floatMenu?.classList.add('hidden'); syncPropsPanel();
+        selectedElement = null;
+        floatingMenu?.classList.add('hidden');
+        const textGroup = document.querySelector('.text-only-tools');
+        if (textGroup) textGroup.style.display = 'none';
+        updatePropsPanel();
     }
-    canvas?.addEventListener('pointerdown', e => { if (e.target===canvas) deselect(); });
+    canvas?.addEventListener('pointerdown', (e) => { if (e.target === canvas) deselect(); });
 
-    function repositionFloatMenu() {
-        if (!floatMenu || !selectedElement) { floatMenu?.classList.add('hidden'); return; }
-        floatMenu.classList.remove('hidden');
-        floatMenu.style.top=Math.max(4,selectedElement.offsetTop-46)+'px';
-        floatMenu.style.left=Math.max(4,selectedElement.offsetLeft)+'px';
+    function updateFloatingMenuPosition() {
+        if (!floatingMenu || !selectedElement) { floatingMenu?.classList.add('hidden'); return; }
+        floatingMenu.classList.remove('hidden');
+        floatingMenu.style.top  = Math.max(4, selectedElement.offsetTop - 46) + 'px';
+        floatingMenu.style.left = Math.max(4, selectedElement.offsetLeft) + 'px';
     }
 
-    function syncPropsPanel() {
-        const noSel=document.getElementById('props-no-select'); const cont=document.getElementById('props-content');
-        if (!selectedElement) { noSel?.classList.remove('hidden'); cont?.classList.add('hidden'); return; }
+    // ── プロパティパネル ─────────────────────────────────────
+    function updatePropsPanel() {
+        const noSel   = document.getElementById('props-no-select');
+        const cont    = document.getElementById('props-content');
+        const textSec = document.getElementById('text-props');
+        const shapeSec= document.getElementById('shape-props');
+        if (!selectedElement) {
+            noSel?.classList.remove('hidden'); cont?.classList.add('hidden'); return;
+        }
         noSel?.classList.add('hidden'); cont?.classList.remove('hidden');
-        document.getElementById('prop-left').value=parseInt(selectedElement.style.left)||0;
-        document.getElementById('prop-top').value=parseInt(selectedElement.style.top)||0;
-        document.getElementById('prop-width').value=parseInt(selectedElement.style.width)||0;
-        document.getElementById('prop-height').value=parseInt(selectedElement.style.height)||0;
-    }
-
-    // ── 高度なインポート (PDF / PPTX) ─────────────────────────
-    bindClick('btn-import-pdf', () => document.getElementById('pdf-file-input').click());
-    document.getElementById('pdf-file-input').addEventListener('change', async (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async function() {
-            try {
-                const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 1.5 });
-                    const tCanvas = document.createElement('canvas'); const ctx = tCanvas.getContext('2d');
-                    tCanvas.height = viewport.height; tCanvas.width = viewport.width;
-                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                    
-                    const imgData = tCanvas.toDataURL('image/jpeg', 0.9);
-                    const html = `<div class="canvas-element image-element" style="left:0px;top:0px;width:${currentWidth}px;height:${currentHeight}px;z-index:${maxZIndex++};">
-                        <img src="${imgData}" class="content-wrapper" style="width:100%;height:100%;object-fit:contain;">
-                        <div class="resize-handle nw" data-direction="nw"></div><div class="resize-handle ne" data-direction="ne"></div><div class="resize-handle sw" data-direction="sw"></div><div class="resize-handle se" data-direction="se"></div>
-                    </div>`;
-                    
-                    // 1ページ目の空白対策
-                    if (i === 1 && slides.length === 1 && canvas.innerHTML.trim() === '') {
-                        slides[0].html = html;
-                    } else {
-                        slides.push({ html, bg:'#ffffff', bgStyle:'color', transition:'none', undoStack:[], redoStack:[] });
+        updatePropsPosition(); updatePropsSize();
+        const isText = selectedElement.classList.contains('text-element');
+        textSec?.classList.toggle('hidden', !isText);
+        shapeSec?.classList.toggle('hidden', isText);
+        const inner = selectedElement.querySelector('.content-wrapper');
+        if (inner) {
+            const s = window.getComputedStyle(inner);
+            if (isText) {
+                const pf = document.getElementById('prop-fontsize'); if (pf) pf.value = parseInt(s.fontSize) || 32;
+                const pc = document.getElementById('prop-color');    if (pc) pc.value = rgbToHex(s.color);
+                const pff= document.getElementById('prop-fontfamily');
+                if (pff) {
+                    const cur = s.fontFamily.replace(/['"]/g,'').toLowerCase();
+                    for (const opt of pff.options) {
+                        if (opt.value.replace(/['"]/g,'').toLowerCase().includes(cur.split(',')[0].trim())) {
+                            pff.value = opt.value; break;
+                        }
                     }
                 }
-                switchSlide(0);
-            } catch (err) { console.error(err); alert("PDFの読み込みに失敗しました"); }
-        };
-        reader.readAsArrayBuffer(file); e.target.value = '';
-    });
-
-    bindClick('btn-import-pptx', () => document.getElementById('pptx-file-input').click());
-    document.getElementById('pptx-file-input').addEventListener('change', async (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const zip = new JSZip();
-        try {
-            const contents = await zip.loadAsync(file);
-            const slideFiles = Object.keys(contents.files).filter(n => n.match(/ppt\/slides\/slide\d+\.xml/));
-            
-            for (let i = 0; i < slideFiles.length; i++) {
-                const slideName = `ppt/slides/slide${i+1}.xml`;
-                if (!contents.files[slideName]) continue;
-                const xmlText = await contents.files[slideName].async('text');
-                const xmlDoc = new DOMParser().parseFromString(xmlText, 'application/xml');
-                
-                let slideHtml = '';
-                xmlDoc.getElementsByTagName('p:sp').forEach(sp => {
-                    let textContent = '';
-                    // 段落(改行)ごとの分離抽出
-                    sp.getElementsByTagName('a:p').forEach(p => {
-                        let pText = '';
-                        p.getElementsByTagName('a:t').forEach(t => pText += t.textContent);
-                        textContent += `<div>${pText || '<br>'}</div>`;
-                    });
-                    
-                    if (textContent.trim().replace(/<br>/g,'')) {
-                        slideHtml += `<div class="canvas-element text-element" style="left:100px;top:100px;width:600px;height:auto;z-index:${maxZIndex++};">
-                            <div class="content-wrapper" contenteditable="true" style="font-size:32px;color:#000;">${textContent}</div>
-                            <div class="resize-handle nw" data-direction="nw"></div><div class="resize-handle ne" data-direction="ne"></div>
-                            <div class="resize-handle sw" data-direction="sw"></div><div class="resize-handle se" data-direction="se"></div>
-                            <div class="resize-handle w" data-direction="w"></div><div class="resize-handle e" data-direction="e"></div>
-                        </div>`;
-                    }
-                });
-                
-                if (i === 0 && slides.length === 1 && canvas.innerHTML.trim() === '') slides[0].html = slideHtml;
-                else slides.push({ html: slideHtml, bg:'#ffffff', bgStyle:'color', transition:'none', undoStack:[], redoStack:[] });
+            } else {
+                const fill = document.getElementById('prop-fill'); if (fill) fill.value = rgbToHex(s.backgroundColor);
             }
-            switchSlide(0);
-        } catch(err) { console.error(err); alert("PPTXの読み込みに失敗"); }
-        e.target.value = '';
+        }
+        const op  = Math.round((parseFloat(selectedElement.style.opacity) || 1) * 100);
+        const po  = document.getElementById('prop-opacity'); if (po) po.value = op;
+        const pov = document.getElementById('prop-opacity-val'); if (pov) pov.textContent = op + '%';
+    }
+    function updatePropsPosition() {
+        if (!selectedElement) return;
+        const px = document.getElementById('prop-x'); if (px) px.value = parseInt(selectedElement.style.left) || 0;
+        const py = document.getElementById('prop-y'); if (py) py.value = parseInt(selectedElement.style.top)  || 0;
+    }
+    function updatePropsSize() {
+        if (!selectedElement) return;
+        const pw = document.getElementById('prop-w'); if (pw) pw.value = parseInt(selectedElement.style.width)  || 0;
+        const ph = document.getElementById('prop-h'); if (ph) ph.value = parseInt(selectedElement.style.height) || 0;
+    }
+
+    // プロパティ入力 → 要素反映
+    ['prop-x','prop-y','prop-w','prop-h'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', () => {
+            if (!selectedElement) return; saveState();
+            selectedElement.style.left   = (parseInt(document.getElementById('prop-x')?.value)||0) + 'px';
+            selectedElement.style.top    = (parseInt(document.getElementById('prop-y')?.value)||0) + 'px';
+            selectedElement.style.width  = (parseInt(document.getElementById('prop-w')?.value)||20) + 'px';
+            selectedElement.style.height = (parseInt(document.getElementById('prop-h')?.value)||20) + 'px';
+            updateFloatingMenuPosition(); renderSlideList();
+        });
+    });
+    document.getElementById('prop-fontsize')?.addEventListener('change', (e) => {
+        const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) inner.style.fontSize = e.target.value + 'px';
+    });
+    document.getElementById('prop-fontfamily')?.addEventListener('change', (e) => {
+        const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) inner.style.fontFamily = e.target.value;
+    });
+    document.getElementById('prop-color')?.addEventListener('input', (e) => {
+        const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) inner.style.color = e.target.value;
+        const ec = document.getElementById('element-color'); if (ec) ec.value = e.target.value;
+    });
+    document.getElementById('prop-fill')?.addEventListener('input', (e) => {
+        const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) inner.style.backgroundColor = e.target.value;
+        renderSlideList();
+    });
+    document.getElementById('prop-opacity')?.addEventListener('input', (e) => {
+        if (!selectedElement) return;
+        selectedElement.style.opacity = e.target.value / 100;
+        const pov = document.getElementById('prop-opacity-val'); if (pov) pov.textContent = e.target.value + '%';
     });
 
-    // ── 高度なエクスポート (バグ除去) ────────────────────────
+    // ── 7. テキスト書式・色 ─────────────────────────────────
+    const patchText = (key, val) => {
+        if (!selectedElement?.classList.contains('text-element')) return;
+        saveState();
+        const inner = selectedElement.querySelector('.content-wrapper');
+        if (inner) inner.style[key] = val;
+        updatePropsPanel(); renderSlideList();
+    };
+    bindClick('align-left-btn',    () => patchText('textAlign', 'left'));
+    bindClick('align-center-btn', () => patchText('textAlign', 'center'));
+    bindClick('align-right-btn',  () => patchText('textAlign', 'right'));
+    bindClick('bold-btn',   () => { const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) patchText('fontWeight', window.getComputedStyle(inner).fontWeight === '700' ? '400' : '700'); });
+    bindClick('italic-btn', () => { const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) patchText('fontStyle', window.getComputedStyle(inner).fontStyle === 'italic' ? 'normal' : 'italic'); });
+    bindClick('float-bold',   () => { const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) patchText('fontWeight', window.getComputedStyle(inner).fontWeight === '700' ? '400' : '700'); });
+    bindClick('float-italic', () => { const inner = selectedElement?.querySelector('.content-wrapper'); if (inner) patchText('fontStyle', window.getComputedStyle(inner).fontStyle === 'italic' ? 'normal' : 'italic'); });
+
+    document.getElementById('font-family')?.addEventListener('change', (e) => patchText('fontFamily', e.target.value));
+    document.getElementById('font-size')?.addEventListener('input',   (e) => patchText('fontSize', e.target.value + 'px'));
+    document.getElementById('element-color')?.addEventListener('input', (e) => {
+        if (!selectedElement) return;
+        const inner = selectedElement.querySelector('.content-wrapper'); if (!inner) return;
+        if (selectedElement.classList.contains('text-element')) inner.style.color = e.target.value;
+        else inner.style.backgroundColor = e.target.value;
+        const fc = document.getElementById('float-color'); if (fc) fc.value = e.target.value;
+        const pc = document.getElementById('prop-color');  if (pc) pc.value = e.target.value;
+    });
+    document.getElementById('float-color')?.addEventListener('input', (e) => {
+        if (!selectedElement) return;
+        const inner = selectedElement.querySelector('.content-wrapper'); if (!inner) return;
+        if (selectedElement.classList.contains('text-element')) inner.style.color = e.target.value;
+        else inner.style.backgroundColor = e.target.value;
+        const ec = document.getElementById('element-color'); if (ec) ec.value = e.target.value;
+    });
+
+    // ── 8. レイヤー・複製・削除 ──────────────────────────────
+    bindClick('bring-front-btn',  () => { if (selectedElement) { saveState(); selectedElement.style.zIndex = maxZIndex++; } });
+    bindClick('send-back-btn',    () => { if (selectedElement) { saveState(); selectedElement.style.zIndex = 1; } });
+    bindClick('float-layer-front',() => { if (selectedElement) { saveState(); selectedElement.style.zIndex = maxZIndex++; } });
+    bindClick('float-send-back',  () => { if (selectedElement) { saveState(); selectedElement.style.zIndex = 1; } });
+
+    bindClick('duplicate-btn', () => {
+        if (!selectedElement) return; saveState();
+        const clone = selectedElement.cloneNode(true);
+        clone.classList.remove('selected');
+        clone.style.left = (parseInt(selectedElement.style.left) + 20) + 'px';
+        clone.style.top  = (parseInt(selectedElement.style.top)  + 20) + 'px';
+        clone.style.zIndex = maxZIndex++;
+        canvas.appendChild(clone); initElementEvents(clone); selectElement(clone);
+        renderSlideList();
+    });
+
+    const removeSelected = () => {
+        if (!selectedElement) return; saveState();
+        selectedElement.remove(); deselect(); renderSlideList();
+    };
+    bindClick('delete-btn',   removeSelected);
+    bindClick('float-delete', removeSelected);
+
+    // ── 9. Designタブ ───────────────────────────────────────
+    document.querySelectorAll('.theme-swatch').forEach(sw => {
+        sw.onclick = () => {
+            saveState();
+            const bg = sw.dataset.bg;
+            const s  = slides[currentSlideIndex];
+            s.bg = bg;
+            s.bgStyle = bg.includes('gradient') ? 'gradient' : 'color';
+            if (s.bgStyle === 'gradient') { canvas.style.background = bg; canvas.style.backgroundImage = bg; }
+            else { canvas.style.background = bg; canvas.style.backgroundImage = 'none'; }
+            renderSlideList();
+        };
+    });
+    document.getElementById('slide-bg-color')?.addEventListener('input', (e) => {
+        const s = slides[currentSlideIndex];
+        s.bg = e.target.value; s.bgStyle = 'color';
+        canvas.style.background = e.target.value;
+        canvas.style.backgroundImage = 'none';
+        renderSlideList();
+    });
+
+    let elemOpacity = 100;
+    bindClick('opacity-up-btn', () => {
+        if (!selectedElement) return;
+        elemOpacity = Math.min(100, elemOpacity + 10);
+        selectedElement.style.opacity = elemOpacity / 100;
+        document.getElementById('opacity-label').textContent = elemOpacity + '%';
+        updatePropsPanel();
+    });
+    bindClick('opacity-down-btn', () => {
+        if (!selectedElement) return;
+        elemOpacity = Math.max(10, elemOpacity - 10);
+        selectedElement.style.opacity = elemOpacity / 100;
+        document.getElementById('opacity-label').textContent = elemOpacity + '%';
+        updatePropsPanel();
+    });
+
+    // ── 10. Transitionタブ ───────────────────────────────────
+    document.querySelectorAll('.trans-btn').forEach(btn => {
+        btn.onclick = () => {
+            slides[currentSlideIndex].transition = btn.dataset.trans;
+            document.querySelectorAll('.trans-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+    });
+
+    // ── 11. Animationタブ ────────────────────────────────────
+    function setAnimation(name) {
+        if (!selectedElement) return; saveState();
+        selectedElement.setAttribute('data-animation', name);
+        const delay = parseFloat(document.getElementById('anim-delay')?.value || 0);
+        selectedElement.setAttribute('data-anim-delay', delay);
+        selectedElement.style.animationDelay = delay + 's';
+        document.querySelectorAll('.anim-set-btn').forEach(b => b.classList.toggle('active', b.dataset.anim === name));
+        const fa = document.getElementById('float-anim-select'); if (fa) fa.value = name;
+        selectedElement.classList.remove('play-anim'); void selectedElement.offsetWidth;
+        selectedElement.classList.add('play-anim');
+    }
+    document.querySelectorAll('.anim-set-btn').forEach(b => { b.onclick = () => setAnimation(b.dataset.anim); });
+    document.getElementById('float-anim-select')?.addEventListener('change', e => setAnimation(e.target.value));
+    document.getElementById('anim-delay')?.addEventListener('change', () => {
+        if (!selectedElement) return;
+        const v = parseFloat(document.getElementById('anim-delay').value) || 0;
+        selectedElement.setAttribute('data-anim-delay', v);
+        selectedElement.style.animationDelay = v + 's';
+    });
+
+    // ── 12. Drawタブ ─────────────────────────────────────────
+    let drawCanvas, drawCtx;
+    function ensureDrawCanvas() {
+        if (document.getElementById('draw-canvas')) {
+            drawCanvas = document.getElementById('draw-canvas');
+            drawCtx    = drawCanvas.getContext('2d');
+            return;
+        }
+        drawCanvas = document.createElement('canvas');
+        drawCanvas.id = 'draw-canvas';
+        drawCanvas.width  = currentWidth;
+        drawCanvas.height = currentHeight;
+        document.getElementById('canvas-container').appendChild(drawCanvas);
+        drawCtx = drawCanvas.getContext('2d');
+        let px, py, drawing = false;
+        drawCanvas.addEventListener('pointerdown', e => {
+            if (!drawMode) return; drawing = true;
+            const r = drawCanvas.getBoundingClientRect();
+            px = (e.clientX - r.left) / currentZoom;
+            py = (e.clientY - r.top)  / currentZoom;
+            drawCtx.beginPath(); drawCtx.moveTo(px, py);
+        });
+        drawCanvas.addEventListener('pointermove', e => {
+            if (!drawing) return;
+            const r  = drawCanvas.getBoundingClientRect();
+            const cx = (e.clientX - r.left) / currentZoom;
+            const cy = (e.clientY - r.top)  / currentZoom;
+            const sz = parseInt(document.getElementById('draw-size')?.value || 4);
+            const co = document.getElementById('draw-color')?.value || '#2563eb';
+            drawCtx.lineWidth  = drawMode === 'eraser' ? sz * 3 : sz;
+            drawCtx.strokeStyle= drawMode === 'eraser' ? 'rgba(255,255,255,1)' : co;
+            drawCtx.lineCap    = 'round'; drawCtx.lineJoin = 'round';
+            drawCtx.globalCompositeOperation = drawMode === 'eraser' ? 'destination-out' : 'source-over';
+            drawCtx.lineTo(cx, cy); drawCtx.stroke();
+            px = cx; py = cy;
+        });
+        drawCanvas.addEventListener('pointerup', () => { drawing = false; });
+    }
+    bindClick('draw-pen-btn', () => {
+        ensureDrawCanvas(); drawMode = 'pen';
+        document.getElementById('draw-canvas').className = 'active';
+        deselect();
+    });
+    bindClick('draw-eraser-btn', () => {
+        ensureDrawCanvas(); drawMode = 'eraser';
+        document.getElementById('draw-canvas').className = 'active eraser-mode';
+        deselect();
+    });
+    bindClick('draw-stop-btn', () => {
+        drawMode = null;
+        const dc = document.getElementById('draw-canvas'); if (dc) dc.className = '';
+    });
+    document.getElementById('draw-size')?.addEventListener('input', e => {
+        const lbl = document.getElementById('draw-size-label'); if (lbl) lbl.textContent = e.target.value;
+    });
+
+    // ── 13. Displayタブ ──────────────────────────────────────
+    let showGrid = false;
+    bindClick('toggle-grid-btn', () => {
+        showGrid = !showGrid; canvas?.classList.toggle('show-grid', showGrid);
+        document.getElementById('toggle-grid-btn')?.classList.toggle('active-toggle', showGrid);
+    });
+    let showRuler = false;
+    bindClick('toggle-ruler-btn', () => {
+        showRuler = !showRuler;
+        document.getElementById('canvas-ruler-h')?.classList.toggle('hidden', !showRuler);
+        document.getElementById('canvas-ruler-v')?.classList.toggle('hidden', !showRuler);
+        document.getElementById('toggle-ruler-btn')?.classList.toggle('active-toggle', showRuler);
+    });
+    document.getElementById('snap-toggle')?.addEventListener('change', e => { snapEnabled = e.target.checked; });
+
+    // ── 14. Proofreading ─────────────────────────────────────
+    function getTextContent() {
+        const arr = [];
+        canvas?.querySelectorAll('.text-element .content-wrapper').forEach(el => {
+            if (el.innerText?.trim()) arr.push(el.innerText.trim());
+        });
+        return arr;
+    }
+    bindClick('word-count-btn', () => {
+        const texts = getTextContent();
+        const all   = texts.join(' ');
+        const words = all.trim().split(/\s+/).filter(w=>w).length;
+        const chars = all.replace(/\s/g,'').length;
+        const res   = document.getElementById('proofread-result');
+        const txt   = document.getElementById('proofread-text');
+        if (txt) txt.textContent = `スライド: ${slides.length}  単語: ${words}  文字（空白除く）: ${chars}`;
+        if (res) res.style.display = 'flex';
+    });
+    bindClick('spellcheck-btn', () => {
+        const texts = getTextContent();
+        const res   = document.getElementById('proofread-result');
+        const txt   = document.getElementById('proofread-text');
+        if (txt) txt.textContent = texts.length
+            ? `${texts.length} 個のテキスト要素 / 合計 ${texts.join('').length} 文字`
+            : 'テキスト要素が見つかりません';
+        if (res) res.style.display = 'flex';
+    });
+
+    // ── 15. スライド管理 ─────────────────────────────────────
+    function renderSlideList() {
+        const list = document.getElementById('slide-list'); if (!list) return;
+        list.innerHTML = '';
+        slides.forEach((s, i) => {
+            const thumb = document.createElement('div');
+            thumb.className = `slide-thumb ${i === currentSlideIndex ? 'active' : ''}`;
+            thumb.style.aspectRatio = `${currentWidth} / ${currentHeight}`;
+
+            const preview = document.createElement('div');
+            preview.className = 'thumb-preview-container';
+            preview.style.width  = currentWidth  + 'px';
+            preview.style.height = currentHeight + 'px';
+            preview.innerHTML = (i === currentSlideIndex) ? canvas.innerHTML : s.html;
+
+            if (s.bgStyle === 'gradient') { preview.style.background = s.bg; }
+            else { preview.style.backgroundColor = s.bg || '#fff'; preview.style.backgroundImage = 'none'; }
+
+            const containerW = list.clientWidth - 4 || 170;
+            preview.style.transform = `scale(${containerW / currentWidth})`;
+
+            const num = document.createElement('div');
+            num.className = 'slide-thumb-number'; num.textContent = i + 1;
+
+            thumb.appendChild(preview);
+            thumb.appendChild(num);
+            thumb.onclick = () => switchSlide(i);
+            list.appendChild(thumb);
+        });
+    }
+
+    function switchSlide(idx, applyTrans = false) {
+        if (!canvas || idx < 0 || idx >= slides.length) return;
+        // 現在スライドを保存
+        slides[currentSlideIndex].html = canvas.innerHTML;
+        const cur = slides[currentSlideIndex];
+        cur.bgStyle = canvas.style.backgroundImage && canvas.style.backgroundImage !== 'none' ? 'gradient' : 'color';
+        cur.bg = cur.bgStyle === 'gradient' ? canvas.style.backgroundImage : (canvas.style.backgroundColor || '#fff');
+
+        currentSlideIndex = idx;
+        const s = slides[idx];
+        canvas.innerHTML = s.html;
+
+        if (s.bgStyle === 'gradient') { canvas.style.background = s.bg; canvas.style.backgroundImage = s.bg; }
+        else { canvas.style.background = s.bg || '#fff'; canvas.style.backgroundImage = 'none'; }
+
+        // トランジション
+        if (applyTrans && s.transition && s.transition !== 'none') {
+            const area = document.getElementById('canvas-area');
+            area?.classList.remove('trans-fade','trans-slide','trans-zoom');
+            void area?.offsetWidth;
+            const spd  = parseFloat(document.getElementById('trans-speed')?.value || 0.7);
+            const cls  = `trans-${s.transition}`;
+            if (area) { area.style.setProperty('--trans-duration', spd + 's'); area.classList.add(cls); }
+            setTimeout(() => area?.classList.remove(cls), spd * 1000 + 50);
+        }
+
+        reattachEvents();
+        renderSlideList();
+        updateUndoRedoUI();
+        const sn = document.getElementById('slide-number'); if (sn) sn.textContent = `${idx+1} / ${slides.length}`;
+    }
+
+    bindClick('add-slide-btn', () => {
+        slides[currentSlideIndex].html = canvas.innerHTML;
+        slides.push({ html:'', bg:'#ffffff', bgStyle:'color', transition:'none', undoStack:[], redoStack:[] });
+        switchSlide(slides.length - 1);
+    });
+
+    bindClick('delete-slide-btn', () => {
+        if (slides.length <= 1) { alert('最後のスライドは削除できません。'); return; }
+        if (!confirm('このスライドを削除しますか？')) return;
+        slides.splice(currentSlideIndex, 1);
+        const next = Math.max(0, currentSlideIndex - 1);
+        currentSlideIndex = next;
+        const s = slides[next];
+        canvas.innerHTML = s.html;
+        if (s.bgStyle === 'gradient') { canvas.style.background = s.bg; canvas.style.backgroundImage = s.bg; }
+        else { canvas.style.background = s.bg || '#fff'; canvas.style.backgroundImage = 'none'; }
+        reattachEvents(); renderSlideList(); updateUndoRedoUI();
+    });
+
+    function reattachEvents() {
+        if (!canvas) return;
+        Array.from(canvas.children).forEach(el => { if (el.id !== 'floating-menu') initElementEvents(el); });
+        deselect();
+    }
+
+    // ── 16. PDF インポート ───────────────────────────────────
+    if (pdfInput) {
+        bindClick('btn-import-pdf', () => pdfInput.click());
+        pdfInput.onchange = async (e) => {
+            const file = e.target.files[0]; if (!file || !window.pdfjsLib) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(ev.target.result) }).promise;
+                    const imported = [];
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const vp   = page.getViewport({ scale: 2.0 });
+                        const rc   = document.createElement('canvas');
+                        rc.width = vp.width; rc.height = vp.height;
+                        await page.render({ canvasContext: rc.getContext('2d'), viewport: vp }).promise;
+                        imported.push({
+                            html: `<div class="canvas-element image-element" style="width:${currentWidth}px;height:${currentHeight}px;left:0;top:0;z-index:50;"><img class="content-wrapper" src="${rc.toDataURL('image/png')}" style="width:100%;height:100%;object-fit:contain;pointer-events:none;"></div>`,
+                            bg: '#ffffff', bgStyle: 'color', transition: 'none', undoStack:[], redoStack:[]
+                        });
+                    }
+                    if (imported.length > 0) {
+                        if (slides.length === 1 && !slides[0].html) slides = imported;
+                        else slides = slides.concat(imported);
+                        currentSlideIndex = 0;
+                        switchSlide(0);
+                    }
+                } catch (err) { alert('PDF インポートに失敗しました: ' + err.message); }
+            };
+            reader.readAsArrayBuffer(file); pdfInput.value = '';
+        };
+    }
+
+    // ── 17. エクスポート ─────────────────────────────────────
     bindClick('export-pdf-btn', async () => {
-        if (!window.jspdf || !window.html2canvas) return;
-        deselect(); // グレーの帯・UI写り込み防止
-        
+        if (!window.jspdf || !window.html2canvas) { alert('ライブラリが不足しています。'); return; }
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation:'landscape', unit:'px', format:[currentWidth, currentHeight] });
-        const origIdx = currentSlideIndex;
-        slides[currentSlideIndex].html = canvas.innerHTML; // 元データを安全退避
-        
-        const oldZoom = currentZoom;
-        currentZoom = 1.0; canvas.style.transform = 'none'; // ズーム解除でキャプチャ枠ズレ修正
-        await new Promise(r => setTimeout(r, 100)); // ブラウザの再描画待機
+        const pdf  = new jsPDF({ orientation:'landscape', unit:'px', format:[currentWidth, currentHeight] });
+        const orig = currentSlideIndex;
+        deselect(); slides[orig].html = canvas.innerHTML;
+
+        const origTransform = canvas.style.transform;
+        canvas.style.transform = 'scale(1)';
+        canvas.style.transformOrigin = 'top left';
 
         for (let i = 0; i < slides.length; i++) {
-            canvas.innerHTML = slides[i].html;
-            canvas.style.background = slides[i].bg || '#ffffff';
-            await new Promise(r => setTimeout(r, 50));
-            
-            const cap = await html2canvas(canvas, { width: currentWidth, height: currentHeight, scale: 1, useCORS: true, backgroundColor: null });
             if (i > 0) pdf.addPage([currentWidth, currentHeight], 'landscape');
-            pdf.addImage(cap.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, currentWidth, currentHeight);
+            canvas.innerHTML = slides[i].html;
+            const s = slides[i];
+            if (s.bgStyle === 'gradient') { canvas.style.background = s.bg; }
+            else { canvas.style.backgroundColor = s.bg || '#fff'; canvas.style.backgroundImage = 'none'; }
+            const cap = await html2canvas(canvas, { width: currentWidth, height: currentHeight, scale: 1, useCORS: true, logging: false });
+            pdf.addImage(cap.toDataURL('image/jpeg', 0.96), 'JPEG', 0, 0, currentWidth, currentHeight);
         }
-        
+        canvas.style.transform = origTransform;
+        switchSlide(orig);
         pdf.save('presentation.pdf');
-        
-        // 元の環境を安全に完全復元 (ファイル書き換わりバグの解消)
-        currentZoom = oldZoom; applyZoom();
-        currentSlideIndex = origIdx; canvas.innerHTML = slides[origIdx].html; canvas.style.background = slides[origIdx].bg || '#ffffff';
-        reattachEvents();
     });
 
     bindClick('export-pptx-btn', () => {
-        if (!window.PptxGenJS) return;
-        const pptx = new PptxGenJS();
-        pptx.layout = (currentWidth/currentHeight > 1.4) ? 'LAYOUT_16x9' : 'LAYOUT_4x3';
+        if (!window.PptxGenJS) { alert('PPTXライブラリが読み込まれていません。'); return; }
+        const pptx = new PptxGenJS(); pptx.layout = 'LAYOUT_16x9';
         slides[currentSlideIndex].html = canvas.innerHTML;
-
         slides.forEach(s => {
-            const slide = pptx.addSlide();
-            // PPTX背景黒化バグ修正
-            const bgHex = (s.bg && s.bg !== 'transparent' && !s.bg.includes('rgba(0, 0, 0, 0)')) ? rgbToHex(s.bg) : '#ffffff';
-            slide.background = { fill: bgHex.replace('#', '') };
-
-            const temp = document.createElement('div'); temp.innerHTML = s.html;
-            temp.querySelectorAll('.canvas-element').forEach(el => {
-                const inner = el.querySelector('.content-wrapper'); if(!inner) return;
-                const x = ((parseFloat(el.style.left)||0)/currentWidth)*100+"%", y = ((parseFloat(el.style.top)||0)/currentHeight)*100+"%";
-                const w = ((parseFloat(el.style.width)||100)/currentWidth)*100+"%", h = ((parseFloat(el.style.height)||100)/currentHeight)*100+"%";
-
+            const sl = pptx.addSlide();
+            if (s.bgStyle === 'color') sl.background = { fill: (s.bg || '#ffffff').replace('#','') };
+            const tmp = document.createElement('div'); tmp.innerHTML = s.html;
+            tmp.querySelectorAll('.canvas-element').forEach(el => {
+                const inner = el.querySelector('.content-wrapper'); if (!inner) return;
+                const fx = currentWidth / 10, fy = currentHeight / 5.625;
+                const x  = (parseInt(el.style.left)||0) / fx;
+                const y  = (parseInt(el.style.top) ||0) / fy;
+                const w  = (parseInt(el.style.width) ||100) / fx;
+                const h  = (parseInt(el.style.height)||50)  / fy;
                 if (el.classList.contains('text-element')) {
-                    slide.addText(inner.innerText, { x, y, w, h, fontSize: (parseFloat(inner.style.fontSize)||32)*0.75, color: rgbToHex(inner.style.color||'#000').replace('#',''), align: inner.style.textAlign||'left' });
-                } else if (el.classList.contains('rect-element') || el.classList.contains('circle-element')) {
-                    slide.addShape(el.classList.contains('circle-element') ? pptx.ShapeType.oval : pptx.ShapeType.rectangle, { x, y, w, h, fill: { color: rgbToHex(inner.style.backgroundColor||'#2563eb').replace('#','') } });
+                    const ff = (inner.style.fontFamily || 'Arial').split(',')[0].replace(/['"]/g,'').trim();
+                    sl.addText(inner.innerText || '', {
+                        x, y, w, h,
+                        fontSize: (parseInt(inner.style.fontSize) || 24) * 0.75,
+                        color: rgbToHex(window.getComputedStyle(inner).color).replace('#',''),
+                        fontFace: ff, align: inner.style.textAlign || 'left'
+                    });
+                } else if (el.classList.contains('image-element')) {
+                    const img = el.querySelector('img'); if (img?.src) sl.addImage({ data: img.src, x, y, w, h });
+                } else if (el.classList.contains('rect-element')) {
+                    const shape = el.classList.contains('circle-element') ? pptx.ShapeType.oval : pptx.ShapeType.rectangle;
+                    sl.addShape(shape, { x, y, w, h, fill: { color: rgbToHex(window.getComputedStyle(inner).backgroundColor).replace('#','') } });
                 }
             });
         });
         pptx.writeFile({ fileName: 'presentation.pptx' });
     });
 
-    // ── スライドショー (隔離実行でデータ破損修正) ──────────────────
-    let presenterIndex = 0;
-    bindClick('present-btn', () => {
-        deselect(); slides[currentSlideIndex].html = canvas.innerHTML; // 現時点を保存
-        document.getElementById('presenter-overlay').classList.remove('hidden');
-        presenterIndex = currentSlideIndex;
-        renderPresenterSlide();
+    // ── 18. プレゼンテーション ───────────────────────────────
+    function layoutPresentation() {
+        const isPresent = document.fullscreenElement || document.webkitFullscreenElement
+                       || document.querySelector('.pseudo-fullscreen');
+        if (!isPresent || !canvas) return;
+        const scale = Math.min(window.innerWidth / currentWidth, window.innerHeight / currentHeight);
+        canvas.style.transform       = `scale(${scale})`;
+        canvas.style.transformOrigin = 'center center';
+        canvas.style.position        = 'absolute';
+        canvas.style.left = '50%';
+        canvas.style.top  = '50%';
+        canvas.style.margin = `-${currentHeight/2}px 0 0 -${currentWidth/2}px`;
+    }
+    window.addEventListener('resize', () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.querySelector('.pseudo-fullscreen'))
+            layoutPresentation();
     });
-    bindClick('exit-present-btn', () => { document.getElementById('presenter-overlay').classList.add('hidden'); });
-    bindClick('next-slide', () => { if(presenterIndex < slides.length-1) { presenterIndex++; renderPresenterSlide(); } });
-    bindClick('prev-slide', () => { if(presenterIndex > 0) { presenterIndex--; renderPresenterSlide(); } });
-    
-    function renderPresenterSlide() {
-        const wrap = document.getElementById('presenter-canvas-wrap');
-        wrap.innerHTML = slides[presenterIndex].html; // 編集DOMとは独立した空間にクローン
-        wrap.style.width = currentWidth+'px'; wrap.style.height = currentHeight+'px';
-        wrap.style.background = slides[presenterIndex].bg || '#ffffff';
-        wrap.style.transform = `scale(${Math.min(window.innerWidth/currentWidth, window.innerHeight/currentHeight)})`;
-        wrap.style.transformOrigin = 'center center';
-        
-        wrap.querySelectorAll('.canvas-element').forEach(el => { el.classList.remove('selected'); el.classList.add('play-anim'); });
-        document.getElementById('slide-number').textContent = `${presenterIndex + 1} / ${slides.length}`;
-    }
 
-    // ── スライド管理共通ユーティリティ ────────────────────────────
-    function switchSlide(idx) {
-        slides[currentSlideIndex].html = canvas.innerHTML;
-        currentSlideIndex = idx; canvas.innerHTML = slides[idx].html; canvas.style.background = slides[idx].bg;
-        reattachEvents(); renderSlideList();
+    function triggerPresentationUI(entering) {
+        const ctrl = document.getElementById('presenter-controls'); if (!ctrl) return;
+        ctrl.classList.toggle('hidden', !entering);
+        if (entering) {
+            deselect();
+            slides[currentSlideIndex].html = canvas.innerHTML;
+            document.getElementById('slide-number').textContent = `${currentSlideIndex+1} / ${slides.length}`;
+            layoutPresentation();
+            playSlideAnimations();
+            const sec = parseFloat(document.getElementById('auto-advance')?.value || 0);
+            if (sec > 0) {
+                clearInterval(autoAdvanceTimer);
+                autoAdvanceTimer = setInterval(() => {
+                    if (currentSlideIndex < slides.length - 1) goNextSlide();
+                    else clearInterval(autoAdvanceTimer);
+                }, sec * 1000);
+            }
+        } else {
+            clearInterval(autoAdvanceTimer);
+            document.querySelector('.canvas-area')?.classList.remove('pseudo-fullscreen');
+            canvas.style.position = '';
+            canvas.style.left     = '';
+            canvas.style.top      = '';
+            canvas.style.margin   = '';
+            applyZoom();
+        }
     }
-    function renderSlideList() {
-        const cont = document.getElementById('thumb-container'); if (!cont) return;
-        cont.innerHTML = '';
-        slides.forEach((s, i) => {
-            const thumb = document.createElement('div'); thumb.className = `slide-thumb ${i===currentSlideIndex ? 'active':''}`; thumb.style.aspectRatio = `${currentWidth}/${currentHeight}`;
-            const pv = document.createElement('div'); pv.className = 'thumb-preview-container'; pv.style.width=currentWidth+'px'; pv.style.height=currentHeight+'px';
-            pv.innerHTML = i===currentSlideIndex ? canvas.innerHTML : s.html; pv.style.background = s.bg; pv.style.transform = `scale(${(cont.clientWidth/currentWidth)*0.9})`;
-            thumb.appendChild(pv); thumb.onclick = () => switchSlide(i); cont.appendChild(thumb);
+    document.addEventListener('fullscreenchange', () => triggerPresentationUI(!!document.fullscreenElement));
+    document.addEventListener('webkitfullscreenchange', () => triggerPresentationUI(!!document.webkitFullscreenElement));
+
+    function startPresent(fromStart = false) {
+        if (fromStart) switchSlide(0);
+        const area = document.querySelector('.canvas-area');
+        if (area?.requestFullscreen) area.requestFullscreen();
+        else if (area?.webkitRequestFullscreen) area.webkitRequestFullscreen();
+        else { area?.classList.add('pseudo-fullscreen'); triggerPresentationUI(true); }
+    }
+    bindClick('present-btn',            () => startPresent(false));
+    bindClick('present-from-start-btn', () => startPresent(true));
+    bindClick('exit-present-btn', () => {
+        clearInterval(autoAdvanceTimer);
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else triggerPresentationUI(false);
+    });
+
+    function playSlideAnimations() {
+        if (!canvas) return;
+        Array.from(canvas.children).forEach(el => {
+            const delay = parseFloat(el.getAttribute('data-anim-delay') || 0);
+            el.classList.remove('play-anim'); void el.offsetWidth;
+            el.style.animationDelay = delay + 's';
+            el.classList.add('play-anim');
         });
     }
-    function reattachEvents() { Array.from(canvas.children).forEach(el => initElementEvents(el)); }
+
+    function goNextSlide() {
+        if (currentSlideIndex < slides.length - 1) switchSlide(currentSlideIndex + 1, true);
+        const sn = document.getElementById('slide-number'); if (sn) sn.textContent = `${currentSlideIndex+1} / ${slides.length}`;
+        playSlideAnimations();
+    }
+    function goPrevSlide() {
+        if (currentSlideIndex > 0) switchSlide(currentSlideIndex - 1, true);
+        const sn = document.getElementById('slide-number'); if (sn) sn.textContent = `${currentSlideIndex+1} / ${slides.length}`;
+        playSlideAnimations();
+    }
+    bindClick('next-slide', goNextSlide);
+    bindClick('prev-slide', goPrevSlide);
+
+    // ── 19. キーボードショートカット ─────────────────────────
+    document.addEventListener('keydown', e => {
+        const tag    = document.activeElement.tagName;
+        const inText = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+                    || document.activeElement.isContentEditable;
+
+        const isPresenting = document.fullscreenElement || document.webkitFullscreenElement
+                          || document.querySelector('.pseudo-fullscreen');
+        if (isPresenting) {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goNextSlide(); }
+            if (e.key === 'ArrowLeft')                   { e.preventDefault(); goPrevSlide(); }
+            if (e.key === 'Escape') document.getElementById('exit-present-btn')?.click();
+            return;
+        }
+        if (inText) return;
+
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'z') { e.preventDefault(); document.getElementById('undo-btn')?.click(); return; }
+            if (e.key === 'y') { e.preventDefault(); document.getElementById('redo-btn')?.click(); return; }
+            if (e.key === 'd') { e.preventDefault(); document.getElementById('duplicate-btn')?.click(); return; }
+        }
+        if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSelected(); return; }
+
+        if (selectedElement) {
+            const pace = e.shiftKey ? 1 : 10;
+            if (e.key === 'ArrowLeft')  { e.preventDefault(); selectedElement.style.left = (parseInt(selectedElement.style.left)||0) - pace + 'px'; }
+            if (e.key === 'ArrowRight') { e.preventDefault(); selectedElement.style.left = (parseInt(selectedElement.style.left)||0) + pace + 'px'; }
+            if (e.key === 'ArrowUp')    { e.preventDefault(); selectedElement.style.top  = (parseInt(selectedElement.style.top) ||0) - pace + 'px'; }
+            if (e.key === 'ArrowDown')  { e.preventDefault(); selectedElement.style.top  = (parseInt(selectedElement.style.top) ||0) + pace + 'px'; }
+            updateFloatingMenuPosition(); updatePropsPosition(); renderSlideList();
+        }
+    });
+
+    // ── ユーティリティ ───────────────────────────────────────
     function rgbToHex(rgb) {
-        if (!rgb || rgb === 'transparent' || rgb.replace(/\s/g, '').includes('rgba(0,0,0,0)')) return '#ffffff';
-        if (rgb.startsWith('#')) return rgb;
+        if (!rgb || rgb === 'transparent') return '#000000';
         const m = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-        return m ? "#" + m.slice(1).map(x => parseInt(x).toString(16).padStart(2, '0')).join('') : '#ffffff';
+        return m ? '#' + m.slice(1).map(v => parseInt(v).toString(16).padStart(2,'0')).join('') : '#000000';
     }
 
-    bindClick('btn-add-slide', () => { slides.push({ html:'', bg:'#ffffff', bgStyle:'color', transition:'none', undoStack:[], redoStack:[] }); switchSlide(slides.length-1); });
-    bindClick('btn-del-slide', () => { if(slides.length>1) { slides.splice(currentSlideIndex, 1); switchSlide(Math.max(0, currentSlideIndex-1)); } });
-    bindClick('delete-btn', () => { if(selectedElement) { saveState(); selectedElement.remove(); deselect(); renderSlideList(); }});
-    bindClick('float-delete', () => document.getElementById('delete-btn').click());
-
+    // ── 初期化 ───────────────────────────────────────────────
     updateCanvasResolution();
+    renderSlideList();
+    updateUndoRedoUI();
 });
