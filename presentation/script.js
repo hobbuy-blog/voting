@@ -25,9 +25,13 @@ let selectedElement   = null;
 let maxZIndex = 100;
 let currentZoom = 0.5;
 
+// ★ ドラッグ時のスクロール誤爆を防ぐグローバルフラグ
+let globalDragging = false;
+
 document.addEventListener('DOMContentLoaded', () => {
     const canvas    = document.getElementById('canvas');
     const container = document.getElementById('canvas-container');
+    const area      = document.getElementById('canvas-area');
     const bindClick = (id, fn) => { document.getElementById(id)?.addEventListener('click', fn); };
 
     // ── カラーパレット ──
@@ -62,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState(); renderSlideList();
     }
 
-    // ── ズーム・表示 (複数UI同期) ──
+    // ── ズーム・表示 (複数UI同期 + ピンチズーム) ──
     function applyZoom() {
         if (!canvas) return;
         canvas.style.transform=`scale(${currentZoom})`;
@@ -79,13 +83,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.querySelectorAll('.zoom-fit-sync').forEach(btn => {
         btn.addEventListener('click', () => {
-            const area = document.getElementById('canvas-area');
             if(!area) return;
             currentZoom = Math.min((area.clientWidth - 80) / currentWidth, (area.clientHeight - 80) / currentHeight);
             applyZoom();
         });
     });
 
+    // ★ ピンチズーム対応
+    let pinchStartDist = 0;
+    let pinchStartZoom = 1;
+    area?.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            pinchStartDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            pinchStartZoom = currentZoom;
+        }
+    }, { passive: false });
+    area?.addEventListener('touchmove', e => {
+        if (e.touches.length === 2 && pinchStartDist > 0) {
+            e.preventDefault();
+            const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            currentZoom = Math.min(2.0, Math.max(0.1, pinchStartZoom * (dist / pinchStartDist)));
+            applyZoom();
+        }
+    }, { passive: false });
+    area?.addEventListener('touchend', e => {
+        if (e.touches.length < 2) pinchStartDist = 0;
+    });
+
+    // ★ ドラッグ中のみ画面スクロールを強制ブロック（要素だけが動くように）
+    document.addEventListener('touchmove', e => {
+        if (globalDragging) e.preventDefault();
+    }, { passive: false });
+
+    // ── グリッド＆ルーラー ──
     let showGrid = false, showRuler = false;
     bindClick('toggle-grid-btn', () => {
         showGrid = !showGrid;
@@ -100,14 +131,20 @@ document.addEventListener('DOMContentLoaded', () => {
         redrawRulers();
     });
 
+    // ★ ルーラーの絶対位置固定＆動的描画
     function redrawRulers() {
-        if (!showRuler) return;
+        if (!showRuler || !area) return;
         const cRect = canvas.getBoundingClientRect();
+        
         const rh = document.getElementById('ruler-h');
         if(rh && !rh.classList.contains('hidden')){
-            rh.width = rh.offsetWidth; rh.height = rh.offsetHeight;
+            rh.style.top = area.scrollTop + 'px';
+            rh.style.left = area.scrollLeft + 32 + 'px';
+            rh.width = area.clientWidth - 32; 
+            rh.height = 20;
             const ctx = rh.getContext('2d'); ctx.clearRect(0,0,rh.width,rh.height);
             ctx.strokeStyle='#cbd5e1'; ctx.fillStyle='#94a3b8'; ctx.font='9px sans-serif';
+            
             const offset = cRect.left - rh.getBoundingClientRect().left;
             for(let v=0; v<=currentWidth; v+=100) {
                 const sx = offset + v * currentZoom; if(sx<0 || sx>rh.width) continue;
@@ -115,11 +152,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.fillText(v, sx+2, rh.height-2);
             }
         }
+        
         const rv = document.getElementById('ruler-v');
         if(rv && !rv.classList.contains('hidden')){
-            rv.width = rv.offsetWidth; rv.height = rv.offsetHeight;
+            rv.style.left = area.scrollLeft + 'px';
+            rv.style.top = area.scrollTop + 20 + 'px';
+            rv.width = 20; 
+            rv.height = area.clientHeight - 20;
             const ctx = rv.getContext('2d'); ctx.clearRect(0,0,rv.width,rv.height);
             ctx.strokeStyle='#cbd5e1'; ctx.fillStyle='#94a3b8'; ctx.font='9px sans-serif';
+            
             const offset = cRect.top - rv.getBoundingClientRect().top;
             for(let v=0; v<=currentHeight; v+=100) {
                 const sy = offset + v * currentZoom; if(sy<0 || sy>rv.height) continue;
@@ -128,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     window.addEventListener('resize', redrawRulers);
+    area?.addEventListener('scroll', redrawRulers); // スクロール時にルーラーを追従＆再描画
 
     function updateCanvasResolution() {
         const sel = document.getElementById('slide-size-select'); if(!sel||!canvas) return;
@@ -148,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindClick('undo-btn', () => { const s=slides[currentSlideIndex]; if(!s.undoStack.length) return; s.redoStack.push(canvas.innerHTML); canvas.innerHTML=s.undoStack.pop(); reattachEvents(); });
     bindClick('redo-btn', () => { const s=slides[currentSlideIndex]; if(!s.redoStack.length) return; s.undoStack.push(canvas.innerHTML); canvas.innerHTML=s.redoStack.pop(); reattachEvents(); });
 
-    // ── 要素作成とダブルタップ編集 ──
+    // ── 要素作成とダブルタップ編集対応 ──
     function createBaseElement(typeClass, w, h) {
         saveState();
         const el=document.createElement('div'); el.className=`canvas-element ${typeClass}`;
@@ -156,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const handles = typeClass.includes('text-element') ? ['nw','ne','sw','se','w','e'] : ['nw','ne','sw','se'];
         handles.forEach(dir => { const h2=document.createElement('div'); h2.className=`resize-handle ${dir}`; h2.dataset.direction=dir; el.appendChild(h2); });
         canvas.appendChild(el); initElementEvents(el); selectElement(el); renderSlideList();
-        window.openTab(null, 'tab-home'); // ★強制Home遷移
+        window.openTab(null, 'tab-home');
         return el;
     }
 
@@ -172,35 +215,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initElementEvents(el) {
         let isDrag=false, isRes=false, sx, sy, ox, oy, sw, sh, dir;
-        let lastTap = 0;
-
         const inner = el.querySelector('.content-wrapper');
-        // ★ ダブルタップによる編集許可
+
+        // ★ ダブルタップ(クリック)でテキスト編集モードへ移行
         if(inner && el.classList.contains('text-element')) {
+            let lastTap = 0;
             const handleEdit = (e) => {
                 if(selectedElement === el) { e.stopPropagation(); inner.focus(); }
             };
             inner.addEventListener('dblclick', handleEdit);
-            inner.addEventListener('touchstart', (e) => {
+            inner.addEventListener('touchend', (e) => {
                 const now = Date.now();
-                if(now - lastTap < 300) handleEdit(e);
+                if(now - lastTap < 300) { handleEdit(e); e.preventDefault(); }
                 lastTap = now;
             });
         }
 
         el.addEventListener('pointerdown', e => {
             if (e.target.classList.contains('resize-handle')) return;
-            // 編集中の場合はドラッグ処理をさせない
+            // ★ テキスト編集中(キャレット表示中)はドラッグを発火させない
             if (el.classList.contains('text-element') && document.activeElement === inner) return;
 
-            isDrag=true; saveState(); el.setPointerCapture(e.pointerId);
+            isDrag=true; globalDragging=true; saveState(); 
+            // ※ PointerCaptureを削除し、内部フォーカス障害を根絶
             sx=e.clientX; sy=e.clientY; ox=el.offsetLeft; oy=el.offsetTop;
             selectElement(el); e.stopPropagation();
         });
 
         el.querySelectorAll('.resize-handle').forEach(h => {
             h.addEventListener('pointerdown', e => {
-                isRes=true; saveState(); h.setPointerCapture(e.pointerId);
+                isRes=true; globalDragging=true; saveState(); 
                 dir=h.dataset.direction; sx=e.clientX; sy=e.clientY; sw=el.offsetWidth; sh=el.offsetHeight; ox=el.offsetLeft; oy=el.offsetTop;
                 e.stopPropagation(); e.preventDefault();
             });
@@ -222,8 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         document.addEventListener('pointerup', e => {
-            if(isDrag){ try{el.releasePointerCapture(e.pointerId);}catch(_){} isDrag=false; renderSlideList(); }
-            if(isRes){ isRes=false; renderSlideList(); }
+            if(isDrag){ isDrag=false; globalDragging=false; renderSlideList(); }
+            if(isRes){ isRes=false; globalDragging=false; renderSlideList(); }
         });
     }
 
@@ -231,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!el) return;
         if (selectedElement && selectedElement!==el) selectedElement.classList.remove('selected');
         selectedElement=el; el.classList.add('selected');
-        window.openTab(null, 'tab-home'); // ★強制Home遷移
+        window.openTab(null, 'tab-home');
         syncPropsPanel();
     }
     function deselect() {
@@ -297,9 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
         slides.splice(currentSlideIndex,1); switchSlide(Math.max(0,currentSlideIndex-1));
     });
     
-    // ★ スライド複製の機能実装
     bindClick('duplicate-slide-btn', () => {
-        slides[currentSlideIndex].html = canvas.innerHTML; // 現状保存
+        slides[currentSlideIndex].html = canvas.innerHTML;
         const curr = slides[currentSlideIndex];
         const clone = { html: curr.html, bg: curr.bg, bgStyle: curr.bgStyle, transition: curr.transition, undoStack: [], redoStack: [] };
         slides.splice(currentSlideIndex + 1, 0, clone);
@@ -308,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function reattachEvents() { Array.from(canvas.children).forEach(el=>initElementEvents(el)); deselect(); }
 
-    // ── PPTX エクスポート修正（NaN・透明化対応） ──
+    // ── PPTX エクスポート ──
     function rgbToHex(rgb){
         if(!rgb||rgb==='transparent'||rgb.includes('rgba(0,0,0,0)')) return '#ffffff';
         const m=rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -359,7 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.classList.remove('hidden');
         buildPresenterSlide(currentSlideIndex);
 
-        // ★ ブラウザのフルスクリーン化
         const docElm = document.documentElement;
         if (docElm.requestFullscreen) docElm.requestFullscreen();
         else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
@@ -369,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('presenter-overlay').classList.add('hidden');
         switchSlide(currentSlideIndex);
 
-        // ★ ブラウザのフルスクリーン解除
         if (document.fullscreenElement || document.webkitFullscreenElement) {
             if (document.exitFullscreen) document.exitFullscreen();
             else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -394,7 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── 初期化 ──
     updateCanvasResolution();
-    // ★ 起動時にキャンバスへ明示的に1枚目を描画（スライドが表示されない・編集できないバグの修正）
     canvas.innerHTML = slides[0].html;
     canvas.style.background = slides[0].bg || '#ffffff';
     renderSlideList();
