@@ -60,7 +60,7 @@ button.icon-only { padding: 4px 6px; }
 .theme-swatch { width: 24px; height: 24px; border-radius: 4px; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
 .theme-swatch:hover { transform: scale(1.15); border-color: var(--accent-color) !important; }
 
-select, input[type="number"] { padding: 3px 6px; border-radius: var(--radius); border: 1px solid var(--ribbon-border); font-size: 0.76rem; outline: none; font-family: inherit; }
+select, input[type="number"], input[type="range"] { padding: 3px 6px; border-radius: var(--radius); border: 1px solid var(--ribbon-border); font-size: 0.76rem; outline: none; font-family: inherit; }
 
 .color-trigger-btn { display: inline-flex; align-items: center; gap: 3px; padding: 3px 5px; border-radius: var(--radius); border: 1px solid var(--ribbon-border); background: #fff; cursor: pointer; }
 .color-preview { display: block; width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; }
@@ -88,15 +88,11 @@ select, input[type="number"] { padding: 3px 6px; border-radius: var(--radius); b
 #canvas-container { position: relative; flex-shrink: 0; }
 
 .slide-canvas { background: #fff; box-shadow: 0 6px 28px rgba(15,23,42,0.14); position: relative; overflow: hidden; flex-shrink: 0; transform-origin: center center; }
-
-/* ★ 編み目(Grid)表示用 */
 .slide-canvas.show-grid {
-    background-image: linear-gradient(rgba(37,99,235,0.1) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(37,99,235,0.1) 1px, transparent 1px) !important;
+    background-image: linear-gradient(rgba(37,99,235,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.1) 1px, transparent 1px) !important;
     background-size: 40px 40px !important;
 }
 
-/* ★ ルーラー */
 .ruler-canvas { position: absolute; z-index: 20; background: #f8fafc; border: 1px solid var(--ribbon-border); }
 .ruler-h { top: 0; left: 32px; height: 20px; width: calc(100% - 32px); }
 .ruler-v { left: 0; top: 20px; width: 20px; height: calc(100% - 20px); }
@@ -112,8 +108,6 @@ select, input[type="number"] { padding: 3px 6px; border-radius: var(--radius); b
 .canvas-element.selected { border: 1.5px solid var(--accent-color); }
 
 .text-element { height: auto !important; min-height: 40px; }
-
-/* ★ ダブルタップ時のテキスト編集許可 */
 .content-wrapper { width: 100%; height: 100%; outline: none; display: block; word-break: break-word; box-sizing: border-box; white-space: pre-wrap; cursor: text;}
 .canvas-element:not(.selected) .content-wrapper { cursor: grab; }
 
@@ -128,8 +122,10 @@ img.content-wrapper { object-fit: contain; pointer-events: none; }
 .resize-handle.w { top: calc(50% - 7px); left: -7px; cursor: ew-resize; }
 .resize-handle.e { top: calc(50% - 7px); right: -7px; cursor: ew-resize; }
 
-.props-panel { width: 196px; flex-shrink: 0; background: var(--props-bg); border-left: 1px solid var(--ribbon-border); display: flex; flex-direction: column; overflow-y: auto; }
+/* ★ プロパティパネル：スクロールと固定フッターの分離 */
+.props-panel { width: 196px; flex-shrink: 0; background: var(--props-bg); border-left: 1px solid var(--ribbon-border); display: flex; flex-direction: column; overflow: hidden; }
 .props-header { padding: 8px 12px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--ribbon-border); flex-shrink: 0; }
+.props-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 .props-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.72rem; }
 .props-content { padding: 10px; }
 .props-content.hidden { display: none; }
@@ -137,6 +133,8 @@ img.content-wrapper { object-fit: contain; pointer-events: none; }
 .prop-row label { min-width: 16px; font-weight: 500; }
 .prop-input { width: 50px; padding: 3px 4px; font-size: 0.7rem; }
 .prop-section.hidden { display: none; }
+.props-zoom-footer { padding: 12px; border-top: 1px solid var(--ribbon-border); background: #fff; flex-shrink: 0; }
+.zoom-footer-title { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
 
 .presenter-overlay { position: fixed; inset: 0; z-index: 99999; background: #000; display: flex; align-items: center; justify-content: center; touch-action: none; }
 .presenter-overlay.hidden { display: none !important; }
