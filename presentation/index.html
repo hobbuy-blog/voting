@@ -219,10 +219,10 @@
                 </div>
                 <div class="ribbon-group">
                     <div class="group-buttons" style="gap:10px;">
-                        <input type="range" id="zoom-slider" min="10" max="200" value="50" style="width:80px;">
-                        <span id="zoom-slider-val" style="font-size:0.75rem; min-width:30px;">50%</span>
-                        <button id="zoom-fit-btn" class="icon-btn secondary">Fit</button>
-                        <button id="zoom-100-btn" class="icon-btn secondary">100%</button>
+                        <input type="range" class="zoom-slider-sync" min="10" max="200" value="50" style="width:80px;">
+                        <span class="zoom-val-sync" style="font-size:0.75rem; min-width:30px;">50%</span>
+                        <button class="icon-btn secondary zoom-fit-sync">Fit</button>
+                        <button class="icon-btn secondary zoom-100-sync">100%</button>
                     </div>
                     <span class="group-label">Zoom</span>
                 </div>
@@ -255,28 +255,43 @@
 
         <aside class="props-panel" id="props-panel">
             <div class="props-header">Properties</div>
-            <div id="props-no-select" class="props-empty">
-                <p>Select an element</p>
-            </div>
-            <div id="props-content" class="props-content hidden">
-                <div class="prop-row">
-                    <label>X</label><input type="number" id="prop-x" class="prop-input">
-                    <label>Y</label><input type="number" id="prop-y" class="prop-input">
+            
+            <div class="props-scroll">
+                <div id="props-no-select" class="props-empty">
+                    <p>Select an element</p>
                 </div>
-                <div class="prop-row">
-                    <label>W</label><input type="number" id="prop-w" class="prop-input">
-                    <label>H</label><input type="number" id="prop-h" class="prop-input">
-                </div>
-                <div id="text-props" class="prop-section hidden">
+                <div id="props-content" class="props-content hidden">
                     <div class="prop-row">
-                        <label>Size</label><input type="number" id="prop-fontsize" class="prop-input">
+                        <label>X</label><input type="number" id="prop-x" class="prop-input">
+                        <label>Y</label><input type="number" id="prop-y" class="prop-input">
+                    </div>
+                    <div class="prop-row">
+                        <label>W</label><input type="number" id="prop-w" class="prop-input">
+                        <label>H</label><input type="number" id="prop-h" class="prop-input">
+                    </div>
+                    <div id="text-props" class="prop-section hidden">
+                        <div class="prop-row">
+                            <label>Size</label><input type="number" id="prop-fontsize" class="prop-input">
+                        </div>
+                    </div>
+                    <div id="shape-props" class="prop-section hidden">
+                        <div class="prop-row" style="flex-wrap:wrap;gap:4px;">
+                            <label style="width:100%">Opacity</label>
+                            <input type="range" id="prop-opacity" min="0" max="100" value="100" style="flex:1;min-width:60px;">
+                        </div>
                     </div>
                 </div>
-                <div id="shape-props" class="prop-section hidden">
-                    <div class="prop-row" style="flex-wrap:wrap;gap:4px;">
-                        <label style="width:100%">Opacity</label>
-                        <input type="range" id="prop-opacity" min="0" max="100" value="100" style="flex:1;min-width:60px;">
-                    </div>
+            </div>
+
+            <div class="props-zoom-footer">
+                <div class="zoom-footer-title">Zoom</div>
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                    <input type="range" class="zoom-slider-sync" min="10" max="200" value="50" style="flex:1;">
+                    <span class="zoom-val-sync" style="font-size:0.7rem; color:var(--text-muted); min-width:32px; text-align:right;">50%</span>
+                </div>
+                <div style="display:flex; gap:4px;">
+                    <button class="icon-btn secondary zoom-fit-sync" style="flex:1; justify-content:center;">Fit</button>
+                    <button class="icon-btn secondary zoom-100-sync" style="flex:1; justify-content:center;">100%</button>
                 </div>
             </div>
         </aside>
