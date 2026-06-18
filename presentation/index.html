@@ -34,14 +34,7 @@
     <header class="ribbon">
         <div class="ribbon-tabs">
             <div class="ribbon-logo">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <rect width="18" height="18" rx="4" fill="#2563eb"/>
-                    <rect x="3" y="3" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
-                    <rect x="10" y="3" width="5" height="5" rx="1" fill="white" opacity="0.55"/>
-                    <rect x="3" y="10" width="5" height="5" rx="1" fill="white" opacity="0.55"/>
-                    <rect x="10" y="10" width="5" height="5" rx="1" fill="#93c5fd" opacity="0.9"/>
-                </svg>
-                <span>Leaslide</span>
+                <span style="color:#2563eb; font-weight:bold; font-size:16px;">Leaslide</span>
             </div>
             <button class="tab-link" onclick="openTab(event,'tab-file')">File</button>
             <button class="tab-link active" onclick="openTab(event,'tab-home')">Home</button>
@@ -286,6 +279,14 @@
                             <label style="width:100%">Opacity</label>
                             <input type="range" id="prop-opacity" min="0" max="100" value="100" style="flex:1;min-width:60px;">
                         </div>
+                    </div>
+                </div>
+
+                <div style="padding: 10px; border-top: 1px solid var(--ribbon-border); margin-top: auto;">
+                    <div style="font-size: 0.68rem; font-weight: 700; color: #7c3aed; margin-bottom: 8px; text-transform: uppercase;">✨ AI Assistant</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <button id="ai-text-btn" class="icon-btn secondary" style="justify-content: center; color: #6d28d9; border-color: #ddd6fe; cursor: pointer;">📝 Fix Text</button>
+                        <button id="ai-layout-btn" class="icon-btn secondary" style="justify-content: center; color: #6d28d9; border-color: #ddd6fe; cursor: pointer;">🪄 Auto Layout</button>
                     </div>
                 </div>
             </div>
