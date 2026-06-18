@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: AI_MODEL, // プロキシ先（OpenRouter）で読み取らせるために付与
+                    model: AI_MODEL, 
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: userPrompt }
@@ -509,12 +509,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
+            // ★ いきなりJSONとして解釈せず、まずはテキストとして受け取る
+            const responseText = await response.text();
+
             if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`API接続エラー (HTTP ${response.status}): ${errText}`);
+                throw new Error(`APIエラー (HTTP ${response.status}): ${responseText}`);
             }
 
-            const data = await response.json();
+            let data;
+            try {
+                // ここでJSONパースを試みる
+                data = JSON.parse(responseText);
+            } catch (e) {
+                // WorkerからJSONではなくテキスト（エラーメッセージ）が返ってきた場合
+                throw new Error(`Workerからの応答エラー: ${responseText}`);
+            }
             
             // OpenRouterのエラーハンドリング
             if (data.error) {
@@ -527,15 +536,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const content = data.choices[0].message.content;
             console.log("AIの生レスポンス:", content);
             
-            // マークダウンのコードブロックなどを除去してJSON部分のみを抽出する
+            // マークダウンを除去してJSON部分のみを抽出
             let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
             const jsonMatch = cleanContent.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!jsonMatch) throw new Error("AIがJSON形式で応答しませんでした。");
+            if (!jsonMatch) throw new Error("AIがJSON形式で応答しませんでした。レスポンス: " + cleanContent);
             
             return JSON.parse(jsonMatch[0]);
         } catch (error) {
-            console.error("AI Error: ", error);
-            alert("AIの処理中にエラーが発生しました。\n" + error.message);
+            console.error("AI Error詳細: ", error);
+            // ★ ここで本当のエラー原因をアラート表示する
+            alert("AIの処理中にエラーが発生しました。\n\n詳細: " + error.message);
             return null;
         }
     }
