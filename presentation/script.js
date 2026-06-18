@@ -489,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ★ 以下のURLをご自身のCloudflare WorkerのURLに変更してください
     const WORKER_URL = "https://leaslide-ai.bockring-scratcher.workers.dev/"; 
     // ★ OpenRouter等のプロキシ用にモデルを明示的に指定
-    const AI_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+    const AI_MODEL = "openrouter/free";
 
     async function callAI(systemPrompt, userPrompt) {
         try {
