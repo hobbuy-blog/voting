@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("AI Error詳細: ", error);
             // ★ ここで本当のエラー原因をアラート表示する
-            alert("AIの処理中にエラーが発生しました。\n\n詳細: " + error.message);
+            alert("Something went wrong while processing the task.\n\nDetail: " + error.message);
             return null;
         }
     }
@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── 1. 文章修正 (Fix Text) ──
     bindClick('ai-text-btn', async () => {
         if (!selectedElement || !selectedElement.classList.contains('text-element')) {
-            alert("文章を修正するには、テキストボックスを選択してください。");
+            alert("To fix texts, please select a text box.");
             return;
         }
         
@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const systemPrompt = `You are a professional presentation editor. Improve the given Japanese text to make it more concise, impactful, and suitable for a presentation slide.
-CRITICAL: Respond ONLY with a raw JSON object. Do not include markdown formatting.
+CRITICAL: Respond ONLY with a raw JSON object. Do not include markdown formatting. Do not make output language being different from input language.
 Format: { "revisedText": "your improved Japanese text here" }`;
             
             const result = await callAI(systemPrompt, `Original text: ${originalText}`);
@@ -593,7 +593,7 @@ Format: { "revisedText": "your improved Japanese text here" }`;
 
         const elements = Array.from(activeCanvas.querySelectorAll('.canvas-element'));
         if (elements.length === 0) {
-            alert("配置を調整する要素がありません。");
+            alert("There is nothing to change position.");
             return;
         }
 
