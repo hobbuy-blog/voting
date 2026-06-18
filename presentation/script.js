@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const responseText = await response.text();
 
             if (!response.ok) {
-                throw new Error(`APIエラー (HTTP ${response.status}): ${responseText}`);
+                throw new Error(`API error (HTTP ${response.status}): ${responseText}`);
             }
 
             let data;
@@ -522,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data = JSON.parse(responseText);
             } catch (e) {
                 // WorkerからJSONではなくテキスト（エラーメッセージ）が返ってきた場合
-                throw new Error(`Workerからの応答エラー: ${responseText}`);
+                throw new Error(`Responce error from Server: ${responseText}`);
             }
             
             // OpenRouterのエラーハンドリング
@@ -530,16 +530,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error.message || JSON.stringify(data.error));
             }
             if (!data.choices || data.choices.length === 0) {
-                throw new Error("AIから有効なデータが返されませんでした。");
+                throw new Error("It couldn't get valid data from Leaslide Assistant.");
             }
             
             const content = data.choices[0].message.content;
-            console.log("AIの生レスポンス:", content);
+            console.log("Raw outcome:", content);
             
             // マークダウンを除去してJSON部分のみを抽出
             let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
             const jsonMatch = cleanContent.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!jsonMatch) throw new Error("AIがJSON形式で応答しませんでした。レスポンス: " + cleanContent);
+            if (!jsonMatch) throw new Error("It couldn't get valid JSON data from Leaslide Assistant. Responce: " + cleanContent);
             
             return JSON.parse(jsonMatch[0]);
         } catch (error) {
@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const systemPrompt = `You are a professional presentation editor. Improve the given Japanese text to make it more concise, impactful, and suitable for a presentation slide.
 CRITICAL: Respond ONLY with a raw JSON object. Do not include markdown formatting. Do not make output language being different from input language.
-Format: { "revisedText": "your improved Japanese text here" }`;
+Format: { "revisedText": "your improved original input language text here" }`;
             
             const result = await callAI(systemPrompt, `Original text: ${originalText}`);
             
