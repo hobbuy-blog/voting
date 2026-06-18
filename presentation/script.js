@@ -59,9 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyColor(color) {
         if (!colorTarget) return;
-        if (colorTarget === 'bg') { slides[currentSlideIndex].bg = color; slides[currentSlideIndex].bgStyle = 'color'; canvas.style.background = color; canvas.style.backgroundImage = 'none'; document.getElementById('bg-color-preview').style.background = color; }
-        else if (colorTarget === 'text' && selectedElement?.classList.contains('text-element')) { selectedElement.querySelector('.content-wrapper').style.color = color; syncPropsPanel(); }
-        else if (colorTarget === 'shape' && selectedElement && !selectedElement.classList.contains('text-element')) { selectedElement.querySelector('.content-wrapper').style.backgroundColor = color; syncPropsPanel(); }
+        if (colorTarget === 'bg') { 
+            slides[currentSlideIndex].bg = color; 
+            slides[currentSlideIndex].bgStyle = 'color'; 
+            canvas.style.background = color; 
+            canvas.style.backgroundImage = 'none'; 
+            document.getElementById('bg-color-preview').style.background = color; 
+        }
+        else if (colorTarget === 'text' && selectedElement?.classList.contains('text-element')) { 
+            selectedElement.querySelector('.content-wrapper').style.color = color; 
+            syncPropsPanel(); 
+        }
+        else if (colorTarget === 'shape' && selectedElement && !selectedElement.classList.contains('text-element')) { 
+            selectedElement.querySelector('.content-wrapper').style.backgroundColor = color; 
+            syncPropsPanel(); 
+        }
         saveState(); renderSlideList();
     }
 
@@ -87,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── グリッド＆ルーラー ──
     let showGrid = false, showRuler = false;
     bindClick('toggle-grid-btn', () => { showGrid = !showGrid; canvas?.classList.toggle('show-grid', showGrid); document.getElementById('toggle-grid-btn').classList.toggle('active-toggle', showGrid); });
-    bindClick('toggle-ruler-btn', () => { showRuler = !showRuler; document.getElementById('ruler-h')?.classList.toggle('hidden', !showRuler); document.getElementById('ruler-v')?.classList.toggle('hidden', !showRuler); document.getElementById('toggle-ruler-btn').classList.toggle('active-toggle', showRuler); redrawRulers(); });
+    bindClick('toggle-ruler-btn', () => { showRuler = !showRuler; document.getElementById('ruler-h')?.classList.toggle('hidden', !showRuler); document.getElementById('ruler-v')?.classList.toggle('hidden', !showRuler);  document.getElementById('toggle-ruler-btn').classList.toggle('active-toggle', showRuler); redrawRulers(); });
 
     function redrawRulers() {
         if (!showRuler || !area) return;
@@ -98,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rh.width = area.clientWidth - 32; rh.height = 20;
             const ctx = rh.getContext('2d'); ctx.clearRect(0,0,rh.width,rh.height);
             ctx.strokeStyle='#cbd5e1'; ctx.fillStyle='#94a3b8'; ctx.font='9px sans-serif';
-            const offset = cRect.left - rh.getBoundingClientRect().left;
+             const offset = cRect.left - rh.getBoundingClientRect().left;
             for(let v=0; v<=currentWidth; v+=100) { const sx = offset + v * currentZoom; if(sx<0 || sx>rh.width) continue; ctx.beginPath(); ctx.moveTo(sx, rh.height); ctx.lineTo(sx, rh.height/2); ctx.stroke(); ctx.fillText(v, sx+2, rh.height-2); }
         }
         const rv = document.getElementById('ruler-v');
@@ -107,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rv.width = 20; rv.height = area.clientHeight - 20;
             const ctx = rv.getContext('2d'); ctx.clearRect(0,0,rv.width,rv.height);
             ctx.strokeStyle='#cbd5e1'; ctx.fillStyle='#94a3b8'; ctx.font='9px sans-serif';
-            const offset = cRect.top - rv.getBoundingClientRect().top;
+             const offset = cRect.top - rv.getBoundingClientRect().top;
             for(let v=0; v<=currentHeight; v+=100) { const sy = offset + v * currentZoom; if(sy<0 || sy>rv.height) continue; ctx.beginPath(); ctx.moveTo(rv.width, sy); ctx.lineTo(rv.width/2, sy); ctx.stroke(); }
         }
     }
@@ -204,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             isDrag=true; globalDragging=true; saveState(); 
             sx=e.clientX; sy=e.clientY; ox=el.offsetLeft; oy=el.offsetTop;
-            selectElement(el); e.stopPropagation();
+             selectElement(el); e.stopPropagation();
         });
 
         el.querySelectorAll('.resize-handle').forEach(h => {
@@ -222,9 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isRes) {
                 const isText = el.classList.contains('text-element');
                 let nw=sw, nh=sh;
-                if (dir==='se'){nw=sw+dx; nh=sh+dy;} else if(dir==='sw'){nw=sw-dx; el.style.left=(ox+dx)+'px'; nh=sh+dy;}
+                 if (dir==='se'){nw=sw+dx; nh=sh+dy;} else if(dir==='sw'){nw=sw-dx; el.style.left=(ox+dx)+'px'; nh=sh+dy;}
                 else if(dir==='ne'){nw=sw+dx; nh=sh-dy; el.style.top=(oy+dy)+'px';} else if(dir==='nw'){nw=sw-dx; el.style.left=(ox+dx)+'px'; nh=sh-dy; el.style.top=(oy+dy)+'px';}
-                else if(dir==='e'){nw=sw+dx;} else if(dir==='w'){nw=sw-dx; el.style.left=(ox+dx)+'px';}
+                else if(dir==='e'){nw=sw+dx;} else if(dir==='w'){nw=sw-dx;  el.style.left=(ox+dx)+'px';}
                 el.style.width=Math.max(20,nw)+'px'; if(!isText) el.style.height=Math.max(20,nh)+'px';
                 if(isText && inner) el.style.height = inner.scrollHeight + 'px';
                 syncPropsPanel();
@@ -598,153 +610,157 @@ document.addEventListener('DOMContentLoaded', () => {
     applyZoom();
 
     // ============================================================
-//  AI Assistant (Cloudflare Worker経由)
-// ============================================================
+    //  AI Assistant (Cloudflare Worker経由)
+    // ============================================================
 
-const WORKER_URL = "https://leaslide-ai.bockring-scratcher.workers.dev/";
-// ★ Workers側でプロキシしているモデル名を指定（OpenRouter等の無料Qwenモデルを想定）
-const AI_MODEL = "qwen/qwen-2.5-7b-instruct:free"; 
+    const WORKER_URL = "https://leaslide-ai.bockring-scratcher.workers.dev/";
+    // OpenRouter等の無料Qwenモデルを指定（Workers側でモデルを固定していない場合必須）
+    const AI_MODEL = "qwen/qwen-2.5-7b-instruct:free"; 
 
-async function callAI(systemPrompt, userPrompt) {
-    try {
-        const response = await fetch(WORKER_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: AI_MODEL, // ★ 1. モデル指定を追加（API必須パラメータ）
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ],
-                temperature: 0.2 // ★ 2. JSON出力の安定化のため温度（ランダム性）を下げる
-            })
-        });
+    async function callAI(systemPrompt, userPrompt) {
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: AI_MODEL, // ★ OpenRouter API必須パラメータ
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.2 // JSON出力の安定化
+                })
+            });
 
-        // ★ 3. HTTPステータスコードのエラーハンドリング
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`API Error (${response.status}): ${errText}`);
+            // ★ HTTPステータスコードのエラーハンドリング
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`API Error (${response.status}): ${errText}`);
+            }
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message || data.error);
+            
+            const content = data.choices[0].message.content;
+            
+            // ★ JSON抽出の堅牢化（マークダウン除去）
+            let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            const jsonMatch = cleanContent.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (!jsonMatch) throw new Error("AIがJSON形式で応答しませんでした。");
+            
+            return JSON.parse(jsonMatch[0]);
+        } catch (error) {
+            console.error("AI Error: ", error);
+            alert("AIの処理中にエラーが発生しました。\n" + error.message);
+            return null;
         }
-
-        const data = await response.json();
-        if (data.error) throw new Error(data.error.message || data.error);
-        
-        const content = data.choices[0].message.content;
-        
-        // ★ 4. JSON抽出の堅牢化（マークダウンのコードブロックを除去）
-        let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
-        
-        // 最初の { または [ から最後の } または ] までを抽出
-        const jsonMatch = cleanContent.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-        if (!jsonMatch) throw new Error("AIがJSON形式で応答しませんでした。");
-        
-        return JSON.parse(jsonMatch[0]);
-    } catch (error) {
-        console.error("AI Error: ", error);
-        alert("AIの処理中にエラーが発生しました。\n" + error.message);
-        return null;
     }
-}
 
-// ── 文章修正 (Fix Text) ──
-bindClick('ai-text-btn', async () => {
-    if (!selectedElement || !selectedElement.classList.contains('text-element')) {
-        alert("文章を修正するには、テキストボックスを選択してください。");
-        return;
-    }
-    
-    const inner = selectedElement.querySelector('.content-wrapper');
-    const originalText = inner.innerText;
-    
-    const btn = document.getElementById('ai-text-btn');
-    const origBtnText = btn.innerHTML;
-    btn.innerHTML = "⏳ Thinking..."; 
-    btn.disabled = true;
+    // ── 文章修正 (Fix Text) ──
+    bindClick('ai-text-btn', async () => {
+        if (!selectedElement || !selectedElement.classList.contains('text-element')) {
+            alert("文章を修正するには、テキストボックスを選択してください。");
+            return;
+        }
+        
+        const inner = selectedElement.querySelector('.content-wrapper');
+        const originalText = inner.innerText;
+        
+        const btn = document.getElementById('ai-text-btn');
+        const origBtnText = btn.innerHTML;
+        btn.innerHTML = "⏳ Thinking..."; 
+        btn.disabled = true;
 
-    // ★ 5. プロンプトの厳格化（生JSONのみを出力させる）
-    const systemPrompt = `You are a professional presentation editor. Improve the given Japanese text to make it more concise, impactful, and suitable for a presentation slide.
-CRITICAL: Respond ONLY with a raw JSON object. Do not include markdown formatting, explanations, or any other text.
+        try {
+            const systemPrompt = `You are a professional presentation editor. Improve the given Japanese text to make it more concise, impactful, and suitable for a presentation slide.
+CRITICAL: Respond ONLY with a raw JSON object. Do not include markdown formatting.
 Format: { "revisedText": "your improved Japanese text here" }`;
-    
-    const result = await callAI(systemPrompt, `Original text: ${originalText}`);
-    
-    if (result && result.revisedText) {
-        saveState();
-        inner.innerText = result.revisedText;
-        selectedElement.style.height = inner.scrollHeight + 'px';
-        renderSlideList();
-    }
-    
-    btn.innerHTML = origBtnText; 
-    btn.disabled = false;
-});
-
-// ── 自動レイアウト (Auto Layout) ──
-bindClick('ai-layout-btn', async () => {
-    const activeCanvas = document.querySelector('.canvas-area:not(.hidden)');
-    if (!activeCanvas) return;
-
-    const elements = Array.from(activeCanvas.querySelectorAll('.canvas-element'));
-    if (elements.length === 0) {
-        alert("配置を調整する要素がありません。");
-        return;
-    }
-
-    // ★ 6. 論理的なスライドサイズを使用（ズーム倍率や表示サイズに依存しない）
-    const cWidth = currentWidth;
-    const cHeight = currentHeight;
-
-    const layoutData = elements.map((el, index) => {
-        const type = el.classList.contains('text-element') ? 'text' : 
-                     el.classList.contains('image-element') ? 'image' : 'shape';
-        return {
-            id: `el_${index}`,
-            type: type,
-            content: type === 'text' ? el.innerText.substring(0, 30) : '',
-            x: parseInt(el.style.left) || 0,
-            y: parseInt(el.style.top) || 0,
-            w: parseInt(el.style.width) || 0,
-            h: parseInt(el.style.height) || 0
-        };
+            
+            const result = await callAI(systemPrompt, `Original text: ${originalText}`);
+            
+            if (result && result.revisedText) {
+                saveState();
+                inner.innerText = result.revisedText;
+                selectedElement.style.height = inner.scrollHeight + 'px';
+                renderSlideList();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            // ★ 成功・失敗に関わらずボタンを元に戻す
+            btn.innerHTML = origBtnText; 
+            btn.disabled = false;
+        }
     });
 
-    const btn = document.getElementById('ai-layout-btn');
-    const origBtnText = btn.innerHTML;
-    btn.innerHTML = "⏳ Designing..."; 
-    btn.disabled = true;
+    // ── 自動レイアウト (Auto Layout) ──
+    bindClick('ai-layout-btn', async () => {
+        const activeCanvas = document.querySelector('.canvas-area:not(.hidden)');
+        if (!activeCanvas) return;
 
-    // ★ 7. プロンプトの厳格化と、例（Few-Shot）の提示
-    const systemPrompt = `You are an expert UI/UX and presentation designer.
-The user provides a JSON array of slide elements with their current x, y, width (w), and height (h). The slide canvas size is ${cWidth}x${cHeight} pixels.
-Your task is to logically and beautifully arrange these elements without overlapping. For example, center the title at the top, align text blocks with consistent margins, etc.
-Do not change 'id', 'type', or 'content'. 
-CRITICAL: Respond ONLY with a raw JSON array containing the modified objects. Do not include markdown formatting or explanations.
-Example format: [{"id":"el_0","x":100,"y":100,"w":500,"h":80}, ...]`;
-    
-    const result = await callAI(systemPrompt, JSON.stringify(layoutData));
+        const elements = Array.from(activeCanvas.querySelectorAll('.canvas-element'));
+        if (elements.length === 0) {
+            alert("配置を調整する要素がありません。");
+            return;
+        }
 
-    if (result && Array.isArray(result)) {
-        saveState();
-        result.forEach(newLayout => {
-            const index = parseInt(newLayout.id.split('_')[1]);
-            const el = elements[index];
-            if (el) {
-                el.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-                el.style.left = newLayout.x + 'px';
-                el.style.top = newLayout.y + 'px';
-                el.style.width = newLayout.w + 'px';
-                // テキスト要素の場合は高さを自動調整させるため、hの適用はスキップ
-                if (!el.classList.contains('text-element')) {
-                    el.style.height = newLayout.h + 'px';
-                }
-                setTimeout(() => el.style.transition = '', 500);
-            }
+        const cWidth = currentWidth;
+        const cHeight = currentHeight;
+
+        const layoutData = elements.map((el, index) => {
+            const type = el.classList.contains('text-element') ? 'text' : 
+                         el.classList.contains('image-element') ? 'image' : 'shape';
+            return {
+                id: `el_${index}`,
+                type: type,
+                content: type === 'text' ? el.innerText.substring(0, 30) : '',
+                x: parseInt(el.style.left) || 0,
+                y: parseInt(el.style.top) || 0,
+                w: parseInt(el.style.width) || 0,
+                h: parseInt(el.style.height) || 0
+            };
         });
-        syncPropsPanel();
-        renderSlideList();
-    }
 
-    btn.innerHTML = origBtnText; 
-    btn.disabled = false;
-});
+        const btn = document.getElementById('ai-layout-btn');
+        const origBtnText = btn.innerHTML;
+        btn.innerHTML = "⏳ Designing..."; 
+        btn.disabled = true;
+
+        try {
+            const systemPrompt = `You are an expert UI/UX and presentation designer.
+The user provides a JSON array of slide elements. The slide canvas size is ${cWidth}x${cHeight} pixels.
+Arrange these elements logically without overlapping.
+Do not change 'id', 'type', or 'content'. 
+CRITICAL: Respond ONLY with a raw JSON array.
+Example: [{"id":"el_0","x":100,"y":100,"w":500,"h":80}, ...]`;
+            
+            const result = await callAI(systemPrompt, JSON.stringify(layoutData));
+
+            if (result && Array.isArray(result)) {
+                saveState();
+                result.forEach(newLayout => {
+                    const index = parseInt(newLayout.id.split('_')[1]);
+                    const el = elements[index];
+                    if (el) {
+                        el.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                        el.style.left = newLayout.x + 'px';
+                        el.style.top = newLayout.y + 'px';
+                        el.style.width = newLayout.w + 'px';
+                        if (!el.classList.contains('text-element')) {
+                            el.style.height = newLayout.h + 'px';
+                        }
+                        setTimeout(() => el.style.transition = '', 500);
+                    }
+                });
+                syncPropsPanel();
+                renderSlideList();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            // ★ 成功・失敗に関わらずボタンを元に戻す
+            btn.innerHTML = origBtnText; 
+            btn.disabled = false;
+        }
+    });
 });
