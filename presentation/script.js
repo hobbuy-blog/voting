@@ -24,8 +24,6 @@ let currentSlideIndex = 0;
 let selectedElement   = null;
 let maxZIndex = 100;
 let currentZoom = 0.5;
-
-// スクロール誤爆を防ぐフラグ
 let globalDragging = false;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -60,19 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyColor(color) {
         if (!colorTarget) return;
         if (colorTarget === 'bg') { 
-            slides[currentSlideIndex].bg = color; 
-            slides[currentSlideIndex].bgStyle = 'color'; 
-            canvas.style.background = color; 
-            canvas.style.backgroundImage = 'none'; 
+            slides[currentSlideIndex].bg = color; slides[currentSlideIndex].bgStyle = 'color'; 
+            canvas.style.background = color; canvas.style.backgroundImage = 'none'; 
             document.getElementById('bg-color-preview').style.background = color; 
         }
         else if (colorTarget === 'text' && selectedElement?.classList.contains('text-element')) { 
-            selectedElement.querySelector('.content-wrapper').style.color = color; 
-            syncPropsPanel(); 
+            selectedElement.querySelector('.content-wrapper').style.color = color; syncPropsPanel(); 
         }
         else if (colorTarget === 'shape' && selectedElement && !selectedElement.classList.contains('text-element')) { 
-            selectedElement.querySelector('.content-wrapper').style.backgroundColor = color; 
-            syncPropsPanel(); 
+            selectedElement.querySelector('.content-wrapper').style.backgroundColor = color; syncPropsPanel(); 
         }
         saveState(); renderSlideList();
     }
@@ -110,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rh.width = area.clientWidth - 32; rh.height = 20;
             const ctx = rh.getContext('2d'); ctx.clearRect(0,0,rh.width,rh.height);
             ctx.strokeStyle='#cbd5e1'; ctx.fillStyle='#94a3b8'; ctx.font='9px sans-serif';
-             const offset = cRect.left - rh.getBoundingClientRect().left;
+            const offset = cRect.left - rh.getBoundingClientRect().left;
             for(let v=0; v<=currentWidth; v+=100) { const sx = offset + v * currentZoom; if(sx<0 || sx>rh.width) continue; ctx.beginPath(); ctx.moveTo(sx, rh.height); ctx.lineTo(sx, rh.height/2); ctx.stroke(); ctx.fillText(v, sx+2, rh.height-2); }
         }
         const rv = document.getElementById('ruler-v');
@@ -119,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rv.width = 20; rv.height = area.clientHeight - 20;
             const ctx = rv.getContext('2d'); ctx.clearRect(0,0,rv.width,rv.height);
             ctx.strokeStyle='#cbd5e1'; ctx.fillStyle='#94a3b8'; ctx.font='9px sans-serif';
-             const offset = cRect.top - rv.getBoundingClientRect().top;
+            const offset = cRect.top - rv.getBoundingClientRect().top;
             for(let v=0; v<=currentHeight; v+=100) { const sy = offset + v * currentZoom; if(sy<0 || sy>rv.height) continue; ctx.beginPath(); ctx.moveTo(rv.width, sy); ctx.lineTo(rv.width/2, sy); ctx.stroke(); }
         }
     }
@@ -204,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(now - lastTap < 300) { handleEdit(e); }
                 lastTap = now;
             });
-            // 編集中の誤動作防止
             inner.addEventListener('mousedown', e => { if(document.activeElement === inner) e.stopPropagation(); });
             inner.addEventListener('touchstart', e => { if(document.activeElement === inner) e.stopPropagation(); }, {passive:true});
         }
@@ -318,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bindClick('bring-front-btn', () => { if(selectedElement){ saveState(); selectedElement.style.zIndex = maxZIndex++; }});
     bindClick('send-back-btn', () => { if(selectedElement){ saveState(); selectedElement.style.zIndex = 1; }});
-    
     const removeSelected = () => { if(!selectedElement) return; saveState(); selectedElement.remove(); deselect(); renderSlideList(); };
     bindClick('delete-btn', removeSelected);
     bindClick('duplicate-btn', () => {
@@ -340,10 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.trans-btn').forEach(btn => { 
-        btn.addEventListener('click', () => { 
-            slides[currentSlideIndex].transition = btn.dataset.trans; 
-            document.querySelectorAll('.trans-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); 
-        }); 
+        btn.addEventListener('click', () => { slides[currentSlideIndex].transition = btn.dataset.trans; document.querySelectorAll('.trans-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }); 
     });
     document.querySelectorAll('.anim-set-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -354,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ── スライド管理・複製 ──
+    // ── スライド管理・エクスポート・プレゼン ──
     function switchSlide(idx) {
         if(idx<0 || idx>=slides.length) return;
         slides[currentSlideIndex].html=canvas.innerHTML;
@@ -375,102 +364,12 @@ document.addEventListener('DOMContentLoaded', () => {
             thumb.appendChild(pv); thumb.onclick=()=>switchSlide(i); list.appendChild(thumb);
         });
     }
-    bindClick('add-slide-btn', () => {
-        slides[currentSlideIndex].html=canvas.innerHTML;
-        slides.push({html:'',bg:'#ffffff',bgStyle:'color',transition:'none',undoStack:[],redoStack:[]});
-        switchSlide(slides.length-1);
-    });
-    bindClick('delete-slide-btn', () => {
-        if(slides.length<=1) return;
-        slides.splice(currentSlideIndex,1); switchSlide(Math.max(0,currentSlideIndex-1));
-    });
-    bindClick('duplicate-slide-btn', () => {
-        slides[currentSlideIndex].html = canvas.innerHTML;
-        const curr = slides[currentSlideIndex];
-        const clone = { html: curr.html, bg: curr.bg, bgStyle: curr.bgStyle, transition: curr.transition, undoStack: [], redoStack: [] };
-        slides.splice(currentSlideIndex + 1, 0, clone);
-        switchSlide(currentSlideIndex + 1);
-    });
+    bindClick('add-slide-btn', () => { slides[currentSlideIndex].html=canvas.innerHTML; slides.push({html:'',bg:'#ffffff',bgStyle:'color',transition:'none',undoStack:[],redoStack:[]}); switchSlide(slides.length-1); });
+    bindClick('delete-slide-btn', () => { if(slides.length<=1) return; slides.splice(currentSlideIndex,1); switchSlide(Math.max(0,currentSlideIndex-1)); });
+    bindClick('duplicate-slide-btn', () => { slides[currentSlideIndex].html = canvas.innerHTML; const curr = slides[currentSlideIndex]; const clone = { html: curr.html, bg: curr.bg, bgStyle: curr.bgStyle, transition: curr.transition, undoStack: [], redoStack: [] }; slides.splice(currentSlideIndex + 1, 0, clone); switchSlide(currentSlideIndex + 1); });
 
     function reattachEvents() { Array.from(canvas.children).forEach(el=>initElementEvents(el)); deselect(); }
 
-    // ── PDF/PPTX インポート ──
-    const pdfInput=document.getElementById('pdf-file-input');
-    if (pdfInput) {
-        bindClick('btn-import-pdf',()=>pdfInput.click());
-        pdfInput.addEventListener('change', async e => {
-            const file=e.target.files[0]; if(!file||!window.pdfjsLib) return;
-            const reader=new FileReader();
-            reader.onload=async ev=>{
-                try{
-                    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise;
-                    const imported=[];
-                    for(let i=1;i<=pdf.numPages;i++){
-                        const page=await pdf.getPage(i); const vp=page.getViewport({scale:2.0});
-                        const rc=document.createElement('canvas'); rc.width=vp.width; rc.height=vp.height;
-                        await page.render({canvasContext:rc.getContext('2d'),viewport:vp}).promise;
-                        const html = `<div class="canvas-element image-element" style="width:${currentWidth}px;height:${currentHeight}px;left:0;top:0;z-index:50;"><img class="content-wrapper" src="${rc.toDataURL('image/png')}" style="width:100%;height:100%;object-fit:contain;pointer-events:none;"></div>`;
-                        if (i === 1 && slides.length === 1 && canvas.innerHTML.trim() === '') { slides[0].html = html; } 
-                        else { imported.push({html,bg:'#ffffff',bgStyle:'color',transition:'none',undoStack:[],redoStack:[]}); }
-                    }
-                    if(imported.length>0) slides=slides.concat(imported);
-                    switchSlide(0);
-                }catch(err){alert('PDF import failed: '+err.message);}
-            };
-            reader.readAsArrayBuffer(file); pdfInput.value='';
-        });
-    }
-
-    const pptxInput=document.getElementById('pptx-file-input');
-    if (pptxInput) {
-        bindClick('btn-import-pptx',()=>pptxInput.click());
-        pptxInput.addEventListener('change', async e => {
-            const file=e.target.files[0]; if(!file||!window.JSZip) return;
-            const reader=new FileReader();
-            reader.onload=async ev=>{
-                try{
-                    const zip=await JSZip.loadAsync(ev.target.result);
-                    const slideFiles=Object.keys(zip.files).filter(n=>n.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b)=>{ return parseInt(a.match(/slide(\d+)/)[1])-parseInt(b.match(/slide(\d+)/)[1]); });
-                    for(let i=0; i<slideFiles.length; i++){
-                        const xml=await zip.file(slideFiles[i]).async('text'); const doc=new DOMParser().parseFromString(xml,'text/xml');
-                        let html='';
-                        const spTree=doc.querySelector('spTree')||doc.querySelector('*|spTree');
-                        if(spTree){
-                            spTree.querySelectorAll('sp').forEach(sp=>{
-                                try{
-                                    const xfrm=sp.querySelector('xfrm')||sp.querySelector('*|xfrm');
-                                    const off=xfrm?.querySelector('off')||xfrm?.querySelector('*|off'); const ext=xfrm?.querySelector('ext')||xfrm?.querySelector('*|ext');
-                                    if(!off||!ext) return;
-                                    const sx=Math.round(parseInt(off.getAttribute('x')||0)/914400*96 * (currentWidth/1280));
-                                    const sy=Math.round(parseInt(off.getAttribute('y')||0)/914400*96 * (currentHeight/720));
-                                    const sw=Math.round(parseInt(ext.getAttribute('cx')||0)/914400*96 * (currentWidth/1280));
-                                    const sh=Math.round(parseInt(ext.getAttribute('cy')||0)/914400*96 * (currentHeight/720));
-                                    if(sw<4||sh<4) return;
-                                    const txBody=sp.querySelector('txBody')||sp.querySelector('*|txBody');
-                                    let textContent='';
-                                    if(txBody) { txBody.querySelectorAll('p').forEach(p => { let pText = ''; p.querySelectorAll('r').forEach(r => { const t = r.querySelector('t'); if (t) pText += t.textContent; }); textContent += `<div>${pText || '<br>'}</div>`; }); }
-                                    const solidFill=sp.querySelector('solidFill')||sp.querySelector('*|solidFill');
-                                    let fillColor='#2563eb'; if(solidFill){const srgb=solidFill.querySelector('srgbClr'); if(srgb) fillColor='#'+(srgb.getAttribute('val')||'2563eb');}
-                                    if(textContent && textContent.trim().replace(/<br>/g,'')){
-                                        html+=`<div class="canvas-element text-element" style="left:${sx}px;top:${sy}px;width:${sw}px;height:auto;z-index:${maxZIndex++};touch-action:none;"><div class="resize-handle nw" data-direction="nw"></div><div class="resize-handle ne" data-direction="ne"></div><div class="resize-handle sw" data-direction="sw"></div><div class="resize-handle se" data-direction="se"></div><div class="resize-handle w" data-direction="w"></div><div class="resize-handle e" data-direction="e"></div><div class="content-wrapper" contenteditable="true" style="font-size:24px;color:#0f172a;font-family:'Noto Sans JP',sans-serif;text-align:left;">${textContent}</div></div>`;
-                                    } else {
-                                        html+=`<div class="canvas-element rect-element" style="left:${sx}px;top:${sy}px;width:${sw}px;height:${sh}px;z-index:${maxZIndex++};touch-action:none;"><div class="resize-handle nw" data-direction="nw"></div><div class="resize-handle ne" data-direction="ne"></div><div class="resize-handle sw" data-direction="sw"></div><div class="resize-handle se" data-direction="se"></div><div class="content-wrapper" style="background-color:${fillColor};border-radius:3px;"></div></div>`;
-                                    }
-                                }catch(_){}
-                            });
-                        }
-                        const bgClrEl=doc.querySelector('bgClr')||doc.querySelector('*|bgClr'); let bg='#ffffff'; if(bgClrEl){const srgb=bgClrEl.querySelector('srgbClr'); if(srgb) bg='#'+(srgb.getAttribute('val')||'ffffff');}
-                        if(i===0 && slides.length===1 && canvas.innerHTML.trim()==='') { slides[0].html = html; slides[0].bg = bg; } 
-                        else { slides.push({html,bg,bgStyle:'color',transition:'none',undoStack:[],redoStack:[]}); }
-                    }
-                    switchSlide(0);
-                }catch(err){alert('PPTXのインポートに失敗しました: '+err.message);}
-            };
-            reader.readAsArrayBuffer(file); pptxInput.value='';
-        });
-    }
-
-    // ── PDF/PPTX エクスポート ──
     function rgbToHex(rgb){
         if(!rgb||rgb==='transparent'||rgb.includes('rgba(0,0,0,0)')) return '#ffffff';
         const m=rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -499,23 +398,16 @@ document.addEventListener('DOMContentLoaded', () => {
     bindClick('export-pptx-btn', () => {
         if(!window.PptxGenJS){alert('Library missing');return;}
         deselect();
-        const pptx = new PptxGenJS();
-        pptx.layout = (currentWidth/currentHeight > 1.4) ? 'LAYOUT_16x9' : 'LAYOUT_4x3';
+        const pptx = new PptxGenJS(); pptx.layout = (currentWidth/currentHeight > 1.4) ? 'LAYOUT_16x9' : 'LAYOUT_4x3';
         slides[currentSlideIndex].html = canvas.innerHTML;
-
         slides.forEach(s => {
-            const sl = pptx.addSlide();
-            sl.background = { fill: rgbToHex(s.bg).replace('#', '') };
-
+            const sl = pptx.addSlide(); sl.background = { fill: rgbToHex(s.bg).replace('#', '') };
             const tmp = document.createElement('div'); tmp.innerHTML = s.html;
             tmp.querySelectorAll('.canvas-element').forEach(el => {
                 const inner = el.querySelector('.content-wrapper'); if(!inner) return;
                 const style = window.getComputedStyle(el);
-                const x = ((parseFloat(style.left)||0) / currentWidth) * 100 + "%";
-                const y = ((parseFloat(style.top)||0) / currentHeight) * 100 + "%";
-                const w = ((parseFloat(style.width)||100) / currentWidth) * 100 + "%";
-                const h = ((parseFloat(style.height)||50) / currentHeight) * 100 + "%";
-
+                const x = ((parseFloat(style.left)||0) / currentWidth) * 100 + "%", y = ((parseFloat(style.top)||0) / currentHeight) * 100 + "%";
+                const w = ((parseFloat(style.width)||100) / currentWidth) * 100 + "%", h = ((parseFloat(style.height)||50) / currentHeight) * 100 + "%";
                 if (el.classList.contains('text-element')) {
                     const innerStyle = window.getComputedStyle(inner);
                     sl.addText(inner.innerText||'', { x, y, w, h, fontSize: (parseFloat(innerStyle.fontSize)||32)*0.75, color: rgbToHex(innerStyle.color).replace('#',''), align: innerStyle.textAlign||'left' });
@@ -530,54 +422,35 @@ document.addEventListener('DOMContentLoaded', () => {
         pptx.writeFile({ fileName: 'presentation.pptx' });
     });
 
-    // ── スライドショー（ブラウザ全画面連動） ──
     bindClick('present-btn', () => startPresent(false));
     bindClick('present-from-start-btn', () => startPresent(true));
-    
     function startPresent(fromStart) {
-        deselect();
-        if(fromStart) currentSlideIndex = 0;
-        slides[currentSlideIndex].html = canvas.innerHTML;
-        
-        const overlay = document.getElementById('presenter-overlay');
-        overlay.classList.remove('hidden');
+        deselect(); if(fromStart) currentSlideIndex = 0; slides[currentSlideIndex].html = canvas.innerHTML;
+        const overlay = document.getElementById('presenter-overlay'); overlay.classList.remove('hidden');
         buildPresenterSlide(currentSlideIndex);
-
         const docElm = document.documentElement;
-        if (docElm.requestFullscreen) docElm.requestFullscreen();
-        else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+        if (docElm.requestFullscreen) docElm.requestFullscreen(); else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
     }
-
     bindClick('exit-present-btn', () => {
-        document.getElementById('presenter-overlay').classList.add('hidden');
-        switchSlide(currentSlideIndex);
-
+        document.getElementById('presenter-overlay').classList.add('hidden'); switchSlide(currentSlideIndex);
         if (document.fullscreenElement || document.webkitFullscreenElement) {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
         }
     });
-
     function buildPresenterSlide(idx) {
-        const s=slides[idx];
-        const wrap = document.getElementById('presenter-canvas-wrap');
+        const s=slides[idx]; const wrap = document.getElementById('presenter-canvas-wrap');
         wrap.innerHTML = `<div id="presenter-slide" class="slide-canvas" style="width:${currentWidth}px;height:${currentHeight}px;background:${s.bg||'#fff'};">${s.html}</div>`;
         const pSlide = document.getElementById('presenter-slide');
         pSlide.querySelectorAll('.resize-handle').forEach(h => h.style.display='none');
         pSlide.querySelectorAll('.selected').forEach(e => e.classList.remove('selected'));
-        
         const scale = Math.min(window.innerWidth / currentWidth, window.innerHeight / currentHeight);
-        pSlide.style.transform = `scale(${scale})`;
-        document.getElementById('slide-number').textContent = `${idx+1} / ${slides.length}`;
+        pSlide.style.transform = `scale(${scale})`; document.getElementById('slide-number').textContent = `${idx+1} / ${slides.length}`;
     }
-
     bindClick('next-slide', () => { if(currentSlideIndex<slides.length-1){ currentSlideIndex++; buildPresenterSlide(currentSlideIndex); } });
     bindClick('prev-slide', () => { if(currentSlideIndex>0){ currentSlideIndex--; buildPresenterSlide(currentSlideIndex); } });
 
-    // ── キーボードショートカット ──
     document.addEventListener('keydown', e => {
-        const tag = document.activeElement.tagName;
-        const inText = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement.isContentEditable;
+        const tag = document.activeElement.tagName; const inText = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement.isContentEditable;
         const presenting = !document.getElementById('presenter-overlay').classList.contains('hidden');
         if (presenting) {
             if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); document.getElementById('next-slide')?.click(); }
@@ -613,37 +486,48 @@ document.addEventListener('DOMContentLoaded', () => {
     //  AI Assistant (Cloudflare Worker経由)
     // ============================================================
 
-    const WORKER_URL = "https://leaslide-ai.bockring-scratcher.workers.dev/";
-    // OpenRouter等の無料Qwenモデルを指定（Workers側でモデルを固定していない場合必須）
-    const AI_MODEL = "qwen/qwen-2.5-7b-instruct:free"; 
+    // ★ 以下のURLをご自身のCloudflare WorkerのURLに変更してください
+    const WORKER_URL = "https://leaslide-ai.bockring-scratcher.workers.dev/"; 
+    // ★ OpenRouter等のプロキシ用にモデルを明示的に指定
+    const AI_MODEL = "qwen/qwen-2.5-7b-instruct:free";
 
     async function callAI(systemPrompt, userPrompt) {
         try {
+            console.log("AIリクエスト送信中...", AI_MODEL);
             const response = await fetch(WORKER_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
-                    model: AI_MODEL, // ★ OpenRouter API必須パラメータ
+                    model: AI_MODEL, // プロキシ先（OpenRouter）で読み取らせるために付与
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: userPrompt }
                     ],
-                    temperature: 0.2 // JSON出力の安定化
+                    temperature: 0.2
                 })
             });
 
-            // ★ HTTPステータスコードのエラーハンドリング
             if (!response.ok) {
                 const errText = await response.text();
-                throw new Error(`API Error (${response.status}): ${errText}`);
+                throw new Error(`API接続エラー (HTTP ${response.status}): ${errText}`);
             }
 
             const data = await response.json();
-            if (data.error) throw new Error(data.error.message || data.error);
+            
+            // OpenRouterのエラーハンドリング
+            if (data.error) {
+                throw new Error(data.error.message || JSON.stringify(data.error));
+            }
+            if (!data.choices || data.choices.length === 0) {
+                throw new Error("AIから有効なデータが返されませんでした。");
+            }
             
             const content = data.choices[0].message.content;
+            console.log("AIの生レスポンス:", content);
             
-            // ★ JSON抽出の堅牢化（マークダウン除去）
+            // マークダウンのコードブロックなどを除去してJSON部分のみを抽出する
             let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
             const jsonMatch = cleanContent.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
             if (!jsonMatch) throw new Error("AIがJSON形式で応答しませんでした。");
@@ -656,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ── 文章修正 (Fix Text) ──
+    // ── 1. 文章修正 (Fix Text) ──
     bindClick('ai-text-btn', async () => {
         if (!selectedElement || !selectedElement.classList.contains('text-element')) {
             alert("文章を修正するには、テキストボックスを選択してください。");
@@ -687,13 +571,12 @@ Format: { "revisedText": "your improved Japanese text here" }`;
         } catch (e) {
             console.error(e);
         } finally {
-            // ★ 成功・失敗に関わらずボタンを元に戻す
             btn.innerHTML = origBtnText; 
             btn.disabled = false;
         }
     });
 
-    // ── 自動レイアウト (Auto Layout) ──
+    // ── 2. 自動レイアウト (Auto Layout) ──
     bindClick('ai-layout-btn', async () => {
         const activeCanvas = document.querySelector('.canvas-area:not(.hidden)');
         if (!activeCanvas) return;
@@ -758,7 +641,6 @@ Example: [{"id":"el_0","x":100,"y":100,"w":500,"h":80}, ...]`;
         } catch (e) {
             console.error(e);
         } finally {
-            // ★ 成功・失敗に関わらずボタンを元に戻す
             btn.innerHTML = origBtnText; 
             btn.disabled = false;
         }
