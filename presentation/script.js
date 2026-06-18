@@ -289,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ★ 欠落していたテキスト装飾やレイヤー機能の復活
     const patchText = (key, val) => {
         if (!selectedElement?.classList.contains('text-element')) return;
         saveState(); const inner = selectedElement.querySelector('.content-wrapper'); if(inner) inner.style[key] = val;
@@ -597,4 +596,133 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.style.background = slides[0].bg || '#ffffff';
     renderSlideList();
     applyZoom();
+
+    // ============================================================
+    //  AI Assistant (Cloudflare Worker経由)
+    // ============================================================
+
+    const WORKER_URL = "https://leaslide-ai.bockring-scratcher.workers.dev/"; 
+
+    async function callAI(systemPrompt, userPrompt) {
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            
+            const content = data.choices[0].message.content;
+            const jsonMatch = content.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+            if (!jsonMatch) throw new Error("AIが正しいJSON形式で応答しませんでした。");
+            
+            return JSON.parse(jsonMatch[0]);
+        } catch (error) {
+            console.error("AI Error:", error);
+            alert("AIの処理中にエラーが発生しました。\n" + error.message);
+            return null;
+        }
+    }
+
+    // ── 文章修正 (Fix Text) ──
+    bindClick('ai-text-btn', async () => {
+        if (!selectedElement || !selectedElement.classList.contains('text-element')) {
+            alert("文章を修正するには、テキストボックスを選択してください。");
+            return;
+        }
+        
+        const inner = selectedElement.querySelector('.content-wrapper');
+        const originalText = inner.innerText;
+        
+        const btn = document.getElementById('ai-text-btn');
+        const origBtnText = btn.innerHTML;
+        btn.innerHTML = "⏳ Thinking..."; 
+        btn.disabled = true;
+
+        const systemPrompt = `You are a professional presentation editor. Improve the given text to make it more concise, impactful, and suitable for a presentation slide in Japanese.
+Respond ONLY with a valid JSON object in this format: { "revisedText": "your improved Japanese text here" }`;
+        
+        const result = await callAI(systemPrompt, `Original text: ${originalText}`);
+        
+        if (result && result.revisedText) {
+            saveState();
+            inner.innerText = result.revisedText;
+            selectedElement.style.height = inner.scrollHeight + 'px';
+            renderSlideList();
+        }
+        
+        btn.innerHTML = origBtnText; 
+        btn.disabled = false;
+    });
+
+    // ── 自動レイアウト (Auto Layout) ──
+    bindClick('ai-layout-btn', async () => {
+        const activeCanvas = document.querySelector('.canvas-area:not(.hidden)');
+        if (!activeCanvas) return;
+
+        const elements = Array.from(activeCanvas.querySelectorAll('.canvas-element'));
+        if (elements.length === 0) {
+            alert("配置を調整する要素がありません。");
+            return;
+        }
+
+        const canvasRect = activeCanvas.getBoundingClientRect();
+        const cWidth = canvasRect.width;
+        const cHeight = canvasRect.height;
+
+        const layoutData = elements.map((el, index) => {
+            const type = el.classList.contains('text-element') ? 'text' : 
+                         el.classList.contains('image-element') ? 'image' : 'shape';
+            return {
+                id: `el_${index}`,
+                type: type,
+                content: type === 'text' ? el.innerText.substring(0, 20) : '',
+                x: parseInt(el.style.left) || 0,
+                y: parseInt(el.style.top) || 0,
+                w: parseInt(el.style.width) || 0,
+                h: parseInt(el.style.height) || 0
+            };
+        });
+
+        const btn = document.getElementById('ai-layout-btn');
+        const origBtnText = btn.innerHTML;
+        btn.innerHTML = "⏳ Designing..."; 
+        btn.disabled = true;
+
+        const systemPrompt = `You are an expert UI/UX and presentation designer.
+The user provides a JSON array of slide elements with their current x, y coordinates, width (w), and height (h). The slide size is ${cWidth}x${cHeight}.
+Your task is to logically and beautifully arrange these elements. For example, center the title at the top, align text nicely, etc.
+Do not change 'id', 'type', or 'content'. Output ONLY a valid JSON array containing the modified x, y, w, h values.`;
+
+        const result = await callAI(systemPrompt, JSON.stringify(layoutData));
+
+        if (result && Array.isArray(result)) {
+            saveState();
+            result.forEach(newLayout => {
+                const index = parseInt(newLayout.id.split('_')[1]);
+                const el = elements[index];
+                if (el) {
+                    el.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                    el.style.left = newLayout.x + 'px';
+                    el.style.top = newLayout.y + 'px';
+                    el.style.width = newLayout.w + 'px';
+                    el.style.height = newLayout.h + 'px';
+                    setTimeout(() => el.style.transition = '', 500);
+                }
+            });
+            syncPropsPanel();
+            renderSlideList();
+        }
+
+        btn.innerHTML = origBtnText; 
+        btn.disabled = false;
+    });
+
 });
