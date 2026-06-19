@@ -626,25 +626,39 @@ Arrange these elements logically without overlapping.
 Do not change 'id', 'type', or 'content'. 
 CRITICAL: Respond ONLY with a raw JSON array.
 Example: [{"id":"el_0","x":100,"y":100,"w":500,"h":80}, ...]`;
-            
+
             const result = await callAI(systemPrompt, JSON.stringify(layoutData));
 
             if (result && Array.isArray(result)) {
-                saveState();
+                saveState(); // 履歴に現在の状態をバックアップ
+            
                 result.forEach(newLayout => {
                     const index = parseInt(newLayout.id.split('_')[1]);
                     const el = elements[index];
                     if (el) {
+                        // 滑らかに移動するアニメーション（イージング）を追加
                         el.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-                        el.style.left = newLayout.x + 'px';
-                        el.style.top = newLayout.y + 'px';
-                        el.style.width = newLayout.w + 'px';
+                    
+                        // 位置が変更できなかった原因「型変換」をNumber()で解決し、確実にpx付きでDOMを直接更新
+                        el.style.left = Number(newLayout.x) + 'px';
+                        el.style.top = Number(newLayout.y) + 'px';
+                        el.style.width = Number(newLayout.w) + 'px';
+                        
                         if (!el.classList.contains('text-element')) {
-                            el.style.height = newLayout.h + 'px';
+                            el.style.height = Number(newLayout.h) + 'px';
                         }
+
+                        // テキスト内容の更新（AIテキスト修正機能用）
+                        if (newLayout.content && el.classList.contains('text-element')) {
+                            el.innerText = newLayout.content;
+                        }
+                    
+                        // アニメーション完了後にtransition属性を綺麗に削除
                         setTimeout(() => el.style.transition = '', 500);
-                    }
+                }
                 });
+            
+                // 画面のプロパティパネルとサイドバーのプレビューを同期
                 syncPropsPanel();
                 renderSlideList();
             }
