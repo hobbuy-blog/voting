@@ -1,199 +1,303 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS Font Profile Generator</title>
+    <title>iOS Font Profile Generator - Liquid Glass Edition</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SF Pro / Inter display fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+            background-color: #fafafa;
+            overflow-x: hidden;
         }
 
-        /* Glassmorphism styling */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+        /* Ambient Liquid Glass background elements */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 18s ease-in-out infinite alternate;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(147, 197, 253, 0.45) 0%, rgba(196, 181, 253, 0.2) 100%);
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -5%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(165, 243, 252, 0.4) 0%, rgba(221, 214, 254, 0.2) 100%);
+            animation-delay: -6s;
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(254, 215, 226, 0.35) 0%, rgba(224, 231, 255, 0.1) 100%);
+            animation-delay: -12s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, 40px) scale(1.08); }
+            100% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Apple Liquid Glass Styling */
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px) saturate(190%);
+            -webkit-backdrop-filter: blur(24px) saturate(190%);
             border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 
+                0 20px 40px -15px rgba(0, 0, 0, 0.05),
+                0 0 15px 0 rgba(255, 255, 255, 0.5) inset,
+                0 1px 0 0 rgba(255, 255, 255, 0.9) inset;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .liquid-glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 8px 30px -5px rgba(0, 0, 0, 0.03),
+                0 1px 0 0 rgba(255, 255, 255, 0.8) inset;
         }
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.05);
-            border-radius: 8px;
+
+        .liquid-input {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01) inset;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
+
+        .liquid-input:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 2px 4px rgba(0, 0, 0, 0.02) inset;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0,0,0,0.3);
+
+        /* Apple Glass Button */
+        .liquid-btn-primary {
+            background: linear-gradient(180deg, rgba(37, 99, 235, 0.95) 0%, rgba(29, 78, 216, 0.95) 100%);
+            box-shadow: 
+                0 10px 25px -5px rgba(37, 99, 235, 0.35),
+                0 1px 0 0 rgba(255, 255, 255, 0.3) inset;
+            backdrop-filter: blur(8px);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .liquid-btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 
+                0 14px 28px -5px rgba(37, 99, 235, 0.45),
+                0 1px 0 0 rgba(255, 255, 255, 0.4) inset;
+            background: linear-gradient(180deg, rgba(29, 78, 216, 0.95) 0%, rgba(30, 64, 175, 0.95) 100%);
+        }
+
+        .liquid-btn-primary:active:not(:disabled) {
+            transform: translateY(0.5px);
+            box-shadow: 0 5px 15px -3px rgba(37, 99, 235, 0.3);
         }
 
         /* Drag zone animation */
         .drop-zone--over {
             border-color: #3b82f6 !important;
-            background-color: rgba(239, 246, 255, 0.8) !important;
-            transform: scale(1.01);
+            background: rgba(239, 246, 255, 0.7) !important;
+            transform: scale(1.008);
+            box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.22);
         }
     </style>
 </head>
-<body class="text-slate-800 antialiased p-4 sm:p-6 md:p-10 min-h-screen flex flex-col items-center justify-start">
 
-    <div class="max-w-4xl w-full mx-auto space-y-6">
+<body class="relative min-h-full flex flex-col items-center justify-start p-4 sm:p-8 md:p-12">
+
+    <!-- Ambient Liquid Glass Blur Background -->
+    <div class="ambient-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 max-w-3xl w-full mx-auto space-y-8">
         
         <!-- Header -->
-        <header class="glass-panel rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <header class="liquid-glass rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-5 transition-all">
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                    <i class="fa-solid fa-font text-xl"></i>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-white/90 to-white/40 p-0.5 shadow-md border border-white/80 shrink-0">
+                    <div class="w-full h-full rounded-[14px] bg-gradient-to-tr from-blue-500 via-indigo-500 to-sky-400 flex items-center justify-center text-white shadow-inner">
+                        <i class="fa-solid fa-font text-2xl drop-shadow-sm"></i>
+                    </div>
                 </div>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">iOS フォントプロファイル生成器</h1>
-                    <p class="text-xs sm:text-sm text-slate-500">アプリ不要・ブラウザ完結で複数のフォントをまとめてiOS/iPadOSにインストール</p>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Font Profile Studio</h1>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium">iOS / iPadOS 用 構成プロファイル作成ツール</p>
                 </div>
             </div>
-            <button id="guideBtn" class="px-4 py-2 bg-slate-900/10 hover:bg-slate-900/20 text-slate-800 text-sm font-semibold rounded-xl transition duration-200 flex items-center gap-2">
-                <i class="fa-solid fa-circle-question"></i> インストール手順
+            
+            <button id="guideBtn" class="px-4 py-2.5 bg-white/60 hover:bg-white/90 text-slate-700 text-xs font-semibold rounded-2xl border border-white/80 shadow-sm transition duration-200 flex items-center gap-2 hover:shadow-md cursor-pointer">
+                <i class="fa-solid fa-circle-info text-blue-500 text-sm"></i> 使い方手順
             </button>
         </header>
 
         <!-- Main Form & Drop Zone -->
-        <section class="glass-panel rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+        <main class="liquid-glass rounded-3xl p-6 sm:p-8 space-y-6">
             
             <!-- Global Profile Settings -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-slate-200/60">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-6 border-b border-slate-200/50">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">プロファイル名（表示名）</label>
-                    <input type="text" id="profileName" value="カスタムフォントパック" placeholder="例: My Custom Fonts"
-                        class="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition duration-150 text-sm">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">プロファイル表示名</label>
+                    <input type="text" id="profileName" value="My Custom Fonts" placeholder="例: My Custom Fonts"
+                        class="liquid-input w-full px-4 py-3 rounded-2xl focus:outline-none text-sm font-medium text-slate-800 placeholder-slate-400">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">識別子 (Payload ID Prefix)</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">プロファイル識別子 (Payload ID)</label>
                     <input type="text" id="profileOrg" value="com.custom.fontprofile" placeholder="com.example.fonts"
-                        class="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition duration-150 text-sm">
+                        class="liquid-input w-full px-4 py-3 rounded-2xl focus:outline-none text-sm font-medium text-slate-800 placeholder-slate-400">
                 </div>
             </div>
 
             <!-- Drag & Drop Zone -->
-            <div id="dropZone" class="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center bg-white/40 hover:bg-white/60 transition-all duration-200 cursor-pointer group flex flex-col items-center justify-center">
+            <div id="dropZone" class="border-2 border-dashed border-slate-300/80 rounded-3xl p-8 sm:p-10 text-center bg-white/30 hover:bg-white/50 transition-all duration-300 cursor-pointer group flex flex-col items-center justify-center relative overflow-hidden">
                 <input type="file" id="fontInput" multiple accept=".ttf,.otf,.woff,.woff2" class="hidden">
-                <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3 group-hover:scale-110 transition duration-200">
+                
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-50 to-indigo-50 text-blue-600 flex items-center justify-center mb-4 border border-white shadow-sm group-hover:scale-110 group-hover:shadow-md transition duration-300">
                     <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
                 </div>
-                <h3 class="text-base font-semibold text-slate-700">フォントファイルをドラッグ＆ドロップ</h3>
-                <p class="text-xs text-slate-500 mt-1">またはクリックしてファイルを選択 (.ttf, .otf, .woff, .woff2)</p>
+                <h3 class="text-base font-bold text-slate-800">フォントファイルをドロップ</h3>
+                <p class="text-xs text-slate-500 mt-1 font-medium">またはタップして選択（.ttf, .otf, .woff, .woff2）</p>
             </div>
 
             <!-- Font List Section Header -->
             <div class="flex items-center justify-between pt-2">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-layer-group text-blue-600"></i>
-                    読み込み済みフォント <span id="fontCountBadge" class="ml-2 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">0</span>
+                <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                    読み込み済みフォント
+                    <span id="fontCountBadge" class="ml-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-100/80 text-blue-700 backdrop-blur-sm border border-blue-200/50">0</span>
                 </h2>
-                <div class="flex items-center space-x-2">
-                    <button id="clearAllBtn" class="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition font-medium hidden">
-                        <i class="fa-solid fa-trash-can mr-1"></i> すべて削除
-                    </button>
-                </div>
+                <button id="clearAllBtn" class="text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50/80 px-3 py-1.5 rounded-xl transition duration-150 font-semibold hidden">
+                    <i class="fa-solid fa-trash-can mr-1"></i> すべて削除
+                </button>
             </div>
 
             <!-- Empty State -->
-            <div id="emptyState" class="py-12 text-center text-slate-400 bg-white/30 rounded-2xl border border-dashed border-slate-200">
-                <i class="fa-solid fa-font-awesome text-4xl mb-3 opacity-50"></i>
-                <p class="text-sm">フォントを追加するとここに一覧が表示されます</p>
+            <div id="emptyState" class="py-12 text-center text-slate-400 bg-white/20 rounded-3xl border border-dashed border-slate-200/60 backdrop-blur-sm">
+                <i class="fa-solid fa-font-awesome text-4xl mb-3 text-slate-300"></i>
+                <p class="text-xs font-medium text-slate-400">フォントファイルを追加するとここにリストが表示されます</p>
             </div>
 
             <!-- Font List Container -->
-            <div id="fontList" class="space-y-4 max-h-[450px] overflow-y-auto pr-1">
+            <div id="fontList" class="space-y-4 max-h-[420px] overflow-y-auto pr-1">
                 <!-- Dynamically generated font cards will go here -->
             </div>
 
             <!-- Action Bar -->
-            <div class="pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="text-xs text-slate-500 flex items-center gap-1.5">
-                    <i class="fa-solid fa-shield-halved text-emerald-500"></i> 処理はすべてブラウザ内で行われ、サーバーには送信されません
+            <div class="pt-5 border-t border-slate-200/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-xs text-slate-500 font-medium flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    すべての処理はブラウザ内で完結（完全ローカル）
                 </div>
-                <button id="generateBtn" disabled class="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 disabled:shadow-none transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-download"></i> プロファイルをダウンロード (.mobileconfig)
+                <button id="generateBtn" disabled class="liquid-btn-primary w-full sm:w-auto px-8 py-3.5 disabled:opacity-40 disabled:pointer-events-none text-white text-sm font-bold rounded-2xl transition duration-200 flex items-center justify-center gap-2.5 cursor-pointer">
+                    <i class="fa-solid fa-file-arrow-down text-base"></i> プロファイルをダウンロード (.mobileconfig)
                 </button>
             </div>
-        </section>
+        </main>
     </div>
 
     <!-- Instruction Modal -->
-    <div id="guideModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-        <div class="glass-card max-w-lg w-full rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-5 max-h-[90vh] overflow-y-auto">
-            <button id="closeGuideBtn" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition">
+    <div id="guideModal" class="fixed inset-0 bg-slate-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="liquid-glass max-w-lg w-full rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto border border-white">
+            <button id="closeGuideBtn" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full bg-white/60 hover:bg-white flex items-center justify-center transition border border-white/80 shadow-sm">
                 <i class="fa-solid fa-xmark"></i>
             </button>
+            
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-md">
                     <i class="fa-brands fa-apple text-xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900">iOS / iPadOS インストール手順</h3>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">iOS インストールガイド</h3>
+                    <p class="text-xs text-slate-500">Safariでのインストールの手順</p>
+                </div>
             </div>
             
             <div class="space-y-4 text-xs sm:text-sm text-slate-600">
-                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-start gap-2">
-                    <i class="fa-solid fa-triangle-exclamation text-base mt-0.5 shrink-0"></i>
-                    <span>必ず <strong>Safari ブラウザ</strong> でアクセス・ダウンロードを行ってください。他のブラウザ（Chromeなど）ではプロファイルダイアログが起動しない場合があります。</span>
+                <div class="p-3.5 bg-amber-50/80 border border-amber-200/60 rounded-2xl text-amber-900 text-xs flex items-start gap-2.5 backdrop-blur-sm">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base mt-0.5 shrink-0"></i>
+                    <span class="font-medium">iOSの仕様上、必ず <strong>Safari ブラウザ</strong> で本サイトを開いてダウンロードを行ってください。</span>
                 </div>
 
-                <ol class="space-y-3 list-decimal list-inside font-medium text-slate-700">
+                <ol class="space-y-3.5 list-decimal list-inside font-medium text-slate-700">
                     <li class="pl-1">
                         <strong>プロファイルをダウンロード</strong>
-                        <p class="text-xs text-slate-500 ml-5 font-normal">生成ボタンを押すと「このウェブサイトは構成プロファイルをダウンロードしようとしています」と表示されるので「許可」を選択します。</p>
+                        <p class="text-xs text-slate-500 ml-5 font-normal mt-0.5">ダウンロード時の確認ダイアログで「許可」を選択します。</p>
                     </li>
                     <li class="pl-1">
                         <strong>設定アプリを開く</strong>
-                        <p class="text-xs text-slate-500 ml-5 font-normal">「設定」アプリを起動し、最上部に表示される「プロファイルがダウンロードされました」をタップします。</p>
+                        <p class="text-xs text-slate-500 ml-5 font-normal mt-0.5">「設定」アプリを起動し、トップに表示される「プロファイルがダウンロードされました」をタップ。</p>
                     </li>
                     <li class="pl-1">
                         <strong>プロファイルをインストール</strong>
-                        <p class="text-xs text-slate-500 ml-5 font-normal">右上にある「インストール」をタップし、パスコードを入力してインストールを完了させます。</p>
-                    </li>
-                    <li class="pl-1">
-                        <strong>フォントの確認</strong>
-                        <p class="text-xs text-slate-500 ml-5 font-normal">「設定」 ＞ 「一般」 ＞ 「フォント」 からインストールされたフォントの一覧を確認・利用できます。</p>
+                        <p class="text-xs text-slate-500 ml-5 font-normal mt-0.5">右上の「インストール」をタップし、端末のパスコードを入力します。</p>
                     </li>
                 </ol>
             </div>
 
-            <div class="pt-2">
-                <button id="modalOkBtn" class="w-full py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition">
-                    閉じる
-                </button>
-            </div>
+            <button id="modalOkBtn" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-2xl transition shadow-md">
+                閉じる
+            </button>
         </div>
     </div>
 
-    <!-- Alert Message Toast Container -->
+    <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
     <script>
         /* State management */
-        let uploadedFonts = []; // Array of { id, file, name, familyName, base64, fontPreviewUrl }
+        let uploadedFonts = []; // Array of { id, file, name, familyName, base64, size }
 
         /* DOM Elements */
         const dropZone = document.getElementById('dropZone');
@@ -211,7 +315,7 @@
         const modalOkBtn = document.getElementById('modalOkBtn');
 
         /**
-         * RFC4122 v4 UUID Generator
+         * UUID Generator
          */
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -222,17 +326,17 @@
         }
 
         /**
-         * Toast notification system
+         * Toast notification
          */
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             
-            const bgClass = type === 'error' ? 'bg-rose-600' : (type === 'success' ? 'bg-emerald-600' : 'bg-slate-800');
+            const bgClass = type === 'error' ? 'bg-rose-500' : (type === 'success' ? 'bg-emerald-600' : 'bg-slate-900');
             const iconClass = type === 'error' ? 'fa-circle-exclamation' : (type === 'success' ? 'fa-circle-check' : 'fa-circle-info');
 
-            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-xs sm:text-sm font-medium transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto`;
-            toast.innerHTML = `<i class="fa-solid ${iconClass}"></i><span>${message}</span>`;
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-2.5 text-xs font-semibold transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto border border-white/20`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass} text-sm"></i><span>${message}</span>`;
             
             container.appendChild(toast);
 
@@ -246,7 +350,7 @@
             }, 3500);
         }
 
-        // Drag and Drop Event Listeners
+        // Drag and Drop Events
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, (e) => {
                 e.preventDefault();
@@ -265,15 +369,14 @@
 
         dropZone.addEventListener('drop', (e) => {
             const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
+            handleFiles(dt.files);
         });
 
         dropZone.addEventListener('click', () => fontInput.click());
 
         fontInput.addEventListener('change', (e) => {
             handleFiles(e.target.files);
-            fontInput.value = ''; // Reset input
+            fontInput.value = '';
         });
 
         /**
@@ -288,11 +391,10 @@
             for (const file of fileList) {
                 const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
                 if (!validExtensions.includes(ext)) {
-                    showToast(`対応していない形式です: ${file.name}`, 'error');
+                    showToast(`非対応形式: ${file.name}`, 'error');
                     continue;
                 }
 
-                // Remove extension for default name
                 const defaultName = file.name.replace(/\.[^/.]+$/, "");
 
                 try {
@@ -303,33 +405,28 @@
                         name: defaultName,
                         familyName: defaultName,
                         base64: base64Data,
-                        size: (file.size / 1024 / 1024).toFixed(2) // MB
+                        size: (file.size / 1024 / 1024).toFixed(2)
                     };
 
                     uploadedFonts.push(fontObj);
                     addedCount++;
                 } catch (err) {
-                    console.error("ファイル読込エラー:", err);
-                    showToast(`読み込みに失敗しました: ${file.name}`, 'error');
+                    console.error("Read Error:", err);
+                    showToast(`読み込み失敗: ${file.name}`, 'error');
                 }
             }
 
             if (addedCount > 0) {
-                showToast(`${addedCount} 件のフォントを追加しました`, 'success');
+                showToast(`${addedCount} 個のフォントを追加しました`, 'success');
                 renderFontList();
             }
         }
 
-        /**
-         * Read file as base64 string
-         */
         function readFileAsBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => {
-                    // Extract Base64 raw string without data URL scheme header
-                    const result = reader.result;
-                    const base64 = result.split(',')[1];
+                    const base64 = reader.result.split(',')[1];
                     resolve(base64);
                 };
                 reader.onerror = error => reject(error);
@@ -358,34 +455,34 @@
 
             uploadedFonts.forEach((font, index) => {
                 const card = document.createElement('div');
-                card.className = "glass-card rounded-2xl p-4 transition-all duration-200 hover:shadow-md border border-white/60 flex flex-col gap-3";
+                card.className = "liquid-glass-card rounded-2xl p-4 transition-all duration-200 flex flex-col gap-3";
 
                 card.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3 overflow-hidden">
-                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                            <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-100">
                                 ${index + 1}
                             </div>
                             <div class="truncate">
-                                <h4 class="font-bold text-slate-800 text-sm truncate">${escapeHtml(font.file.name)}</h4>
-                                <span class="text-[11px] text-slate-400 font-medium">${font.size} MB</span>
+                                <h4 class="font-bold text-slate-800 text-xs sm:text-sm truncate">${escapeHtml(font.file.name)}</h4>
+                                <span class="text-[10px] text-slate-400 font-semibold">${font.size} MB</span>
                             </div>
                         </div>
-                        <button onclick="removeFont('${font.id}')" class="text-slate-400 hover:text-rose-500 w-8 h-8 rounded-lg hover:bg-rose-50 flex items-center justify-center transition shrink-0">
-                            <i class="fa-solid fa-xmark"></i>
+                        <button onclick="removeFont('${font.id}')" class="text-slate-400 hover:text-rose-500 w-7 h-7 rounded-lg hover:bg-rose-50 flex items-center justify-center transition shrink-0 cursor-pointer">
+                            <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200/40">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">表示名 (Display Name)</label>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">表示名 (Display Name)</label>
                             <input type="text" value="${escapeHtml(font.name)}" onchange="updateFontField('${font.id}', 'name', this.value)" 
-                                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                                class="liquid-input w-full px-3 py-1.5 rounded-xl text-xs font-medium focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">フォントファミリー名 (Family Name)</label>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ファミリー名 (Family Name)</label>
                             <input type="text" value="${escapeHtml(font.familyName)}" onchange="updateFontField('${font.id}', 'familyName', this.value)" 
-                                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                                class="liquid-input w-full px-3 py-1.5 rounded-xl text-xs font-medium focus:outline-none">
                         </div>
                     </div>
                 `;
@@ -394,21 +491,18 @@
             });
         }
 
-        // Escape HTML to prevent XSS
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.innerText = text;
             return div.innerHTML;
         }
 
-        // Remove font
         window.removeFont = function(id) {
             uploadedFonts = uploadedFonts.filter(f => f.id !== id);
             renderFontList();
-            showToast('フォントを削除しました', 'info');
+            showToast('削除しました', 'info');
         };
 
-        // Update font card field
         window.updateFontField = function(id, field, value) {
             const font = uploadedFonts.find(f => f.id === id);
             if (font) {
@@ -416,15 +510,14 @@
             }
         };
 
-        // Clear all
         clearAllBtn.addEventListener('click', () => {
             uploadedFonts = [];
             renderFontList();
-            showToast('すべてのフォントをクリアしました', 'info');
+            showToast('リストをクリアしました', 'info');
         });
 
         /**
-         * Generate Apple Mobileconfig XML string
+         * Generate Apple Mobileconfig XML
          */
         function generateMobileConfigXML() {
             const profileName = profileNameInput.value.trim() || 'Custom Fonts Profile';
@@ -459,7 +552,7 @@ ${font.base64}
         </dict>`;
             });
 
-            const plistXML = `<?xml version="1.0" encoding="UTF-8"?>
+            return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -480,8 +573,6 @@ ${font.base64}
     <integer>1</integer>
 </dict>
 </plist>`;
-
-            return plistXML;
         }
 
         function escapeXml(unsafe) {
@@ -496,9 +587,7 @@ ${font.base64}
             });
         }
 
-        /**
-         * Download Profile Handler
-         */
+        // Download Action
         generateBtn.addEventListener('click', () => {
             if (uploadedFonts.length === 0) return;
 
@@ -519,33 +608,22 @@ ${font.base64}
 
                 showToast('プロファイルをダウンロードしました！', 'success');
                 
-                // Show installation guide automatically after download
-                setTimeout(() => {
-                    openModal();
-                }, 1000);
+                setTimeout(() => openModal(), 800);
 
             } catch (err) {
-                console.error("生成エラー:", err);
-                showToast('プロファイルの生成に失敗しました', 'error');
+                console.error("Generator Error:", err);
+                showToast('生成に失敗しました', 'error');
             }
         });
 
-        // Guide Modal Logic
-        function openModal() {
-            guideModal.classList.remove('opacity-0', 'pointer-events-none');
-        }
-
-        function closeModal() {
-            guideModal.classList.add('opacity-0', 'pointer-events-none');
-        }
+        // Modal Helpers
+        function openModal() { guideModal.classList.remove('opacity-0', 'pointer-events-none'); }
+        function closeModal() { guideModal.classList.add('opacity-0', 'pointer-events-none'); }
 
         guideBtn.addEventListener('click', openModal);
         closeGuideBtn.addEventListener('click', closeModal);
         modalOkBtn.addEventListener('click', closeModal);
-
-        guideModal.addEventListener('click', (e) => {
-            if (e.target === guideModal) closeModal();
-        });
+        guideModal.addEventListener('click', (e) => { if (e.target === guideModal) closeModal(); });
     </script>
 </body>
 </html>
