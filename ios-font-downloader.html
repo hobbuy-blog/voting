@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Font Profile Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism styling */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* Drag zone animation */
+        .drop-zone--over {
+            border-color: #3b82f6 !important;
+            background-color: rgba(239, 246, 255, 0.8) !important;
+            transform: scale(1.01);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased p-4 sm:p-6 md:p-10 min-h-screen flex flex-col items-center justify-start">
+
+    <div class="max-w-4xl w-full mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="glass-panel rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-font text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">iOS フォントプロファイル生成器</h1>
+                    <p class="text-xs sm:text-sm text-slate-500">アプリ不要・ブラウザ完結で複数のフォントをまとめてiOS/iPadOSにインストール</p>
+                </div>
+            </div>
+            <button id="guideBtn" class="px-4 py-2 bg-slate-900/10 hover:bg-slate-900/20 text-slate-800 text-sm font-semibold rounded-xl transition duration-200 flex items-center gap-2">
+                <i class="fa-solid fa-circle-question"></i> インストール手順
+            </button>
+        </header>
+
+        <!-- Main Form & Drop Zone -->
+        <section class="glass-panel rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+            
+            <!-- Global Profile Settings -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-slate-200/60">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">プロファイル名（表示名）</label>
+                    <input type="text" id="profileName" value="カスタムフォントパック" placeholder="例: My Custom Fonts"
+                        class="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition duration-150 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">識別子 (Payload ID Prefix)</label>
+                    <input type="text" id="profileOrg" value="com.custom.fontprofile" placeholder="com.example.fonts"
+                        class="w-full px-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition duration-150 text-sm">
+                </div>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div id="dropZone" class="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center bg-white/40 hover:bg-white/60 transition-all duration-200 cursor-pointer group flex flex-col items-center justify-center">
+                <input type="file" id="fontInput" multiple accept=".ttf,.otf,.woff,.woff2" class="hidden">
+                <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3 group-hover:scale-110 transition duration-200">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                </div>
+                <h3 class="text-base font-semibold text-slate-700">フォントファイルをドラッグ＆ドロップ</h3>
+                <p class="text-xs text-slate-500 mt-1">またはクリックしてファイルを選択 (.ttf, .otf, .woff, .woff2)</p>
+            </div>
+
+            <!-- Font List Section Header -->
+            <div class="flex items-center justify-between pt-2">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-blue-600"></i>
+                    読み込み済みフォント <span id="fontCountBadge" class="ml-2 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">0</span>
+                </h2>
+                <div class="flex items-center space-x-2">
+                    <button id="clearAllBtn" class="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition font-medium hidden">
+                        <i class="fa-solid fa-trash-can mr-1"></i> すべて削除
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="py-12 text-center text-slate-400 bg-white/30 rounded-2xl border border-dashed border-slate-200">
+                <i class="fa-solid fa-font-awesome text-4xl mb-3 opacity-50"></i>
+                <p class="text-sm">フォントを追加するとここに一覧が表示されます</p>
+            </div>
+
+            <!-- Font List Container -->
+            <div id="fontList" class="space-y-4 max-h-[450px] overflow-y-auto pr-1">
+                <!-- Dynamically generated font cards will go here -->
+            </div>
+
+            <!-- Action Bar -->
+            <div class="pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-shield-halved text-emerald-500"></i> 処理はすべてブラウザ内で行われ、サーバーには送信されません
+                </div>
+                <button id="generateBtn" disabled class="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 disabled:shadow-none transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-download"></i> プロファイルをダウンロード (.mobileconfig)
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Instruction Modal -->
+    <div id="guideModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-card max-w-lg w-full rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-5 max-h-[90vh] overflow-y-auto">
+            <button id="closeGuideBtn" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <i class="fa-brands fa-apple text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">iOS / iPadOS インストール手順</h3>
+            </div>
+            
+            <div class="space-y-4 text-xs sm:text-sm text-slate-600">
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-base mt-0.5 shrink-0"></i>
+                    <span>必ず <strong>Safari ブラウザ</strong> でアクセス・ダウンロードを行ってください。他のブラウザ（Chromeなど）ではプロファイルダイアログが起動しない場合があります。</span>
+                </div>
+
+                <ol class="space-y-3 list-decimal list-inside font-medium text-slate-700">
+                    <li class="pl-1">
+                        <strong>プロファイルをダウンロード</strong>
+                        <p class="text-xs text-slate-500 ml-5 font-normal">生成ボタンを押すと「このウェブサイトは構成プロファイルをダウンロードしようとしています」と表示されるので「許可」を選択します。</p>
+                    </li>
+                    <li class="pl-1">
+                        <strong>設定アプリを開く</strong>
+                        <p class="text-xs text-slate-500 ml-5 font-normal">「設定」アプリを起動し、最上部に表示される「プロファイルがダウンロードされました」をタップします。</p>
+                    </li>
+                    <li class="pl-1">
+                        <strong>プロファイルをインストール</strong>
+                        <p class="text-xs text-slate-500 ml-5 font-normal">右上にある「インストール」をタップし、パスコードを入力してインストールを完了させます。</p>
+                    </li>
+                    <li class="pl-1">
+                        <strong>フォントの確認</strong>
+                        <p class="text-xs text-slate-500 ml-5 font-normal">「設定」 ＞ 「一般」 ＞ 「フォント」 からインストールされたフォントの一覧を確認・利用できます。</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="pt-2">
+                <button id="modalOkBtn" class="w-full py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Message Toast Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        /* State management */
+        let uploadedFonts = []; // Array of { id, file, name, familyName, base64, fontPreviewUrl }
+
+        /* DOM Elements */
+        const dropZone = document.getElementById('dropZone');
+        const fontInput = document.getElementById('fontInput');
+        const fontList = document.getElementById('fontList');
+        const emptyState = document.getElementById('emptyState');
+        const fontCountBadge = document.getElementById('fontCountBadge');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        const profileNameInput = document.getElementById('profileName');
+        const profileOrgInput = document.getElementById('profileOrg');
+        const guideBtn = document.getElementById('guideBtn');
+        const guideModal = document.getElementById('guideModal');
+        const closeGuideBtn = document.getElementById('closeGuideBtn');
+        const modalOkBtn = document.getElementById('modalOkBtn');
+
+        /**
+         * RFC4122 v4 UUID Generator
+         */
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16).toUpperCase();
+            });
+        }
+
+        /**
+         * Toast notification system
+         */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'error' ? 'bg-rose-600' : (type === 'success' ? 'bg-emerald-600' : 'bg-slate-800');
+            const iconClass = type === 'error' ? 'fa-circle-exclamation' : (type === 'success' ? 'fa-circle-check' : 'fa-circle-info');
+
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-xs sm:text-sm font-medium transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass}"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Drag and Drop Event Listeners
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drop-zone--over');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drop-zone--over');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        });
+
+        dropZone.addEventListener('click', () => fontInput.click());
+
+        fontInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fontInput.value = ''; // Reset input
+        });
+
+        /**
+         * Process uploaded files
+         */
+        async function handleFiles(files) {
+            const validExtensions = ['.ttf', '.otf', '.woff', '.woff2'];
+            const fileList = Array.from(files);
+
+            let addedCount = 0;
+
+            for (const file of fileList) {
+                const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                if (!validExtensions.includes(ext)) {
+                    showToast(`対応していない形式です: ${file.name}`, 'error');
+                    continue;
+                }
+
+                // Remove extension for default name
+                const defaultName = file.name.replace(/\.[^/.]+$/, "");
+
+                try {
+                    const base64Data = await readFileAsBase64(file);
+                    const fontObj = {
+                        id: generateUUID(),
+                        file: file,
+                        name: defaultName,
+                        familyName: defaultName,
+                        base64: base64Data,
+                        size: (file.size / 1024 / 1024).toFixed(2) // MB
+                    };
+
+                    uploadedFonts.push(fontObj);
+                    addedCount++;
+                } catch (err) {
+                    console.error("ファイル読込エラー:", err);
+                    showToast(`読み込みに失敗しました: ${file.name}`, 'error');
+                }
+            }
+
+            if (addedCount > 0) {
+                showToast(`${addedCount} 件のフォントを追加しました`, 'success');
+                renderFontList();
+            }
+        }
+
+        /**
+         * Read file as base64 string
+         */
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    // Extract Base64 raw string without data URL scheme header
+                    const result = reader.result;
+                    const base64 = result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Render Font List UI
+         */
+        function renderFontList() {
+            fontList.innerHTML = '';
+
+            if (uploadedFonts.length === 0) {
+                emptyState.classList.remove('hidden');
+                clearAllBtn.classList.add('hidden');
+                generateBtn.disabled = true;
+                fontCountBadge.innerText = '0';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            clearAllBtn.classList.remove('hidden');
+            generateBtn.disabled = false;
+            fontCountBadge.innerText = uploadedFonts.length;
+
+            uploadedFonts.forEach((font, index) => {
+                const card = document.createElement('div');
+                card.className = "glass-card rounded-2xl p-4 transition-all duration-200 hover:shadow-md border border-white/60 flex flex-col gap-3";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                                ${index + 1}
+                            </div>
+                            <div class="truncate">
+                                <h4 class="font-bold text-slate-800 text-sm truncate">${escapeHtml(font.file.name)}</h4>
+                                <span class="text-[11px] text-slate-400 font-medium">${font.size} MB</span>
+                            </div>
+                        </div>
+                        <button onclick="removeFont('${font.id}')" class="text-slate-400 hover:text-rose-500 w-8 h-8 rounded-lg hover:bg-rose-50 flex items-center justify-center transition shrink-0">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">表示名 (Display Name)</label>
+                            <input type="text" value="${escapeHtml(font.name)}" onchange="updateFontField('${font.id}', 'name', this.value)" 
+                                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">フォントファミリー名 (Family Name)</label>
+                            <input type="text" value="${escapeHtml(font.familyName)}" onchange="updateFontField('${font.id}', 'familyName', this.value)" 
+                                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                `;
+
+                fontList.appendChild(card);
+            });
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        // Remove font
+        window.removeFont = function(id) {
+            uploadedFonts = uploadedFonts.filter(f => f.id !== id);
+            renderFontList();
+            showToast('フォントを削除しました', 'info');
+        };
+
+        // Update font card field
+        window.updateFontField = function(id, field, value) {
+            const font = uploadedFonts.find(f => f.id === id);
+            if (font) {
+                font[field] = value.trim();
+            }
+        };
+
+        // Clear all
+        clearAllBtn.addEventListener('click', () => {
+            uploadedFonts = [];
+            renderFontList();
+            showToast('すべてのフォントをクリアしました', 'info');
+        });
+
+        /**
+         * Generate Apple Mobileconfig XML string
+         */
+        function generateMobileConfigXML() {
+            const profileName = profileNameInput.value.trim() || 'Custom Fonts Profile';
+            const profileOrg = profileOrgInput.value.trim() || 'com.custom.fontprofile';
+            const mainUUID = generateUUID();
+
+            let payloadContentXML = '';
+
+            uploadedFonts.forEach(font => {
+                const fontUUID = generateUUID();
+                const fontDisplayName = font.name || font.file.name;
+                const fontIdentifier = `${profileOrg}.${font.id}`;
+
+                payloadContentXML += `
+        <dict>
+            <key>Font</key>
+            <data>
+${font.base64}
+            </data>
+            <key>Name</key>
+            <string>${escapeXml(fontDisplayName)}</string>
+            <key>PayloadDisplayName</key>
+            <string>${escapeXml(fontDisplayName)}</string>
+            <key>PayloadIdentifier</key>
+            <string>${fontIdentifier}</string>
+            <key>PayloadType</key>
+            <string>com.apple.font</string>
+            <key>PayloadUUID</key>
+            <string>${fontUUID}</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+        </dict>`;
+            });
+
+            const plistXML = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>${payloadContentXML}
+    </array>
+    <key>PayloadDisplayName</key>
+    <string>${escapeXml(profileName)}</string>
+    <key>PayloadIdentifier</key>
+    <string>${profileOrg}</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>${mainUUID}</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>`;
+
+            return plistXML;
+        }
+
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+
+        /**
+         * Download Profile Handler
+         */
+        generateBtn.addEventListener('click', () => {
+            if (uploadedFonts.length === 0) return;
+
+            try {
+                const xmlContent = generateMobileConfigXML();
+                const blob = new Blob([xmlContent], { type: 'application/x-apple-aspen-config;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+
+                const fileName = `${(profileNameInput.value.trim() || 'fonts')}.mobileconfig`;
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast('プロファイルをダウンロードしました！', 'success');
+                
+                // Show installation guide automatically after download
+                setTimeout(() => {
+                    openModal();
+                }, 1000);
+
+            } catch (err) {
+                console.error("生成エラー:", err);
+                showToast('プロファイルの生成に失敗しました', 'error');
+            }
+        });
+
+        // Guide Modal Logic
+        function openModal() {
+            guideModal.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeModal() {
+            guideModal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        guideBtn.addEventListener('click', openModal);
+        closeGuideBtn.addEventListener('click', closeModal);
+        modalOkBtn.addEventListener('click', closeModal);
+
+        guideModal.addEventListener('click', (e) => {
+            if (e.target === guideModal) closeModal();
+        });
+    </script>
+</body>
+</html>
