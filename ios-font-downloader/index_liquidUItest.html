@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Font Profile Generator - Liquid Glass Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SF Pro / Inter display fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ─────────────────────────────────────────────
+           Base
+        ───────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+            background: #0d0d18;
+            overflow-x: hidden;
+            color: #1c1c2e;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─────────────────────────────────────────────
+           Rich background: deep gradient + animated blobs
+        ───────────────────────────────────────────── */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+            /* Base deep-space gradient */
+            background:
+                radial-gradient(ellipse 90% 70% at 15% 10%, #2d1b69 0%, transparent 60%),
+                radial-gradient(ellipse 80% 60% at 85% 80%, #0c2a5e 0%, transparent 55%),
+                radial-gradient(ellipse 70% 50% at 50% 50%, #1a0a3d 0%, transparent 70%),
+                linear-gradient(160deg, #0d0d1f 0%, #111128 50%, #0a0a1a 100%);
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            mix-blend-mode: screen;
+            will-change: transform;
+        }
+
+        .blob-1 {
+            top: -15%;
+            left: -10%;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(120, 80, 255, 0.55) 0%, rgba(80, 40, 200, 0.25) 50%, transparent 75%);
+            animation: driftA 22s ease-in-out infinite alternate;
+        }
+
+        .blob-2 {
+            bottom: -20%;
+            right: -10%;
+            width: 750px;
+            height: 750px;
+            background: radial-gradient(circle, rgba(30, 120, 255, 0.45) 0%, rgba(20, 80, 200, 0.2) 50%, transparent 75%);
+            animation: driftB 26s ease-in-out infinite alternate;
+        }
+
+        .blob-3 {
+            top: 35%;
+            left: 55%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(220, 80, 180, 0.35) 0%, rgba(140, 40, 120, 0.15) 50%, transparent 75%);
+            animation: driftC 30s ease-in-out infinite alternate;
+        }
+
+        .blob-4 {
+            top: 10%;
+            right: 15%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.3) 0%, rgba(0, 120, 200, 0.1) 50%, transparent 75%);
+            animation: driftA 19s 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes driftA {
+            0%   { transform: translate(0px, 0px) scale(1); }
+            33%  { transform: translate(40px, 60px) scale(1.08); }
+            66%  { transform: translate(-30px, 30px) scale(0.96); }
+            100% { transform: translate(20px, -40px) scale(1.04); }
+        }
+        @keyframes driftB {
+            0%   { transform: translate(0px, 0px) scale(1); }
+            40%  { transform: translate(-50px, -40px) scale(1.1); }
+            80%  { transform: translate(30px, 50px) scale(0.93); }
+            100% { transform: translate(-20px, 20px) scale(1.05); }
+        }
+        @keyframes driftC {
+            0%   { transform: translate(-50%, -50%) scale(1); }
+            50%  { transform: translate(calc(-50% + 60px), calc(-50% + 40px)) scale(1.12); }
+            100% { transform: translate(calc(-50% - 30px), calc(-50% - 20px)) scale(0.9); }
+        }
+
+        /* SVG distortion filter for the glass refraction */
+        .svg-filters { position: absolute; width: 0; height: 0; }
+
+        /* ─────────────────────────────────────────────
+           Liquid Glass surface  ← the real thing
+           Key: the glass *bends* what's behind it.
+           We fake it with a local SVG displacement on
+           a pseudo-element sitting between backdrop and
+           content.
+        ───────────────────────────────────────────── */
+        .liquid-glass {
+            position: relative;
+            /* Slightly tinted, translucent fill */
+            background: linear-gradient(
+                145deg,
+                rgba(255, 255, 255, 0.18) 0%,
+                rgba(200, 210, 255, 0.10) 40%,
+                rgba(180, 200, 255, 0.07) 100%
+            );
+            backdrop-filter: blur(28px) saturate(220%) brightness(1.05);
+            -webkit-backdrop-filter: blur(28px) saturate(220%) brightness(1.05);
+            /* Crisp specular rim on top + left, soft shadow bottom */
+            border: 1px solid transparent;
+            background-clip: padding-box;
+            box-shadow:
+                /* outer glow */
+                0 0 0 1px rgba(255, 255, 255, 0.22),
+                /* depth shadow */
+                0 32px 64px -20px rgba(0, 0, 20, 0.55),
+                0 8px 24px -8px rgba(0, 0, 40, 0.35),
+                /* inner specular top */
+                0 1px 0 0 rgba(255, 255, 255, 0.55) inset,
+                /* inner specular left */
+                1px 0 0 0 rgba(255, 255, 255, 0.2) inset,
+                /* inner bottom shadow for depth */
+                0 -1px 0 0 rgba(0, 0, 40, 0.15) inset;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        /* Refraction shimmer layer – mimics the curved-lens distortion */
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                /* diagonal specular streak */
+                linear-gradient(
+                    128deg,
+                    rgba(255, 255, 255, 0.22) 0%,
+                    rgba(255, 255, 255, 0.06) 35%,
+                    transparent 55%
+                ),
+                /* bottom edge caustic */
+                linear-gradient(
+                    to bottom,
+                    transparent 75%,
+                    rgba(180, 200, 255, 0.08) 100%
+                );
+            pointer-events: none;
+            z-index: 0;
+            border-radius: inherit;
+        }
+
+        /* All direct children sit above the shimmer */
+        .liquid-glass > * { position: relative; z-index: 1; }
+
+        /* Interactive highlight that follows the cursor */
+        .liquid-glass .glass-highlight {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: radial-gradient(
+                circle 260px at var(--mx, 50%) var(--my, 30%),
+                rgba(255, 255, 255, 0.14) 0%,
+                transparent 65%
+            );
+        }
+        .liquid-glass:hover .glass-highlight { opacity: 1; }
+
+        /* ─────────────────────────────────────────────
+           Card variant – slightly more opaque
+        ───────────────────────────────────────────── */
+        .liquid-glass-card {
+            position: relative;
+            background: linear-gradient(
+                150deg,
+                rgba(255, 255, 255, 0.16) 0%,
+                rgba(200, 210, 255, 0.09) 100%
+            );
+            backdrop-filter: blur(20px) saturate(200%) brightness(1.04);
+            -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(1.04);
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.18),
+                0 12px 32px -8px rgba(0, 0, 30, 0.45),
+                0 1px 0 0 rgba(255, 255, 255, 0.45) inset;
+            overflow: hidden;
+            isolation: isolate;
+        }
+        .liquid-glass-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                130deg,
+                rgba(255,255,255,0.16) 0%,
+                transparent 50%
+            );
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .liquid-glass-card > * { position: relative; z-index: 1; }
+
+        /* ─────────────────────────────────────────────
+           Inputs
+        ───────────────────────────────────────────── */
+        .liquid-input {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.92);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.06) inset,
+                0 2px 6px rgba(0, 0, 30, 0.25) inset;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .liquid-input::placeholder { color: rgba(200, 210, 255, 0.4); }
+        .liquid-input:focus {
+            background: rgba(255, 255, 255, 0.13);
+            border-color: rgba(140, 160, 255, 0.55);
+            box-shadow:
+                0 0 0 3px rgba(120, 140, 255, 0.2),
+                0 2px 6px rgba(0, 0, 30, 0.2) inset;
+            outline: none;
+        }
+
+        /* Labels */
+        label {
+            color: rgba(200, 215, 255, 0.65);
+        }
+
+        /* ─────────────────────────────────────────────
+           Primary button – liquid tinted glass pill
+        ───────────────────────────────────────────── */
+        .liquid-btn-primary {
+            background: linear-gradient(
+                170deg,
+                rgba(100, 130, 255, 0.85) 0%,
+                rgba(70, 90, 230, 0.9) 50%,
+                rgba(50, 70, 200, 0.92) 100%
+            );
+            box-shadow:
+                0 0 0 1px rgba(160, 180, 255, 0.35),
+                0 12px 28px -6px rgba(50, 70, 220, 0.55),
+                0 1px 0 0 rgba(255, 255, 255, 0.35) inset;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .liquid-btn-primary::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                170deg,
+                rgba(255,255,255,0.22) 0%,
+                rgba(255,255,255,0.04) 55%,
+                transparent 100%
+            );
+            border-radius: inherit;
+            pointer-events: none;
+        }
+        .liquid-btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.015);
+            box-shadow:
+                0 0 0 1px rgba(180, 200, 255, 0.4),
+                0 18px 36px -8px rgba(60, 80, 230, 0.65),
+                0 1px 0 0 rgba(255, 255, 255, 0.45) inset;
+        }
+        .liquid-btn-primary:active:not(:disabled) {
+            transform: translateY(1px) scale(0.99);
+            box-shadow:
+                0 0 0 1px rgba(140,160,255,0.3),
+                0 6px 14px -4px rgba(50, 70, 200, 0.4);
+        }
+        .liquid-btn-primary:disabled { opacity: 0.35; }
+
+        /* Secondary / outline button */
+        .liquid-btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(220, 230, 255, 0.9);
+            box-shadow: 0 1px 0 0 rgba(255,255,255,0.12) inset;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .liquid-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.32);
+        }
+
+        /* ─────────────────────────────────────────────
+           Drop zone
+        ───────────────────────────────────────────── */
+        #dropZone {
+            border: 1.5px dashed rgba(140, 160, 255, 0.35);
+            background: rgba(100, 120, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #dropZone:hover {
+            border-color: rgba(160, 180, 255, 0.55);
+            background: rgba(100, 120, 255, 0.1);
+        }
+        .drop-zone--over {
+            border-color: rgba(140, 170, 255, 0.8) !important;
+            background: rgba(100, 130, 255, 0.15) !important;
+            transform: scale(1.012);
+            box-shadow: 0 0 40px rgba(100, 140, 255, 0.2);
+        }
+
+        /* ─────────────────────────────────────────────
+           Text colours on dark glass
+        ───────────────────────────────────────────── */
+        .glass-title    { color: rgba(240, 245, 255, 0.96); }
+        .glass-subtitle { color: rgba(180, 200, 255, 0.7); }
+        .glass-text     { color: rgba(210, 225, 255, 0.82); }
+        .glass-dim      { color: rgba(160, 180, 255, 0.55); }
+
+        /* heading inside cards */
+        h1, h2, h3, h4 { color: rgba(235, 242, 255, 0.95); }
+        p, span, li     { color: rgba(190, 210, 255, 0.78); }
+
+        /* ─────────────────────────────────────────────
+           Dividers
+        ───────────────────────────────────────────── */
+        .glass-divider {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ─────────────────────────────────────────────
+           Badges
+        ───────────────────────────────────────────── */
+        #fontCountBadge {
+            background: rgba(100, 130, 255, 0.25) !important;
+            color: rgba(190, 210, 255, 0.95) !important;
+            border: 1px solid rgba(120, 150, 255, 0.35) !important;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Font card number badge */
+        .font-index-badge {
+            background: rgba(100, 130, 255, 0.2);
+            color: rgba(180, 205, 255, 0.9);
+            border: 1px solid rgba(120, 150, 255, 0.3);
+        }
+
+        /* ─────────────────────────────────────────────
+           Empty state
+        ───────────────────────────────────────────── */
+        #emptyState {
+            border: 1.5px dashed rgba(120, 150, 255, 0.2);
+            background: rgba(80, 100, 200, 0.04);
+            color: rgba(160, 180, 255, 0.5);
+        }
+
+        /* ─────────────────────────────────────────────
+           Modal backdrop
+        ───────────────────────────────────────────── */
+        #guideModal {
+            background: rgba(5, 5, 25, 0.65) !important;
+        }
+
+        /* Warning banner */
+        .glass-warning {
+            background: rgba(250, 180, 50, 0.12);
+            border: 1px solid rgba(250, 180, 50, 0.3);
+            color: rgba(255, 220, 140, 0.9);
+            border-radius: 16px;
+        }
+
+        /* ─────────────────────────────────────────────
+           Scrollbar
+        ───────────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(140, 160, 255, 0.25);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(160, 180, 255, 0.4);
+        }
+
+        /* ─────────────────────────────────────────────
+           Reduced motion
+        ───────────────────────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+            .blob { animation: none !important; }
+        }
+
+        /* ─────────────────────────────────────────────
+           Close button (modal)
+        ───────────────────────────────────────────── */
+        #closeGuideBtn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: rgba(200,215,255,0.8);
+        }
+        #closeGuideBtn:hover {
+            background: rgba(255,255,255,0.18);
+            color: white;
+        }
+
+        /* Remove button on font card */
+        .font-remove-btn {
+            color: rgba(200, 180, 255, 0.5);
+        }
+        .font-remove-btn:hover {
+            color: rgba(255, 120, 140, 0.95);
+            background: rgba(255, 80, 100, 0.12);
+        }
+
+        /* Clear all button */
+        #clearAllBtn {
+            color: rgba(255, 120, 140, 0.7);
+        }
+        #clearAllBtn:hover {
+            color: rgba(255, 140, 160, 0.95);
+            background: rgba(255, 80, 100, 0.1);
+        }
+    </style>
+</head>
+
+<body class="relative min-h-full flex flex-col items-center justify-start p-4 sm:p-8 md:p-12">
+
+    <!-- Hidden SVG filters for glass refraction -->
+    <svg class="svg-filters" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="glass-distort" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.012 0.008" numOctaves="3" seed="7" result="noise"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- Ambient Liquid Glass Blur Background -->
+    <div class="ambient-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="blob blob-4"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 max-w-3xl w-full mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="liquid-glass rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-5 transition-all">
+            <div class="glass-highlight"></div>
+            <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 rounded-2xl shrink-0" style="background:linear-gradient(145deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06));box-shadow:0 0 0 1px rgba(255,255,255,0.22),0 8px 20px rgba(0,0,30,0.5),0 1px 0 rgba(255,255,255,0.4) inset;display:flex;align-items:center;justify-content:center;">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" style="background:linear-gradient(145deg,#6080ff,#3d5ce8,#2847c8);box-shadow:0 1px 0 rgba(255,255,255,0.35) inset,0 4px 12px rgba(60,80,220,0.6);">
+                        <i class="fa-solid fa-font text-lg drop-shadow-sm"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight" style="color:rgba(240,245,255,0.97);">Font Profile Studio</h1>
+                    <p class="text-xs sm:text-sm font-medium" style="color:rgba(170,190,255,0.65);">iOS / iPadOS 用 構成プロファイル作成ツール</p>
+                </div>
+            </div>
+            
+            <button id="guideBtn" class="liquid-btn-secondary px-4 py-2.5 text-xs font-semibold rounded-2xl transition duration-200 flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-circle-info text-sm" style="color:rgba(150,180,255,0.9);"></i> 使い方手順
+            </button>
+        </header>
+
+        <!-- Main Form & Drop Zone -->
+        <main class="liquid-glass rounded-3xl p-6 sm:p-8 space-y-6">
+            <div class="glass-highlight"></div>
+            
+            <!-- Global Profile Settings -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-6 border-b glass-divider">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider mb-2" style="color:rgba(170,195,255,0.6);">プロファイル表示名</label>
+                    <input type="text" id="profileName" value="My Custom Fonts" placeholder="例: My Custom Fonts"
+                        class="liquid-input w-full px-4 py-3 rounded-2xl focus:outline-none text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider mb-2" style="color:rgba(170,195,255,0.6);">プロファイル識別子 (Payload ID)</label>
+                    <input type="text" id="profileOrg" value="com.custom.fontprofile" placeholder="com.example.fonts"
+                        class="liquid-input w-full px-4 py-3 rounded-2xl focus:outline-none text-sm font-medium">
+                </div>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div id="dropZone" class="border-2 border-dashed border-slate-300/80 rounded-3xl p-8 sm:p-10 text-center bg-white/30 hover:bg-white/50 transition-all duration-300 cursor-pointer group flex flex-col items-center justify-center relative overflow-hidden">
+                <input type="file" id="fontInput" multiple accept=".ttf,.otf,.woff,.woff2" class="hidden">
+                
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition duration-300" style="background:rgba(100,130,255,0.12);border:1px solid rgba(120,150,255,0.25);box-shadow:0 1px 0 rgba(255,255,255,0.12) inset;">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl" style="color:rgba(150,180,255,0.85);"></i>
+                </div>
+                <h3 class="text-base font-bold" style="color:rgba(210,225,255,0.9);">フォントファイルをドロップ</h3>
+                <p class="text-xs mt-1 font-medium" style="color:rgba(150,175,255,0.55);">またはタップして選択（.ttf, .otf, .woff, .woff2）</p>
+            </div>
+
+            <!-- Font List Section Header -->
+            <div class="flex items-center justify-between pt-2">
+                <h2 class="text-base font-bold flex items-center gap-2" style="color:rgba(220,235,255,0.9);">
+                    <span class="w-2 h-2 rounded-full inline-block" style="background:rgba(120,160,255,0.9);box-shadow:0 0 6px rgba(100,150,255,0.7);"></span>
+                    読み込み済みフォント
+                    <span id="fontCountBadge" class="ml-1.5 px-2.5 py-0.5 text-xs font-bold rounded-full">0</span>
+                </h2>
+                <button id="clearAllBtn" class="text-xs px-3 py-1.5 rounded-xl transition duration-150 font-semibold hidden cursor-pointer" style="color:rgba(255,120,140,0.7);">
+                    <i class="fa-solid fa-trash-can mr-1"></i> すべて削除
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="py-12 text-center rounded-3xl backdrop-blur-sm" style="border:1.5px dashed rgba(120,150,255,0.2);background:rgba(80,100,200,0.04);">
+                <i class="fa-solid fa-font-awesome text-4xl mb-3" style="color:rgba(120,150,255,0.3);"></i>
+                <p class="text-xs font-medium" style="color:rgba(150,175,255,0.5);">フォントファイルを追加するとここにリストが表示されます</p>
+            </div>
+
+            <!-- Font List Container -->
+            <div id="fontList" class="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                <!-- Dynamically generated font cards will go here -->
+            </div>
+
+            <!-- Action Bar -->
+            <div class="pt-5 border-t glass-divider flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-xs font-medium flex items-center gap-2" style="color:rgba(160,185,255,0.6);">
+                    <span class="w-2 h-2 rounded-full inline-block" style="background:rgba(80,230,160,0.9);box-shadow:0 0 5px rgba(60,220,140,0.6);"></span>
+                    すべての処理はブラウザ内で完結（完全ローカル）
+                </div>
+                <button id="generateBtn" disabled class="liquid-btn-primary w-full sm:w-auto px-8 py-3.5 disabled:opacity-40 disabled:pointer-events-none text-white text-sm font-bold rounded-2xl transition duration-200 flex items-center justify-center gap-2.5 cursor-pointer">
+                    <i class="fa-solid fa-file-arrow-down text-base"></i> プロファイルをダウンロード (.mobileconfig)
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Instruction Modal -->
+    <div id="guideModal" class="fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300" style="background:rgba(5,5,25,0.65);">
+        <div class="liquid-glass max-w-lg w-full rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="glass-highlight"></div>
+            <button id="closeGuideBtn" class="absolute top-6 right-6 w-8 h-8 rounded-full flex items-center justify-center transition cursor-pointer" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:rgba(200,215,255,0.8);">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl flex items-center justify-center" style="background:linear-gradient(145deg,rgba(255,255,255,0.15),rgba(255,255,255,0.06));box-shadow:0 0 0 1px rgba(255,255,255,0.2),0 4px 12px rgba(0,0,30,0.4),0 1px 0 rgba(255,255,255,0.3) inset;">
+                    <i class="fa-brands fa-apple text-xl" style="color:rgba(220,235,255,0.9);"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold" style="color:rgba(240,245,255,0.96);">iOS インストールガイド</h3>
+                    <p class="text-xs" style="color:rgba(170,190,255,0.6);">Safariでのインストールの手順</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4 text-xs sm:text-sm">
+                <div class="glass-warning p-3.5 flex items-start gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-base mt-0.5 shrink-0" style="color:rgba(255,200,80,0.9);"></i>
+                    <span class="font-medium" style="color:rgba(255,220,140,0.9);">iOSの仕様上、必ず <strong>Safari ブラウザ</strong> で本サイトを開いてダウンロードを行ってください。</span>
+                </div>
+
+                <ol class="space-y-3.5 list-decimal list-inside font-medium" style="color:rgba(210,225,255,0.85);">
+                    <li class="pl-1">
+                        <strong>プロファイルをダウンロード</strong>
+                        <p class="text-xs ml-5 font-normal mt-0.5" style="color:rgba(170,190,255,0.6);">ダウンロード時の確認ダイアログで「許可」を選択します。</p>
+                    </li>
+                    <li class="pl-1">
+                        <strong>設定アプリを開く</strong>
+                        <p class="text-xs ml-5 font-normal mt-0.5" style="color:rgba(170,190,255,0.6);">「設定」アプリを起動し、トップに表示される「プロファイルがダウンロードされました」をタップ。</p>
+                    </li>
+                    <li class="pl-1">
+                        <strong>プロファイルをインストール</strong>
+                        <p class="text-xs ml-5 font-normal mt-0.5" style="color:rgba(170,190,255,0.6);">右上の「インストール」をタップし、端末のパスコードを入力します。</p>
+                    </li>
+                </ol>
+            </div>
+
+            <button id="modalOkBtn" class="liquid-btn-primary w-full py-3.5 text-white font-semibold text-xs rounded-2xl transition cursor-pointer">
+                閉じる
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        /* ── Liquid Glass: cursor-tracking highlight ── */
+        document.querySelectorAll('.liquid-glass').forEach(el => {
+            el.addEventListener('mousemove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1) + '%';
+                const y = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1) + '%';
+                const hl = el.querySelector('.glass-highlight');
+                if (hl) {
+                    hl.style.setProperty('--mx', x);
+                    hl.style.setProperty('--my', y);
+                }
+            });
+        });
+
+        /* State management */
+        let uploadedFonts = []; // Array of { id, file, name, familyName, base64, size }
+
+        /* DOM Elements */
+        const dropZone = document.getElementById('dropZone');
+        const fontInput = document.getElementById('fontInput');
+        const fontList = document.getElementById('fontList');
+        const emptyState = document.getElementById('emptyState');
+        const fontCountBadge = document.getElementById('fontCountBadge');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        const profileNameInput = document.getElementById('profileName');
+        const profileOrgInput = document.getElementById('profileOrg');
+        const guideBtn = document.getElementById('guideBtn');
+        const guideModal = document.getElementById('guideModal');
+        const closeGuideBtn = document.getElementById('closeGuideBtn');
+        const modalOkBtn = document.getElementById('modalOkBtn');
+
+        /**
+         * UUID Generator
+         */
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16).toUpperCase();
+            });
+        }
+
+        /**
+         * Toast notification
+         */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'error' ? 'bg-rose-500' : (type === 'success' ? 'bg-emerald-600' : 'bg-slate-900');
+            const iconClass = type === 'error' ? 'fa-circle-exclamation' : (type === 'success' ? 'fa-circle-check' : 'fa-circle-info');
+
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-2.5 text-xs font-semibold transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto border border-white/20`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass} text-sm"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Drag and Drop Events
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drop-zone--over');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drop-zone--over');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            handleFiles(dt.files);
+        });
+
+        dropZone.addEventListener('click', () => fontInput.click());
+
+        fontInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fontInput.value = '';
+        });
+
+        /**
+         * Process uploaded files
+         */
+        async function handleFiles(files) {
+            const validExtensions = ['.ttf', '.otf', '.woff', '.woff2'];
+            const fileList = Array.from(files);
+
+            let addedCount = 0;
+
+            for (const file of fileList) {
+                const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                if (!validExtensions.includes(ext)) {
+                    showToast(`非対応形式: ${file.name}`, 'error');
+                    continue;
+                }
+
+                const defaultName = file.name.replace(/\.[^/.]+$/, "");
+
+                try {
+                    const base64Data = await readFileAsBase64(file);
+                    const fontObj = {
+                        id: generateUUID(),
+                        file: file,
+                        name: defaultName,
+                        familyName: defaultName,
+                        base64: base64Data,
+                        size: (file.size / 1024 / 1024).toFixed(2)
+                    };
+
+                    uploadedFonts.push(fontObj);
+                    addedCount++;
+                } catch (err) {
+                    console.error("Read Error:", err);
+                    showToast(`読み込み失敗: ${file.name}`, 'error');
+                }
+            }
+
+            if (addedCount > 0) {
+                showToast(`${addedCount} 個のフォントを追加しました`, 'success');
+                renderFontList();
+            }
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Render Font List UI
+         */
+        function renderFontList() {
+            fontList.innerHTML = '';
+
+            if (uploadedFonts.length === 0) {
+                emptyState.classList.remove('hidden');
+                clearAllBtn.classList.add('hidden');
+                generateBtn.disabled = true;
+                fontCountBadge.innerText = '0';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            clearAllBtn.classList.remove('hidden');
+            generateBtn.disabled = false;
+            fontCountBadge.innerText = uploadedFonts.length;
+
+            uploadedFonts.forEach((font, index) => {
+                const card = document.createElement('div');
+                card.className = "liquid-glass-card rounded-2xl p-4 transition-all duration-200 flex flex-col gap-3";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <div class="w-8 h-8 rounded-xl font-index-badge flex items-center justify-center font-bold text-xs shrink-0">
+                                ${index + 1}
+                            </div>
+                            <div class="truncate">
+                                <h4 class="font-bold text-xs sm:text-sm truncate" style="color:rgba(225,235,255,0.92);">${escapeHtml(font.file.name)}</h4>
+                                <span class="text-[10px] font-semibold" style="color:rgba(150,170,255,0.55);">${font.size} MB</span>
+                            </div>
+                        </div>
+                        <button onclick="removeFont('${font.id}')" class="font-remove-btn w-7 h-7 rounded-lg flex items-center justify-center transition shrink-0 cursor-pointer">
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t glass-divider">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase mb-1" style="color:rgba(160,185,255,0.55);">表示名</label>
+                            <input type="text" value="${escapeHtml(font.name)}" onchange="updateFontField('${font.id}', 'name', this.value)" 
+                                class="liquid-input w-full px-3 py-1.5 rounded-xl text-xs font-medium focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase mb-1" style="color:rgba(160,185,255,0.55);">ファミリー名</label>
+                            <input type="text" value="${escapeHtml(font.familyName)}" onchange="updateFontField('${font.id}', 'familyName', this.value)" 
+                                class="liquid-input w-full px-3 py-1.5 rounded-xl text-xs font-medium focus:outline-none">
+                        </div>
+                    </div>
+                `;
+
+                fontList.appendChild(card);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        window.removeFont = function(id) {
+            uploadedFonts = uploadedFonts.filter(f => f.id !== id);
+            renderFontList();
+            showToast('削除しました', 'info');
+        };
+
+        window.updateFontField = function(id, field, value) {
+            const font = uploadedFonts.find(f => f.id === id);
+            if (font) {
+                font[field] = value.trim();
+            }
+        };
+
+        clearAllBtn.addEventListener('click', () => {
+            uploadedFonts = [];
+            renderFontList();
+            showToast('リストをクリアしました', 'info');
+        });
+
+        /**
+         * Generate Apple Mobileconfig XML
+         */
+        function generateMobileConfigXML() {
+            const profileName = profileNameInput.value.trim() || 'Custom Fonts Profile';
+            const profileOrg = profileOrgInput.value.trim() || 'com.custom.fontprofile';
+            const mainUUID = generateUUID();
+
+            let payloadContentXML = '';
+
+            uploadedFonts.forEach(font => {
+                const fontUUID = generateUUID();
+                const fontDisplayName = font.name || font.file.name;
+                const fontIdentifier = `${profileOrg}.${font.id}`;
+
+                payloadContentXML += `
+        <dict>
+            <key>Font</key>
+            <data>
+${font.base64}
+            </data>
+            <key>Name</key>
+            <string>${escapeXml(fontDisplayName)}</string>
+            <key>PayloadDisplayName</key>
+            <string>${escapeXml(fontDisplayName)}</string>
+            <key>PayloadIdentifier</key>
+            <string>${fontIdentifier}</string>
+            <key>PayloadType</key>
+            <string>com.apple.font</string>
+            <key>PayloadUUID</key>
+            <string>${fontUUID}</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+        </dict>`;
+            });
+
+            return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>${payloadContentXML}
+    </array>
+    <key>PayloadDisplayName</key>
+    <string>${escapeXml(profileName)}</string>
+    <key>PayloadIdentifier</key>
+    <string>${profileOrg}</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>${mainUUID}</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>`;
+        }
+
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+
+        // Download Action
+        generateBtn.addEventListener('click', () => {
+            if (uploadedFonts.length === 0) return;
+
+            try {
+                const xmlContent = generateMobileConfigXML();
+                const blob = new Blob([xmlContent], { type: 'application/x-apple-aspen-config;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+
+                const fileName = `${(profileNameInput.value.trim() || 'fonts')}.mobileconfig`;
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast('プロファイルをダウンロードしました！', 'success');
+                
+                setTimeout(() => openModal(), 800);
+
+            } catch (err) {
+                console.error("Generator Error:", err);
+                showToast('生成に失敗しました', 'error');
+            }
+        });
+
+        // Modal Helpers
+        function openModal() { guideModal.classList.remove('opacity-0', 'pointer-events-none'); }
+        function closeModal() { guideModal.classList.add('opacity-0', 'pointer-events-none'); }
+
+        guideBtn.addEventListener('click', openModal);
+        closeGuideBtn.addEventListener('click', closeModal);
+        modalOkBtn.addEventListener('click', closeModal);
+        guideModal.addEventListener('click', (e) => { if (e.target === guideModal) closeModal(); });
+    </script>
+</body>
+</html>
