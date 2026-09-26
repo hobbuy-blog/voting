@@ -503,12 +503,12 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-6 border-b glass-divider">
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider mb-2" style="color:rgba(170,195,255,0.6);">プロファイル表示名</label>
-                    <input type="text" id="profileName" value="My Custom Fonts" placeholder="例: My Custom Fonts"
+                    <input type="text" id="profileName" placeholder="例: My Custom Fonts"
                         class="liquid-input w-full px-4 py-3 rounded-2xl focus:outline-none text-sm font-medium">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider mb-2" style="color:rgba(170,195,255,0.6);">プロファイル識別子 (Payload ID)</label>
-                    <input type="text" id="profileOrg" value="com.custom.fontprofile" placeholder="com.example.fonts"
+                    <input type="text" id="profileOrg" placeholder="com.example.fonts"
                         class="liquid-input w-full px-4 py-3 rounded-2xl focus:outline-none text-sm font-medium">
                 </div>
             </div>
@@ -849,8 +849,8 @@
          * Generate Apple Mobileconfig XML
          */
         function generateMobileConfigXML() {
-            const profileName = profileNameInput.value.trim() || 'Custom Fonts Profile';
-            const profileOrg = profileOrgInput.value.trim() || 'com.custom.fontprofile';
+            const profileName = profileNameInput.value.trim() || 'My Custom Fonts';
+            const profileOrg = profileOrgInput.value.trim() || 'com.example.fonts';
             const mainUUID = generateUUID();
 
             let payloadContentXML = '';
@@ -1005,7 +1005,7 @@ ${font.base64}
 
                 const blob     = new Blob([signedBytes], { type: 'application/x-apple-aspen-config' });
                 const url      = URL.createObjectURL(blob);
-                const fileName = `${(profileNameInput.value.trim() || 'fonts')}.mobileconfig`;
+                const fileName = `${(profileNameInput.value.trim() || 'My Custom Fonts')}.mobileconfig`;
 
                 const a = document.createElement('a');
                 a.href = url;
