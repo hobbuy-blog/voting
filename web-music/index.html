@@ -12,7 +12,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
-.w{max-width:980px;margin:0 auto;padding:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.w{max-width:980px;margin:0 auto;padding:12px 12px calc(var(--dh,230px) + 16px);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 body{overflow-x:hidden}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
 .m{font-family:"Material Symbols Rounded";font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:"liga";font-feature-settings:"liga";vertical-align:middle}
@@ -21,8 +21,8 @@ button:hover{border-color:var(--ac)}
 button.on{color:var(--ac);border-color:var(--ac)}
 button.ic{border:0;padding:6px}
 button.big{background:var(--ac);color:#fff;border:0;border-radius:50%;width:48px;height:48px;justify-content:center;padding:0}
-input[type=range]{accent-color:var(--ac)}
-input[type=number],select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 4px;width:100%}
+input[type=range]{accent-color:var(--ac);min-width:0}
+input.nb,select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 4px;width:100%}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .grow{flex:1;min-width:120px}
 #title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -43,12 +43,24 @@ input[type=number],select{font:inherit;color:inherit;background:var(--bg);border
 .c{display:grid;justify-items:center;font-size:11px}
 .c.off{opacity:.45}
 .c input[type=range].v{writing-mode:vertical-lr;direction:rtl;height:120px;width:28px;margin:0}
-.c input[type=number],.c select{text-align:center;font-size:12px;padding:3px 1px;width:100%;-moz-appearance:textfield;appearance:textfield}
+.c input.nb,.c select{text-align:center;font-size:12px;padding:3px 1px;width:100%;-moz-appearance:textfield;appearance:textfield}
 .c select{appearance:none;-webkit-appearance:none;text-align-last:center;font-size:11px}
 .c input::-webkit-inner-spin-button{display:none}
 .lock .c,.lock .ed{opacity:.5;pointer-events:none}
 canvas{width:100%;height:150px;display:block;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
-#msg{color:#d33;min-height:1.4em;font-size:12px}
+#msg{color:#d33;font-size:12px}
+#msg:empty{display:none}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.12);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+.dk{max-width:980px;margin:0 auto;display:grid;gap:6px}
+.dk>*{min-width:0}
+.top{display:flex;align-items:center;gap:10px}
+#cover{width:52px;height:52px;flex:none;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;color:var(--mut)}
+#cover img{width:100%;height:100%;object-fit:cover;display:block}
+.tt{flex:1;min-width:0}
+#info{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sk{display:flex;align-items:center;gap:8px}
+.sk input[type=range]{flex:1;min-width:0;width:100%;margin:0}
+.ctl{display:flex;align-items:center;justify-content:space-between}
 details summary{cursor:pointer;color:var(--mut)}
 #codecs{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:12px}
 #codecs .m{font-size:16px}
@@ -65,36 +77,18 @@ details summary{cursor:pointer;color:var(--mut)}
    <span class="grow"></span>
    <button class="ic" id="bTheme" title="Toggle theme"><span class="m">contrast</span></button>
   </div>
-  <div id="msg"></div>
-  <div id="title" style="margin-top:6px">No track selected</div>
-  <div class="sub" id="info">&nbsp;</div>
-  <div class="row" style="margin-top:8px">
-   <span class="sub" id="tc">0:00</span>
-   <input type="range" id="seek" class="grow" min="0" max="1" step="0.1" value="0">
-   <span class="sub" id="td">0:00</span>
-  </div>
-  <div class="row" style="margin-top:6px">
-   <button class="ic" id="bShuf" title="Shuffle"><span class="m">shuffle</span></button>
-   <button class="ic" id="bPrev"><span class="m">skip_previous</span></button>
-   <button class="big" id="bPlay"><span class="m">play_arrow</span></button>
-   <button class="ic" id="bNext"><span class="m">skip_next</span></button>
-   <button class="ic" id="bRep" title="Repeat"><span class="m">repeat</span></button>
-   <span class="grow"></span>
-   <span class="m" style="color:var(--mut)">volume_up</span>
-   <input type="range" id="vol" min="0" max="1" step="0.01" style="width:120px">
-  </div>
   <div class="row" style="margin-top:8px"><b>Playlist</b><span class="sub" id="lc"></span><span class="grow"></span><button class="ic" id="bColA" title="Collapse / expand playlist"><span class="m">unfold_less</span></button></div>
   <ul id="list"></ul>
  </div>
 
  <div class="card lock" id="eqcard">
   <div class="row" style="margin-bottom:8px">
-   <b>10-Band PEQ</b>
+   <b>Equalizer</b>
    <button id="bEdit"><span class="m">lock</span><span id="edT">Locked</span></button>
    <button id="bEq"><span class="m">equalizer</span><span id="eqT">ON</span></button>
    <button id="bFlat" class="ed"><span class="m">restart_alt</span>Flat</button>
    <span class="grow"></span>
-   <label class="row sub ed">Preamp [dB]<input type="number" id="preN" min="-15" max="15" step="0.1" style="width:64px"><input type="range" id="pre" min="-15" max="15" step="0.1" style="width:110px"></label>
+   <label class="row sub ed">Preamp [dB]<input type="text" class="nb" id="preN" style="width:64px;text-align:center"><input type="range" id="pre" min="-15" max="15" step="0.1" style="width:110px"></label>
   </div>
   <canvas id="cv"></canvas>
   <div class="eqw" style="margin-top:10px"><div class="bands" id="bands"></div></div>
@@ -107,16 +101,31 @@ details summary{cursor:pointer;color:var(--mut)}
  </div>
 </div>
 
+<div class="dock" id="dock"><div class="dk">
+ <div id="msg"></div>
+ <div class="top"><div id="cover"><span class="m">album</span></div><div class="tt"><div id="title">No track selected</div><div class="sub" id="info">&nbsp;</div></div></div>
+ <div class="sk"><span class="sub" id="tc">0:00</span><input type="range" id="seek" min="0" max="1" step="0.1" value="0"><span class="sub" id="td">0:00</span></div>
+ <div class="ctl">
+  <button class="ic" id="bShuf" title="Shuffle"><span class="m">shuffle</span></button>
+  <button class="ic" id="bPrev"><span class="m">skip_previous</span></button>
+  <button class="big" id="bPlay"><span class="m">play_arrow</span></button>
+  <button class="ic" id="bNext"><span class="m">skip_next</span></button>
+  <button class="ic" id="bRep" title="Repeat"><span class="m">repeat</span></button>
+ </div>
+ <div class="sk"><span class="m" style="color:var(--mut)">volume_up</span><input type="range" id="vol" min="0" max="1" step="0.01"></div>
+</div></div>
+
 <input type="file" id="fi" accept="audio/*,.mp3,.m4a,.aac,.ogg,.oga,.opus,.flac,.wav,.weba,.webm,.aif,.aiff,.aifc,.caf,.mka,.ac3,.amr,.3gp,.mp4,.wma,.ape,.wv" multiple hidden>
 <input type="file" id="fd" webkitdirectory multiple hidden>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const au=new Audio();au.preload="metadata";
 const EXT=/\.(mp3|m4a|aac|ogg|oga|opus|flac|wav|weba|webm|aif|aiff|aifc|caf|mka|ac3|eac3|amr|3gp|mp4|wma|ape|wv|mpga|mp2)$/i;
 const F=[31,62,125,250,500,1000,2000,4000,8000,16000];
 const TYPES=[["peaking","Peak"],["lowshelf","LShelf"],["highshelf","HShelf"],["lowpass","LPF"],["highpass","HPF"],["notch","Notch"],["bandpass","BPF"]];
-const def=()=>({vol:.8,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:F.map((f,i)=>({t:i==0?"lowshelf":i==9?"highshelf":"peaking",f,g:0,q:1,on:1}))});
+const def=()=>({vol:.8,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:F.map((f,i)=>({t:i==0?"lowshelf":i==9?"highshelf":"peaking",f,g:0,q:1.41,on:1}))});
 
 /* ---------- 設定の保存/復元 (localStorage + Cookie) ---------- */
 function load(){
@@ -175,10 +184,10 @@ function buildEq(){
   const mk=h=>{const e=document.createElement("div");e.className="c";e.innerHTML=h;return e};
   const c=[mk(`<label><input type="checkbox" ${b.on?"checked":""}> ${i+1}</label>`),
    mk(`<input type="range" class="v" min="-15" max="15" step="0.1" value="${b.g}" title="Double-click to reset to 0 dB">`),
-   mk(`<input type="number" inputmode="decimal" min="-15" max="15" step="0.1" value="${b.g}">`),
+   mk(`<input type="text" class="nb" value="${b.g}">`),
    mk(`<select>${TYPES.map(t=>`<option value="${t[0]}" ${t[0]==b.t?"selected":""}>${t[1]}</option>`).join("")}</select>`),
-   mk(`<input type="number" inputmode="decimal" min="10" max="22000" step="1" value="${b.f}">`),
-   mk(`<input type="number" inputmode="decimal" min="0.1" max="18" step="0.01" value="${b.q}">`)];
+   mk(`<input type="text" class="nb" inputmode="decimal" value="${b.f}">`),
+   mk(`<input type="text" class="nb" inputmode="decimal" value="${b.q}">`)];
   const [cb,sl,ng,se,nf,nq]=c.map(x=>x.querySelector("input,select"));
   const upd=()=>{apply();save()},dim=()=>c.forEach(x=>x.classList.toggle("off",!b.on));
   dim();
@@ -260,6 +269,21 @@ async function getFile(it,ask){
  if(p!=="granted")return null;
  const f=await h.getFile();mem[it.id]=f;return f;
 }
+let ctk=0,cUrl=null;
+function meta(f){
+ const tk=++ctk,cv=$("#cover");
+ if(cUrl){URL.revokeObjectURL(cUrl);cUrl=null}
+ cv.innerHTML='<span class="m">album</span>';
+ if(!window.jsmediatags)return;
+ try{jsmediatags.read(f,{onSuccess:r=>{
+  if(tk!=ctk)return;
+  const g=r.tags||{},pc=g.picture;
+  if(g.title)$("#title").textContent=g.title;
+  const a=[g.artist,g.album].filter(Boolean).join(" \u2013 ");
+  if(a)$("#info").textContent=a;
+  if(pc&&pc.data){cUrl=URL.createObjectURL(new Blob([new Uint8Array(pc.data)],{type:pc.format||"image/jpeg"}));const im=new Image();im.onload=()=>{if(tk==ctk){cv.innerHTML="";cv.appendChild(im)}};im.src=cUrl}
+ },onError:()=>{}})}catch(e){}
+}
 async function play(i,o={}){
  if(i<0||i>=items.length)return;
  const it=items[i];let f=null;
@@ -271,6 +295,7 @@ async function play(i,o={}){
  if(o.pos)au.addEventListener("loadedmetadata",()=>{au.currentTime=o.pos},{once:true});
  $("#title").textContent=it.name.replace(/\.[^.]+$/,"");
  $("#info").textContent=(f.type||"Unknown type")+" / "+(f.size/1048576).toFixed(1)+" MB";
+ meta(f);
  render();save();
  if(!o.silent){await ctx.resume();try{await au.play()}catch(e){}}
 }
@@ -308,7 +333,7 @@ $("#preN").onchange=e=>{S.pre=Math.min(15,Math.max(-15,+e.target.value||0));ui()
 $("#bEdit").onclick=()=>{const l=$("#eqcard").classList.toggle("lock");$("#bEdit").classList.toggle("on",!l);ic($("#bEdit"),l?"lock":"lock_open");$("#edT").textContent=l?"Locked":"Editing"};
 $("#bColA").onclick=()=>{S.ca^=1;save();render()};
 $("#bEq").onclick=()=>{S.eq^=1;route();ui();apply();save()};
-$("#bFlat").onclick=()=>{S.b.forEach((b,i)=>{b.g=0;b.f=F[i];b.q=1;b.on=1;b.t=i==0?"lowshelf":i==9?"highshelf":"peaking"});S.pre=0;buildEq();route();ui();apply();save()};
+$("#bFlat").onclick=()=>{S.b.forEach((b,i)=>{b.g=0;b.f=F[i];b.q=1.41;b.on=1;b.t=i==0?"lowshelf":i==9?"highshelf":"peaking"});S.pre=0;buildEq();route();ui();apply();save()};
 $("#bTheme").onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;S.th=dark?"light":"dark";document.documentElement.dataset.theme=S.th;draw();save()};
 $("#bClear").onclick=async()=>{if(!items.length||!confirm("Clear the entire playlist?"))return;au.pause();items=[];mem={};cur=-1;await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
 $("#bFiles").onclick=async()=>{
@@ -341,6 +366,8 @@ addEventListener("drop",async e=>{e.preventDefault();const out=[];
  }add(out)});
 addEventListener("keydown",e=>{if(e.code=="Space"&&!/INPUT|SELECT|BUTTON/.test(e.target.tagName)){e.preventDefault();$("#bPlay").click()}});
 addEventListener("resize",draw);
+document.addEventListener("focusin",e=>{const t=e.target;if(t.classList&&t.classList.contains("nb")){t.select();t.addEventListener("mouseup",v=>v.preventDefault(),{once:true});setTimeout(()=>t.select(),10)}});
+if(window.ResizeObserver)new ResizeObserver(()=>document.documentElement.style.setProperty("--dh",$("#dock").offsetHeight+"px")).observe($("#dock"));
 
 let lastSave=0;
 au.onplay=()=>ic($("#bPlay"),"pause");au.onpause=()=>ic($("#bPlay"),"play_arrow");
