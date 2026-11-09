@@ -333,7 +333,7 @@ $("#preN").onchange=e=>{S.pre=Math.min(15,Math.max(-15,+e.target.value||0));ui()
 $("#bEdit").onclick=()=>{const l=$("#eqcard").classList.toggle("lock");$("#bEdit").classList.toggle("on",!l);ic($("#bEdit"),l?"lock":"lock_open");$("#edT").textContent=l?"Locked":"Editing"};
 $("#bColA").onclick=()=>{S.ca^=1;save();render()};
 $("#bEq").onclick=()=>{S.eq^=1;route();ui();apply();save()};
-$("#bFlat").onclick=()=>{S.b.forEach((b,i)=>{b.g=0;b.f=F[i];b.q=1.41;b.on=1;b.t=i==0?"lowshelf":i==9?"highshelf":"peaking"});S.pre=0;buildEq();route();ui();apply();save()};
+$("#bFlat").onclick=()=>{S.b.forEach((b,i)=>{b.g=0;b.f=F[i];b.q=1.41;b.on=1;b.t=i==0?"peaking":i==9?"peaking":"peaking"});S.pre=0;buildEq();route();ui();apply();save()};
 $("#bTheme").onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;S.th=dark?"light":"dark";document.documentElement.dataset.theme=S.th;draw();save()};
 $("#bClear").onclick=async()=>{if(!items.length||!confirm("Clear the entire playlist?"))return;au.pause();items=[];mem={};cur=-1;await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
 $("#bFiles").onclick=async()=>{
