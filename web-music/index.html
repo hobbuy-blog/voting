@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
@@ -60,13 +60,13 @@ details summary{cursor:pointer;color:var(--mut)}
  <div class="card">
   <div class="row">
    <button id="bFiles"><span class="m">audio_file</span>Add Files</button>
-   <button id="bDir"><span class="m">folder_open</span>Add a Folder</button>
-   <button id="bClear"><span class="m">delete_sweep</span>All Clear</button>
+   <button id="bDir"><span class="m">folder_open</span>Add Folder</button>
+   <button id="bClear"><span class="m">delete_sweep</span>Clear All</button>
    <span class="grow"></span>
-   <button class="ic" id="bTheme" title="テーマ"><span class="m">contrast</span></button>
+   <button class="ic" id="bTheme" title="Toggle theme"><span class="m">contrast</span></button>
   </div>
   <div id="msg"></div>
-  <div id="title" style="margin-top:6px">Track unselected</div>
+  <div id="title" style="margin-top:6px">No track selected</div>
   <div class="sub" id="info">&nbsp;</div>
   <div class="row" style="margin-top:8px">
    <span class="sub" id="tc">0:00</span>
@@ -74,35 +74,35 @@ details summary{cursor:pointer;color:var(--mut)}
    <span class="sub" id="td">0:00</span>
   </div>
   <div class="row" style="margin-top:6px">
-   <button class="ic" id="bShuf" title="シャッフル"><span class="m">shuffle</span></button>
+   <button class="ic" id="bShuf" title="Shuffle"><span class="m">shuffle</span></button>
    <button class="ic" id="bPrev"><span class="m">skip_previous</span></button>
    <button class="big" id="bPlay"><span class="m">play_arrow</span></button>
    <button class="ic" id="bNext"><span class="m">skip_next</span></button>
-   <button class="ic" id="bRep" title="リピート"><span class="m">repeat</span></button>
+   <button class="ic" id="bRep" title="Repeat"><span class="m">repeat</span></button>
    <span class="grow"></span>
    <span class="m" style="color:var(--mut)">volume_up</span>
    <input type="range" id="vol" min="0" max="1" step="0.01" style="width:120px">
   </div>
-  <div class="row" style="margin-top:8px"><b>Playlist</b><span class="sub" id="lc"></span><span class="grow"></span><button class="ic" id="bColA" title="一覧全体を折りたたみ／展開"><span class="m">unfold_less</span></button></div>
+  <div class="row" style="margin-top:8px"><b>Playlist</b><span class="sub" id="lc"></span><span class="grow"></span><button class="ic" id="bColA" title="Collapse / expand playlist"><span class="m">unfold_less</span></button></div>
   <ul id="list"></ul>
  </div>
 
  <div class="card lock" id="eqcard">
   <div class="row" style="margin-bottom:8px">
-   <b>10バンド PEQ</b>
-   <button id="bEdit"><span class="m">lock</span><span id="edT">ロック中</span></button>
+   <b>10-Band PEQ</b>
+   <button id="bEdit"><span class="m">lock</span><span id="edT">Locked</span></button>
    <button id="bEq"><span class="m">equalizer</span><span id="eqT">ON</span></button>
-   <button id="bFlat" class="ed"><span class="m">restart_alt</span>フラット</button>
+   <button id="bFlat" class="ed"><span class="m">restart_alt</span>Flat</button>
    <span class="grow"></span>
-   <label class="row sub ed">Pre-amp [dB]<input type="number" id="preN" min="-15" max="15" step="0.1" style="width:64px"><input type="range" id="pre" min="-15" max="15" step="0.1" style="width:110px"></label>
+   <label class="row sub ed">Preamp [dB]<input type="number" id="preN" min="-15" max="15" step="0.1" style="width:64px"><input type="range" id="pre" min="-15" max="15" step="0.1" style="width:110px"></label>
   </div>
   <canvas id="cv"></canvas>
   <div class="eqw" style="margin-top:10px"><div class="bands" id="bands"></div></div>
  </div>
 
  <div class="card">
-  <details><summary>Supported Codecs (Your browser)</summary><div id="codecs"></div>
-   <div class="sub" style="margin-top:6px">Please make sure that your browser support the codec(s) of your files.</div>
+  <details><summary>Supported Codecs (This Browser)</summary><div id="codecs"></div>
+   <div class="sub" style="margin-top:6px">Playback uses your browser's built-in decoders. Make sure your browser supports the codecs of your files.</div>
   </details>
  </div>
 </div>
@@ -174,7 +174,7 @@ function buildEq(){
  S.b.forEach((b,i)=>{
   const mk=h=>{const e=document.createElement("div");e.className="c";e.innerHTML=h;return e};
   const c=[mk(`<label><input type="checkbox" ${b.on?"checked":""}> ${i+1}</label>`),
-   mk(`<input type="range" class="v" min="-15" max="15" step="0.1" value="${b.g}" title="ダブルクリックで0dB">`),
+   mk(`<input type="range" class="v" min="-15" max="15" step="0.1" value="${b.g}" title="Double-click to reset to 0 dB">`),
    mk(`<input type="number" inputmode="decimal" min="-15" max="15" step="0.1" value="${b.g}">`),
    mk(`<select>${TYPES.map(t=>`<option value="${t[0]}" ${t[0]==b.t?"selected":""}>${t[1]}</option>`).join("")}</select>`),
    mk(`<input type="number" inputmode="decimal" min="10" max="22000" step="1" value="${b.f}">`),
@@ -216,7 +216,7 @@ async function add(entries){
  S.ids=items.map(x=>x.id);save();render();
 }
 async function removeDir(d){
- if(!confirm("Do you want to clear the playlist?"))return;
+ if(!confirm("Remove this folder from the playlist?"))return;
  const cid=cur>=0?items[cur].id:null;
  for(const it of items.filter(x=>(x.dir||"")==d)){delete mem[it.id];await tx("readwrite",s=>s.delete(it.id))}
  items=items.filter(x=>(x.dir||"")!=d);cur=cid?items.findIndex(x=>x.id==cid):-1;
@@ -224,7 +224,7 @@ async function removeDir(d){
 }
 function render(){
  const ul=$("#list");ul.innerHTML="";
- $("#lc").textContent=items.length+" tracks";
+ $("#lc").textContent=items.length+(items.length==1?" track":" tracks");
  ic($("#bColA"),S.ca?"unfold_more":"unfold_less");
  ul.style.display=S.ca?"none":"";
  let last=null;
@@ -234,15 +234,15 @@ function render(){
    last=d;
    const n=items.filter(x=>(x.dir||"")==d).length,cl=S.cf[d];
    const h=document.createElement("li");h.className="dir";
-   h.innerHTML=`<span class="m">${cl?"chevron_right":"expand_more"}</span><span class="m">folder</span><span class="n"></span><span class="sub">${n}</span><button class="ic" title="フォルダを削除"><span class="m">close</span></button>`;
-   h.querySelector(".n").textContent=d||"（個別ファイル）";
+   h.innerHTML=`<span class="m">${cl?"chevron_right":"expand_more"}</span><span class="m">folder</span><span class="n"></span><span class="sub">${n}</span><button class="ic" title="Remove folder"><span class="m">close</span></button>`;
+   h.querySelector(".n").textContent=d||"(Individual files)";
    h.onclick=()=>{if(cl)delete S.cf[d];else S.cf[d]=1;save();render()};
    h.querySelector("button").onclick=ev=>{ev.stopPropagation();removeDir(d)};
    ul.appendChild(h);
   }
   if(S.cf[d])return;
   const li=document.createElement("li");li.className=(i==cur?"cur":"")+((mem[it.id]||it.handle)?"":" miss")+(d?" t":"");
-  li.innerHTML=`<span class="m">${i==cur?"graphic_eq":"music_note"}</span><span class="n"></span><span class="sub">${(it.name.split(".").pop()||"").toUpperCase()}</span><button class="ic" title="削除"><span class="m">close</span></button>`;
+  li.innerHTML=`<span class="m">${i==cur?"graphic_eq":"music_note"}</span><span class="n"></span><span class="sub">${(it.name.split(".").pop()||"").toUpperCase()}</span><button class="ic" title="Remove"><span class="m">close</span></button>`;
   li.querySelector(".n").textContent=it.name;
   li.onclick=()=>play(i);
   li.querySelector("button").onclick=async ev=>{
@@ -264,13 +264,13 @@ async function play(i,o={}){
  if(i<0||i>=items.length)return;
  const it=items[i];let f=null;
  try{f=await getFile(it,!o.silent)}catch(e){}
- if(!f){if(!o.silent)msg("Some thing went wrong（need permission, or re-add) : "+it.name);return}
+ if(!f){if(!o.silent)msg("Couldn't load the file (permission required, or please re-add it): "+it.name);return}
  msg();cur=i;S.last=it.id;
  if(curUrl)URL.revokeObjectURL(curUrl);
  curUrl=URL.createObjectURL(f);au.src=curUrl;
  if(o.pos)au.addEventListener("loadedmetadata",()=>{au.currentTime=o.pos},{once:true});
  $("#title").textContent=it.name.replace(/\.[^.]+$/,"");
- $("#info").textContent=(f.type||"unknown type")+" / "+(f.size/1048576).toFixed(1)+" MB";
+ $("#info").textContent=(f.type||"Unknown type")+" / "+(f.size/1048576).toFixed(1)+" MB";
  render();save();
  if(!o.silent){await ctx.resume();try{await au.play()}catch(e){}}
 }
@@ -310,7 +310,7 @@ $("#bColA").onclick=()=>{S.ca^=1;save();render()};
 $("#bEq").onclick=()=>{S.eq^=1;route();ui();apply();save()};
 $("#bFlat").onclick=()=>{S.b.forEach((b,i)=>{b.g=0;b.f=F[i];b.q=1;b.on=1;b.t=i==0?"lowshelf":i==9?"highshelf":"peaking"});S.pre=0;buildEq();route();ui();apply();save()};
 $("#bTheme").onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;S.th=dark?"light":"dark";document.documentElement.dataset.theme=S.th;draw();save()};
-$("#bClear").onclick=async()=>{if(!items.length||!confirm("Do you want to clear the playlist?"))return;au.pause();items=[];mem={};cur=-1;await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
+$("#bClear").onclick=async()=>{if(!items.length||!confirm("Clear the entire playlist?"))return;au.pause();items=[];mem={};cur=-1;await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
 $("#bFiles").onclick=async()=>{
  if(window.showOpenFilePicker){
   try{const hs=await showOpenFilePicker({multiple:true,types:[{description:"Audio",accept:{"audio/*":[".mp3",".m4a",".aac",".ogg",".oga",".opus",".flac",".wav",".weba",".webm",".aif",".aiff",".aifc",".caf",".mka",".ac3",".amr",".3gp",".mp4",".wma",".ape",".wv"]}}]});
@@ -324,7 +324,7 @@ $("#bDir").onclick=async()=>{
   try{const d=await showDirectoryPicker({mode:"read"}),out=[];
    const walk=async(dir,p)=>{for await(const [n,h] of dir.entries()){if(h.kind=="directory")await walk(h,p+"/"+n);else if(EXT.test(n))out.push({handle:h,dir:p,file:await h.getFile()})}};
    await walk(d,d.name);out.sort(srt);
-   msg(out.length?"":"No track file found");return add(out);}
+   msg(out.length?"":"No audio files found.");return add(out);}
   catch(e){if(e.name=="AbortError")return}
  }
  $("#fd").click();
@@ -347,7 +347,7 @@ au.onplay=()=>ic($("#bPlay"),"pause");au.onpause=()=>ic($("#bPlay"),"play_arrow"
 au.onended=()=>next(true);
 au.onloadedmetadata=()=>{$("#seek").max=au.duration||1;$("#td").textContent=fmt(au.duration)};
 au.ontimeupdate=()=>{$("#seek").value=au.currentTime;$("#tc").textContent=fmt(au.currentTime);if(Date.now()-lastSave>2000){lastSave=Date.now();S.pos=au.currentTime;save()}};
-au.onerror=()=>msg("Sorry. This file is unsupported, or broken : "+(items[cur]?items[cur].name:""));
+au.onerror=()=>msg("This file is unsupported or corrupted: "+(items[cur]?items[cur].name:""));
 
 /* ---------- コーデック判定 ---------- */
 const CODECS=[["MP3","audio/mpeg"],["AAC-LC","audio/mp4; codecs=\"mp4a.40.2\""],["HE-AAC","audio/mp4; codecs=\"mp4a.40.5\""],["ADTS AAC","audio/aac"],["FLAC","audio/flac"],["Vorbis","audio/ogg; codecs=\"vorbis\""],["Opus (Ogg)","audio/ogg; codecs=\"opus\""],["Opus (WebM)","audio/webm; codecs=\"opus\""],["Vorbis (WebM)","audio/webm; codecs=\"vorbis\""],["WAV (PCM)","audio/wav"],["AIFF","audio/aiff"],["ALAC","audio/mp4; codecs=\"alac\""],["AC-3","audio/mp4; codecs=\"ac-3\""],["E-AC-3","audio/mp4; codecs=\"ec-3\""],["AMR","audio/amr"],["Matroska","audio/x-matroska"],["WMA","audio/x-ms-wma"]];
@@ -365,7 +365,7 @@ $("#codecs").innerHTML=CODECS.map(([n,m])=>{const ok=au.canPlayType(m);return `<
   const i=items.findIndex(x=>x.id==S.last);
   if(i>=0){$("#title").textContent=items[i].name.replace(/\.[^.]+$/,"");try{await play(i,{silent:true,pos:S.pos})}catch(e){}}
  }
- if(items.length&&!items.some(x=>x.handle))msg("Please re-upload track files (Your browser do not support keeping files)");
+ if(items.length&&!items.some(x=>x.handle))msg("Please re-add your files. This browser can't keep file access between sessions.");
 })();
 </script>
 </body>
