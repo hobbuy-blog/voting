@@ -125,7 +125,7 @@ const au=new Audio();au.preload="metadata";
 const EXT=/\.(mp3|m4a|aac|ogg|oga|opus|flac|wav|weba|webm|aif|aiff|aifc|caf|mka|ac3|eac3|amr|3gp|mp4|wma|ape|wv|mpga|mp2)$/i;
 const F=[31,62,125,250,500,1000,2000,4000,8000,16000];
 const TYPES=[["peaking","Peak"],["lowshelf","LShelf"],["highshelf","HShelf"],["lowpass","LPF"],["highpass","HPF"],["notch","Notch"],["bandpass","BPF"]];
-const def=()=>({vol:.8,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:F.map((f,i)=>({t:i==0?"lowshelf":i==9?"highshelf":"peaking",f,g:0,q:1.41,on:1}))});
+const def=()=>({vol:1.0,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:F.map((f,i)=>({t:i==0?"peaking":i==9?"peaking":"peaking",f,g:0,q:1.41,on:1}))});
 
 /* ---------- 設定の保存/復元 (localStorage + Cookie) ---------- */
 function load(){
