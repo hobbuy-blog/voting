@@ -244,9 +244,46 @@ let items=[],mem={},cur=-1,curUrl=null;
 const msg=t=>$("#msg").textContent=t||"";
 const fmt=t=>isFinite(t)?Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0"):"0:00";
 const mkId=f=>f.name+"|"+f.size+"|"+f.lastModified;
+const nm=t=>String(t||"").normalize("NFKC").toLowerCase().replace(/\s+/g," ").trim();
+const pk=(t,...ks)=>{for(const k of ks){let v=t[k];if(v&&typeof v=="object"&&"data" in v)v=v.data;if(v!=null&&String(v).trim()!=="")return String(v).trim()}return""};
+const info=t=>({al:pk(t,"album","TALB","TAL"),aa:pk(t,"TPE2","albumartist","ALBUMARTIST","album_artist","aART","TP2"),ar:pk(t,"artist","TPE1"),
+ yr:(pk(t,"year","TDRC","TYER","TDOR","date","DATE").match(/\d{4}/)||[""])[0],
+ ds:parseInt(pk(t,"TPOS","discnumber","DISCNUMBER","disk","disc"))||0,tk:parseInt(pk(t,"track","TRCK","trkn"))||0});
+const clash=(x,y)=>x.some(a=>y.some(c=>a.i.tk&&a.i.tk==c.i.tk&&a.i.ds==c.i.ds));
+const VA="various artists";
+function classify(es){
+ const by={};
+ es.filter(e=>e.i&&e.i.al).forEach(e=>(by[nm(e.i.al)]=by[nm(e.i.al)]||[]).push(e));
+ for(const b of Object.values(by)){
+  const AL=b[0].i.al,aas=[...new Set(b.map(e=>nm(e.i.aa)).filter(Boolean))];
+  const nul=b.filter(e=>!e.i.aa),arts=[...new Set(nul.map(e=>nm(e.i.ar)))];
+  let split=false;
+  if(!aas.length&&arts.length>1){const g=arts.map(a=>nul.filter(e=>nm(e.i.ar)==a));split=g.some((x,i)=>g.slice(i+1).some(y=>clash(x,y)))}
+  const one=aas.length==1?b.find(x=>x.i.aa).i.aa:"";
+  b.forEach(e=>{e.w=e.i.aa||(one?one:(arts.length>1&&!split?"Various Artists":e.i.ar))});
+  const gw={};b.forEach(e=>(gw[nm(e.w)]=gw[nm(e.w)]||[]).push(e));
+  for(const g of Object.values(gw)){
+   const W=g[0].w,isVA=nm(W)==VA,cnt={};
+   g.forEach(e=>{if(e.i.yr)cnt[e.i.yr]=(cnt[e.i.yr]||0)+1});
+   const ys=Object.keys(cnt),top=ys.sort((a,c)=>cnt[c]-cnt[a]||a-c)[0]||"";
+   let sp=false;
+   if(ys.length>1&&!isVA){const h=ys.map(y=>g.filter(e=>e.i.yr==y));sp=h.some((x,i)=>h.slice(i+1).some(y=>clash(x,y)))}
+   g.forEach(e=>{const y=isVA?"":(sp?(e.i.yr||top):top);e.dir=AL+(W?" \u2013 "+W:"")+(y?" ("+y+")":"");e.tn=e.i.ds*1000+e.i.tk});
+  }
+ }
+}
 const srt=(a,b)=>(a.dir||"").localeCompare(b.dir||"",undefined,{numeric:true})||a.file.name.localeCompare(b.file.name,undefined,{numeric:true});
 async function add(entries){
  const cid=cur>=0?items[cur].id:null;
+const need=entries;
+ if(need.length){
+  msg("Reading tags\u2026");
+  let dn=0;
+  for(let i=0;i<need.length;i+=8)await Promise.all(need.slice(i,i+8).map(async e=>{const t=await tagsOf(e.file);if(t)e.i=info(t);msg("Reading tags\u2026 "+(++dn)+"/"+need.length)}));
+  classify(need);
+  msg("");
+  entries.sort((a,b)=>(a.dir||"").localeCompare(b.dir||"",undefined,{numeric:true})||(a.tn||0)-(b.tn||0));
+ }
  for(const e of entries){
   const f=e.file,id=mkId(f);mem[id]=f;
   let it=items.find(x=>x.id==id);
@@ -317,6 +354,13 @@ async function riffId3(f){
  }
  return null;
 }
+const tagsOf=f=>Promise.race([new Promise(async res=>{
+ if(!window.jsmediatags)return res(null);
+ try{
+  const rd=b=>jsmediatags.read(b,{onSuccess:r=>res(r.tags||null),onError:()=>res(null)});
+  if(/\.(wav|aif|aiff|aifc)$/i.test(f.name)){const b=await riffId3(f);b?rd(b):res(null)}else rd(f);
+ }catch(e){res(null)}
+}),new Promise(r=>setTimeout(()=>r(null),5000))]);
 let ctk=0,cUrl=null;
 function meta(f){
  const tk=++ctk,cv=$("#cover");
