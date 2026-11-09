@@ -3,7 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title>Local Music Player</title>
+<title>CL Player – Local Music Player with 10-Band Parametric EQ</title>
+<meta name="description" content="A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.">
+<meta name="application-name" content="CL Player">
+<meta name="apple-mobile-web-app-title" content="CL Player">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141416" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CL Player">
+<meta property="og:title" content="CL Player – Local Music Player with 10-Band Parametric EQ">
+<meta property="og:description" content="A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CL Player – Local Music Player with 10-Band Parametric EQ">
+<meta name="twitter:description" content="A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232b6cf0'/><g fill='%23fff'><rect x='9' y='38' width='6' height='14' rx='3'/><rect x='19' y='28' width='6' height='24' rx='3'/><rect x='29' y='16' width='6' height='36' rx='3'/><rect x='39' y='31' width='6' height='21' rx='3'/><rect x='49' y='23' width='6' height='29' rx='3'/></g></svg>">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CL Player","applicationCategory":"MultimediaApplication","operatingSystem":"Any","description":"A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap">
 <style>
 :root{--bg:#f6f6f7;--fg:#1c1c1e;--mut:#707075;--card:#fff;--line:#dcdce0;--ac:#2b6cf0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
@@ -250,26 +268,16 @@ const info=t=>({al:pk(t,"album","TALB","TAL"),aa:pk(t,"TPE2","albumartist","ALBU
  yr:(pk(t,"year","TDRC","TYER","TDOR","date","DATE").match(/\d{4}/)||[""])[0],
  ds:parseInt(pk(t,"TPOS","discnumber","DISCNUMBER","disk","disc"))||0,tk:parseInt(pk(t,"track","TRCK","trkn"))||0});
 const clash=(x,y)=>x.some(a=>y.some(c=>a.i.tk&&a.i.tk==c.i.tk&&a.i.ds==c.i.ds));
-const VA="various artists";
 function classify(es){
  const by={};
  es.filter(e=>e.i&&e.i.al).forEach(e=>(by[nm(e.i.al)]=by[nm(e.i.al)]||[]).push(e));
- for(const b of Object.values(by)){
-  const AL=b[0].i.al,aas=[...new Set(b.map(e=>nm(e.i.aa)).filter(Boolean))];
-  const nul=b.filter(e=>!e.i.aa),arts=[...new Set(nul.map(e=>nm(e.i.ar)))];
-  let split=false;
-  if(!aas.length&&arts.length>1){const g=arts.map(a=>nul.filter(e=>nm(e.i.ar)==a));split=g.some((x,i)=>g.slice(i+1).some(y=>clash(x,y)))}
-  const one=aas.length==1?b.find(x=>x.i.aa).i.aa:"";
-  b.forEach(e=>{e.w=e.i.aa||(one?one:(arts.length>1&&!split?"Various Artists":e.i.ar))});
-  const gw={};b.forEach(e=>(gw[nm(e.w)]=gw[nm(e.w)]||[]).push(e));
-  for(const g of Object.values(gw)){
-   const W=g[0].w,isVA=nm(W)==VA,cnt={};
-   g.forEach(e=>{if(e.i.yr)cnt[e.i.yr]=(cnt[e.i.yr]||0)+1});
-   const ys=Object.keys(cnt),top=ys.sort((a,c)=>cnt[c]-cnt[a]||a-c)[0]||"";
-   let sp=false;
-   if(ys.length>1&&!isVA){const h=ys.map(y=>g.filter(e=>e.i.yr==y));sp=h.some((x,i)=>h.slice(i+1).some(y=>clash(x,y)))}
-   g.forEach(e=>{const y=isVA?"":(sp?(e.i.yr||top):top);e.dir=AL+(W?" \u2013 "+W:"")+(y?" ("+y+")":"");e.tn=e.i.ds*1000+e.i.tk});
-  }
+ for(const g of Object.values(by)){
+  const AL=g[0].i.al,cnt={};
+  g.forEach(e=>{if(e.i.yr)cnt[e.i.yr]=(cnt[e.i.yr]||0)+1});
+  const ys=Object.keys(cnt),top=ys.sort((a,c)=>cnt[c]-cnt[a]||a-c)[0]||"";
+  let sp=false;
+  if(ys.length>1){const h=ys.map(y=>g.filter(e=>e.i.yr==y));sp=h.some((x,i)=>h.slice(i+1).some(y=>clash(x,y)))}
+  g.forEach(e=>{const y=sp?(e.i.yr||top):top;e.dir=AL+(y?" ("+y+")":"");e.tn=e.i.ds*1000+e.i.tk});
  }
 }
 const srt=(a,b)=>(a.dir||"").localeCompare(b.dir||"",undefined,{numeric:true})||a.file.name.localeCompare(b.file.name,undefined,{numeric:true});
@@ -279,9 +287,10 @@ const need=entries;
  if(need.length){
   msg("Reading tags\u2026");
   let dn=0;
-  for(let i=0;i<need.length;i+=8)await Promise.all(need.slice(i,i+8).map(async e=>{const t=await tagsOf(e.file);if(t)e.i=info(t);msg("Reading tags\u2026 "+(++dn)+"/"+need.length)}));
+  for(let i=0;i<need.length;i+=4)await Promise.all(need.slice(i,i+4).map(async e=>{const t=await tagsOf(e.file);if(t)e.i=info(t);msg("Reading tags\u2026 "+(++dn)+"/"+need.length)}));
   classify(need);
-  msg("");
+  const nt=need.filter(e=>!(e.i&&e.i.al)).length;
+  msg(nt?nt+" file(s) had no readable album tag":"");
   entries.sort((a,b)=>(a.dir||"").localeCompare(b.dir||"",undefined,{numeric:true})||(a.tn||0)-(b.tn||0));
  }
  for(const e of entries){
@@ -360,7 +369,7 @@ const tagsOf=f=>Promise.race([new Promise(async res=>{
   const rd=b=>jsmediatags.read(b,{onSuccess:r=>res(r.tags||null),onError:()=>res(null)});
   if(/\.(wav|aif|aiff|aifc)$/i.test(f.name)){const b=await riffId3(f);b?rd(b):res(null)}else rd(f);
  }catch(e){res(null)}
-}),new Promise(r=>setTimeout(()=>r(null),5000))]);
+}),new Promise(r=>setTimeout(()=>r(null),15000))]);
 let ctk=0,cUrl=null;
 function meta(f){
  const tk=++ctk,cv=$("#cover");
