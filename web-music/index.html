@@ -36,11 +36,13 @@ input.nb,select{font:inherit;color:inherit;background:var(--bg);border:1px solid
 #list li.miss .n{color:var(--mut)}
 #list li.dir{color:var(--mut);font-weight:600}
 #list li.t{margin-left:18px}
-.eqw{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.bands{display:grid;grid-template-columns:auto repeat(10,minmax(48px,1fr));gap:8px 4px;align-items:center}
+.eqb{display:flex;gap:8px;--rows:36px 132px 36px 36px 36px 36px}
+.labels{flex:none;display:grid;grid-template-rows:var(--rows);border-right:1px solid var(--line);padding-right:8px}
+.eqw{flex:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.bands{display:grid;grid-template-columns:repeat(10,minmax(48px,1fr));grid-template-rows:var(--rows);gap:0 4px;min-width:520px}
 .bands>*{min-width:0}
-.rl{position:sticky;left:0;z-index:1;background:var(--card);font-size:11px;color:var(--mut);white-space:nowrap;padding-right:6px}
-.c{display:grid;justify-items:center;font-size:11px}
+.rl{font-size:11px;color:var(--mut);white-space:nowrap;display:flex;align-items:center}
+.c{align-self:center;display:grid;justify-items:center;font-size:11px}
 .c.off{opacity:.45}
 .c input[type=range].v{writing-mode:vertical-lr;direction:rtl;height:120px;width:28px;margin:0}
 .c input.nb,.c select{text-align:center;font-size:12px;padding:3px 1px;width:100%;-moz-appearance:textfield;appearance:textfield}
@@ -86,12 +88,16 @@ details summary{cursor:pointer;color:var(--mut)}
    <b>Equalizer</b>
    <button id="bEdit"><span class="m">lock</span><span id="edT">Locked</span></button>
    <button id="bEq"><span class="m">equalizer</span><span id="eqT">ON</span></button>
-   <button id="bFlat" class="ed"><span class="m">restart_alt</span>Flat</button>
-   <span class="grow"></span>
-   <label class="row sub ed">Preamp [dB]<input type="text" class="nb" id="preN" style="width:64px;text-align:center"><input type="range" id="pre" min="-15" max="15" step="0.1" style="width:110px"></label>
   </div>
+  <div class="row" style="margin-bottom:8px">
+   <span class="sub">Preset</span>
+   <select id="preset" style="width:auto;max-width:100%"></select>
+   <input type="text" id="pn" class="nb ed" maxlength="24" placeholder="Name" style="width:130px;display:none">
+   <select id="saveto" class="ed" style="width:auto;max-width:100%"></select>
+  </div>
+  <div class="row sub ed" style="margin-bottom:8px;flex-wrap:nowrap">Preamp [dB]<input type="text" class="nb" id="preN" style="width:64px;text-align:center"><input type="range" id="pre" min="-15" max="15" step="0.1" style="flex:1;min-width:0;width:100%"></div>
   <canvas id="cv"></canvas>
-  <div class="eqw" style="margin-top:10px"><div class="bands" id="bands"></div></div>
+  <div class="eqb" style="margin-top:10px"><div class="labels" id="labels"></div><div class="eqw"><div class="bands" id="bands"></div></div></div>
  </div>
 
  <div class="card">
@@ -125,7 +131,10 @@ const au=new Audio();au.preload="metadata";
 const EXT=/\.(mp3|m4a|aac|ogg|oga|opus|flac|wav|weba|webm|aif|aiff|aifc|caf|mka|ac3|eac3|amr|3gp|mp4|wma|ape|wv|mpga|mp2)$/i;
 const F=[31,62,125,250,500,1000,2000,4000,8000,16000];
 const TYPES=[["peaking","Peak"],["lowshelf","LShelf"],["highshelf","HShelf"],["lowpass","LPF"],["highpass","HPF"],["notch","Notch"],["bandpass","BPF"]];
-const def=()=>({vol:1.0,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:F.map((f,i)=>({t:i==0?"peaking":i==9?"peaking":"peaking",f,g:0,q:1.41,on:1}))});
+const mkB=g=>F.map((f,i)=>({t:"peaking",f,g:g[i],q:1.41,on:1}));
+const BI=[{n:"Flat",g:[0,0,0,0,0,0,0,0,0,0],p:0},{n:"Bass Boost",g:[6,5,3,1,0,0,0,0,0,0],p:-4},{n:"Treble Boost",g:[0,0,0,0,0,0,1,3,5,6],p:-4},{n:"Vocal",g:[-3,-2,-1,1,3,4,3,1,0,-1],p:-2},{n:"Loudness",g:[5,4,2,0,-1,-1,0,2,4,5],p:-4}];
+const defCu=()=>[0,1,2,3,4].map(i=>({n:"Custom "+(i+1),b:mkB(BI[0].g),pre:0}));
+const def=()=>({pi:"f0",dirty:0,cu:defCu(),vol:.8,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:mkB(BI[0].g)});
 
 /* ---------- 設定の保存/復元 (localStorage + Cookie) ---------- */
 function load(){
@@ -133,11 +142,12 @@ function load(){
  try{const m=document.cookie.match(/(?:^|; )mp=([^;]*)/);if(m)return Object.assign(def(),JSON.parse(decodeURIComponent(m[1])))}catch(e){}
  return def();
 }
-let S=load(),tmr;
+let S=load(),tmr;if(!Array.isArray(S.cu))S.cu=defCu();
+if(S.ver!=2){S.ver=2;const mg=b=>{if(b&&b[0]&&b[0].t=="lowshelf")b[0].t="peaking";if(b&&b[9]&&b[9].t=="highshelf")b[9].t="peaking"};mg(S.b);S.cu.forEach(c=>mg(c.b))}
 function save(){
  clearTimeout(tmr);tmr=setTimeout(()=>{
   try{localStorage.setItem("mp",JSON.stringify(S))}catch(e){}
-  try{document.cookie="mp="+encodeURIComponent(JSON.stringify({...S,ids:[]}))+";max-age=31536000;path=/;SameSite=Lax"}catch(e){}
+  try{document.cookie="mp="+encodeURIComponent(JSON.stringify({...S,ids:[],cu:null,cf:{}}))+";max-age=31536000;path=/;SameSite=Lax"}catch(e){}
  },150);
 }
 
@@ -157,7 +167,7 @@ function route(){
 function apply(){
  pre.gain.value=S.eq?Math.pow(10,S.pre/20):1;
  fl.forEach((f,i)=>{const b=S.b[i];f.type=b.t;f.frequency.value=b.f;f.gain.value=b.g;f.Q.value=b.q});
- draw();
+ draw();sync();
 }
 function draw(){
  const c=$("#cv"),d=devicePixelRatio||1,W=c.width=c.clientWidth*d,H=c.height=c.clientHeight*d,g=c.getContext("2d");
@@ -177,7 +187,7 @@ function draw(){
  if(S.eq)S.b.forEach(b=>{if(!b.on)return;g.fillStyle=cs.getPropertyValue("--ac");g.beginPath();g.arc(X(b.f),Y(Math.max(-R,Math.min(R,b.g))),3*d,0,7);g.fill()});
 }
 function buildEq(){
- const box=$("#bands");box.innerHTML="";
+ const box=$("#bands"),lab=$("#labels");box.innerHTML="";lab.innerHTML="";
  const R=["Band","","Gain [dB]","Type","Freq [Hz]","Q"].map(t=>{const e=document.createElement("div");e.className="rl";e.textContent=t;return[e]});
  const cl=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
  S.b.forEach((b,i)=>{
@@ -200,7 +210,33 @@ function buildEq(){
   nq.onchange=()=>{b.q=cl(+nq.value||b.q,.1,18);nq.value=b.q;upd()};
   c.forEach((x,k)=>R[k].push(x));
  });
- R.forEach(r=>r.forEach(e=>box.appendChild(e)));
+ R.forEach(r=>lab.appendChild(r[0]));
+ R.forEach(r=>r.slice(1).forEach(e=>box.appendChild(e)));
+}
+
+const cp=o=>JSON.parse(JSON.stringify(o));
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function sync(){
+ const k=+S.pi.slice(1);
+ if(S.pi[0]=="c"){S.cu[k].b=cp(S.b);S.cu[k].pre=S.pre}
+ else{const x=BI[k];S.dirty=JSON.stringify([S.b,S.pre])!=JSON.stringify([mkB(x.g),x.p])?1:0}
+ presets();
+}
+function presets(){
+ const o=(v,t)=>`<option value="${v}">${esc(t)}${v==S.pi&&S.dirty?" *":""}</option>`;
+ const sel=$("#preset");
+ sel.innerHTML='<optgroup label="Presets">'+BI.map((x,i)=>o("f"+i,x.n)).join("")+'</optgroup><optgroup label="Custom">'+S.cu.map((x,i)=>o("c"+i,x.n)).join("")+'</optgroup>';
+ sel.value=S.pi;
+ const c=S.pi[0]=="c",pn=$("#pn");
+ pn.style.display=c?"":"none";
+ if(c&&document.activeElement!==pn)pn.value=S.cu[+S.pi.slice(1)].n;
+ $("#saveto").innerHTML='<option value="">Save to\u2026</option>'+S.cu.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join("");
+}
+function setActive(id){
+ S.pi=id;S.dirty=0;
+ const k=+id.slice(1);
+ if(id[0]=="f"){S.b=mkB(BI[k].g);S.pre=BI[k].p}else{S.b=cp(S.cu[k].b);S.pre=S.cu[k].pre}
+ buildEq();route();ui();apply();save();
 }
 
 /* ---------- プレイリスト ---------- */
@@ -269,20 +305,35 @@ async function getFile(it,ask){
  if(p!=="granted")return null;
  const f=await h.getFile();mem[it.id]=f;return f;
 }
+const fcc=(d,o)=>String.fromCharCode(d.getUint8(o),d.getUint8(o+1),d.getUint8(o+2),d.getUint8(o+3));
+async function riffId3(f){
+ const h=new DataView(await f.slice(0,12).arrayBuffer()),t=fcc(h,0);
+ if(t!="RIFF"&&t!="FORM")return null;
+ const le=t=="RIFF";let o=12;
+ for(let k=0;k<256&&o+8<=f.size;k++){
+  const d=new DataView(await f.slice(o,o+8).arrayBuffer()),n=d.getUint32(4,le);
+  if(fcc(d,0).toLowerCase()=="id3 ")return f.slice(o+8,o+8+n);
+  o+=8+n+(n&1);
+ }
+ return null;
+}
 let ctk=0,cUrl=null;
 function meta(f){
  const tk=++ctk,cv=$("#cover");
  if(cUrl){URL.revokeObjectURL(cUrl);cUrl=null}
  cv.innerHTML='<span class="m">album</span>';
  if(!window.jsmediatags)return;
- try{jsmediatags.read(f,{onSuccess:r=>{
+ const show=r=>{
   if(tk!=ctk)return;
   const g=r.tags||{},pc=g.picture;
   if(g.title)$("#title").textContent=g.title;
   const a=[g.artist,g.album].filter(Boolean).join(" \u2013 ");
   if(a)$("#info").textContent=a;
   if(pc&&pc.data){cUrl=URL.createObjectURL(new Blob([new Uint8Array(pc.data)],{type:pc.format||"image/jpeg"}));const im=new Image();im.onload=()=>{if(tk==ctk){cv.innerHTML="";cv.appendChild(im)}};im.src=cUrl}
- },onError:()=>{}})}catch(e){}
+ };
+ const rd=b=>{try{jsmediatags.read(b,{onSuccess:show,onError:()=>{}})}catch(e){}};
+ if(/\.(wav|aif|aiff|aifc)$/i.test(f.name))riffId3(f).then(b=>{if(b&&tk==ctk)rd(b)}).catch(()=>{});
+ else rd(f);
 }
 async function play(i,o={}){
  if(i<0||i>=items.length)return;
@@ -332,8 +383,11 @@ $("#pre").oninput=e=>{S.pre=+e.target.value;ui();apply();save()};
 $("#preN").onchange=e=>{S.pre=Math.min(15,Math.max(-15,+e.target.value||0));ui();apply();save()};
 $("#bEdit").onclick=()=>{const l=$("#eqcard").classList.toggle("lock");$("#bEdit").classList.toggle("on",!l);ic($("#bEdit"),l?"lock":"lock_open");$("#edT").textContent=l?"Locked":"Editing"};
 $("#bColA").onclick=()=>{S.ca^=1;save();render()};
+$("#preset").onchange=e=>setActive(e.target.value);
+$("#pn").oninput=e=>{S.cu[+S.pi.slice(1)].n=e.target.value.slice(0,24);presets();save()};
+$("#pn").onchange=()=>{const k=+S.pi.slice(1);if(!S.cu[k].n.trim())S.cu[k].n="Custom "+(k+1);presets();save()};
+$("#saveto").onchange=e=>{const v=e.target.value;if(v==="")return;const k=+v;S.cu[k].b=cp(S.b);S.cu[k].pre=S.pre;S.pi="c"+k;S.dirty=0;presets();save()};
 $("#bEq").onclick=()=>{S.eq^=1;route();ui();apply();save()};
-$("#bFlat").onclick=()=>{S.b.forEach((b,i)=>{b.g=0;b.f=F[i];b.q=1.41;b.on=1;b.t=i==0?"peaking":i==9?"peaking":"peaking"});S.pre=0;buildEq();route();ui();apply();save()};
 $("#bTheme").onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;S.th=dark?"light":"dark";document.documentElement.dataset.theme=S.th;draw();save()};
 $("#bClear").onclick=async()=>{if(!items.length||!confirm("Clear the entire playlist?"))return;au.pause();items=[];mem={};cur=-1;await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
 $("#bFiles").onclick=async()=>{
