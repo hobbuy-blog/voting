@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title>CL Player – Simple, but Advanced</title>
+<title>CL Player – Local Music Player with 10-Band Parametric EQ</title>
 <meta name="description" content="A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.">
 <meta name="application-name" content="CL Player">
 <meta name="apple-mobile-web-app-title" content="CL Player">
@@ -14,13 +14,19 @@
 <meta name="theme-color" content="#141416" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="CL Player">
-<meta property="og:title" content="CL Player – Simple, but Advanced">
+<meta property="og:title" content="CL Player – Local Music Player with 10-Band Parametric EQ">
 <meta property="og:description" content="A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CL Player – Simple, but Advanced">
+<meta name="twitter:title" content="CL Player – Local Music Player with 10-Band Parametric EQ">
 <meta name="twitter:description" content="A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232b6cf0'/><g fill='%23fff'><rect x='9' y='38' width='6' height='14' rx='3'/><rect x='19' y='28' width='6' height='24' rx='3'/><rect x='29' y='16' width='6' height='36' rx='3'/><rect x='39' y='31' width='6' height='21' rx='3'/><rect x='49' y='23' width='6' height='29' rx='3'/></g></svg>">
-<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="120x120" href="./apple-touch-icon-120.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CL Player","applicationCategory":"MultimediaApplication","operatingSystem":"Any","description":"A private, browser-based music player with a 10-band parametric EQ. Plays MP3, AAC, FLAC, Opus, WAV and more from your device—no uploads, no sign-up.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap">
 <style>
@@ -30,14 +36,24 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
-.w{max-width:980px;margin:0 auto;padding:12px 12px calc(var(--dh,230px) + 16px);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.w{max-width:980px;margin:0 auto;padding:12px 12px calc(var(--dh,230px) + var(--th,56px) + 16px);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 body{overflow-x:hidden}
+.tabs{position:fixed;left:0;right:0;bottom:calc(var(--dh,230px) + 8px);z-index:19;display:flex;justify-content:center;pointer-events:none}
+.tabs>div{pointer-events:auto;display:flex;gap:4px;max-width:calc(100% - 16px);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.tabs button{border:0;border-radius:999px;padding:6px 14px;font-size:13px;white-space:nowrap}
+.tabs button.on{background:var(--ac);color:#fff}
+.tabs .m{font-size:18px}
+.bd{position:absolute;right:-2px;bottom:-1px;font-size:8px;font-weight:700;line-height:1;background:var(--ac);color:#fff;border-radius:6px;padding:2px 3px}
+#pl{display:flex;flex-direction:column;min-height:0}
+body[data-tab=pl] #eqcard,body[data-tab=pl] #cc,body[data-tab=cfg] #pl{display:none}
+body[data-tab=pl] .w{position:fixed;left:0;right:0;top:0;bottom:calc(var(--dh,230px) + var(--th,56px));margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 0;grid-template-rows:minmax(0,1fr);overflow:hidden}
+body[data-tab=pl] #list{max-height:none;flex:1;min-height:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
 .m{font-family:"Material Symbols Rounded";font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:"liga";font-feature-settings:"liga";vertical-align:middle}
 button{font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 button:hover{border-color:var(--ac)}
 button.on{color:var(--ac);border-color:var(--ac)}
-button.ic{border:0;padding:6px}
+button.ic{border:0;padding:6px;position:relative}
 button.big{background:var(--ac);color:#fff;border:0;border-radius:50%;width:48px;height:48px;justify-content:center;padding:0}
 input[type=range]{accent-color:var(--ac);min-width:0}
 input.nb,select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 4px;width:100%}
@@ -89,7 +105,7 @@ details summary{cursor:pointer;color:var(--mut)}
 </head>
 <body>
 <div class="w">
- <div class="card">
+ <div class="card" id="pl">
   <div class="row">
    <button id="bFiles"><span class="m">audio_file</span>Add Files</button>
    <button id="bDir"><span class="m">folder_open</span>Add Folder</button>
@@ -118,13 +134,17 @@ details summary{cursor:pointer;color:var(--mut)}
   <div class="eqb" style="margin-top:10px"><div class="labels" id="labels"></div><div class="eqw"><div class="bands" id="bands"></div></div></div>
  </div>
 
- <div class="card">
+ <div class="card" id="cc">
   <details><summary>Supported Codecs (This Browser)</summary><div id="codecs"></div>
    <div class="sub" style="margin-top:6px">Playback uses your browser's built-in decoders. Make sure your browser supports the codecs of your files.</div>
   </details>
  </div>
 </div>
 
+<div class="tabs" id="tabs"><div>
+ <button id="tPl"><span class="m">queue_music</span>Playlist</button>
+ <button id="tCfg"><span class="m">tune</span>Playback Config</button>
+</div></div>
 <div class="dock" id="dock"><div class="dk">
  <div id="msg"></div>
  <div class="top"><div id="cover"><span class="m">album</span></div><div class="tt"><div id="title">No track selected</div><div class="sub" id="info">&nbsp;</div></div></div>
@@ -150,9 +170,16 @@ const EXT=/\.(mp3|m4a|aac|ogg|oga|opus|flac|wav|weba|webm|aif|aiff|aifc|caf|mka|
 const F=[31,62,125,250,500,1000,2000,4000,8000,16000];
 const TYPES=[["peaking","Peak"],["lowshelf","LShelf"],["highshelf","HShelf"],["lowpass","LPF"],["highpass","HPF"],["notch","Notch"],["bandpass","BPF"]];
 const mkB=g=>F.map((f,i)=>({t:"peaking",f,g:g[i],q:1.41,on:1}));
-const BI=[{n:"Flat",g:[0,0,0,0,0,0,0,0,0,0],p:0},{n:"Bass Boost",g:[6,5,3,1,0,0,0,0,0,0],p:-4},{n:"Treble Boost",g:[0,0,0,0,0,0,1,3,5,6],p:-4},{n:"Vocal",g:[-3,-2,-1,1,3,4,3,1,0,-1],p:-2},{n:"Loudness",g:[5,4,2,0,-1,-1,0,2,4,5],p:-4}];
-const defCu=()=>[0,1,2,3,4].map(i=>({n:"Custom "+(i+1),b:mkB(BI[0].g),pre:0}));
-const def=()=>({pi:"f0",dirty:0,cu:defCu(),vol:.8,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:mkB(BI[0].g)});
+const L=[["peaking",2000,0,1.41,0],["peaking",4000,0,1.41,0],["peaking",8000,0,1.41,0],["peaking",16000,0,1.41,0]];
+const BI=[{n:"Flat",g:[0,0,0,0,0,0,0,0,0,0],p:0},
+{n:"Bright",p:0,b:[["lowshelf",60,3,1.41],["peaking",400,0,1.41],["peaking",1000,0,1.41],["peaking",2500,6,2],["peaking",6300,0,1.41],["peaking",16000,0,.5],...L]},
+{n:"Exciting",p:0,b:[["lowshelf",60,10,1.41],["peaking",400,0,1.41],["peaking",1000,0,1.41],["peaking",2500,0,1.41],["peaking",6300,6,.5],["peaking",16000,9,.5],...L]},
+{n:"Mellow",p:0,b:[["peaking",60,0,1.41],["peaking",400,1,1],["peaking",1000,2,.7],["peaking",2500,-1,1.41],["peaking",6300,-2,.5],["peaking",16000,0,1.41],...L]},
+{n:"Relax",p:0,b:[["lowshelf",60,3,1.41],["peaking",400,-3,.7],["peaking",1000,0,1.41],["peaking",2500,3,1],["peaking",6300,0,1.41],["highshelf",16000,6,1.41],...L]},
+{n:"Vocal",p:0,b:[["peaking",60,0,1.41],["peaking",400,3,.6],["peaking",1000,3,.6],["peaking",2500,0,1.41],["peaking",6300,0,1.41],["highshelf",16000,-3,1.41],...L]}];
+const mkP=x=>x.b?x.b.map(a=>({t:a[0],f:a[1],g:a[2],q:a[3],on:a[4]===0?0:1})):mkB(x.g);
+const defCu=()=>[0,1,2,3,4].map(i=>({n:"Custom "+(i+1),b:mkP(BI[0]),pre:0}));
+const def=()=>({pi:"f0",tab:"pl",dirty:0,cu:defCu(),vol:.8,sh:0,rp:0,eq:1,pre:0,th:"",ca:0,cf:{},last:null,pos:0,ids:[],b:mkP(BI[0])});
 
 /* ---------- 設定の保存/復元 (localStorage + Cookie) ---------- */
 function load(){
@@ -161,7 +188,9 @@ function load(){
  return def();
 }
 let S=load(),tmr;if(!Array.isArray(S.cu))S.cu=defCu();
-if(S.ver!=2){S.ver=2;const mg=b=>{if(b&&b[0]&&b[0].t=="lowshelf")b[0].t="peaking";if(b&&b[9]&&b[9].t=="highshelf")b[9].t="peaking"};mg(S.b);S.cu.forEach(c=>mg(c.b))}
+if(!(S.ver>=2)){S.ver=2;const mg=b=>{if(b&&b[0]&&b[0].t=="lowshelf")b[0].t="peaking";if(b&&b[9]&&b[9].t=="highshelf")b[9].t="peaking"};mg(S.b);S.cu.forEach(c=>mg(c.b))}
+if(!(S.ver>=3)){S.ver=3;if(S.sh==1)S.sh=2;if(S.rp==1)S.rp=2;else if(S.rp==2)S.rp=3}
+if(!(S.ver>=4)){S.ver=4;if(S.pi&&S.pi[0]=="f"&&S.pi!="f0")S.pi="f0"}
 function save(){
  clearTimeout(tmr);tmr=setTimeout(()=>{
   try{localStorage.setItem("mp",JSON.stringify(S))}catch(e){}
@@ -237,7 +266,7 @@ const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 function sync(){
  const k=+S.pi.slice(1);
  if(S.pi[0]=="c"){S.cu[k].b=cp(S.b);S.cu[k].pre=S.pre}
- else{const x=BI[k];S.dirty=JSON.stringify([S.b,S.pre])!=JSON.stringify([mkB(x.g),x.p])?1:0}
+ else{const x=BI[k];S.dirty=JSON.stringify([S.b,S.pre])!=JSON.stringify([mkP(x),x.p])?1:0}
  presets();
 }
 function presets(){
@@ -253,7 +282,7 @@ function presets(){
 function setActive(id){
  S.pi=id;S.dirty=0;
  const k=+id.slice(1);
- if(id[0]=="f"){S.b=mkB(BI[k].g);S.pre=BI[k].p}else{S.b=cp(S.cu[k].b);S.pre=S.cu[k].pre}
+ if(id[0]=="f"){S.b=mkP(BI[k]);S.pre=BI[k].p}else{S.b=cp(S.cu[k].b);S.pre=S.cu[k].pre}
  buildEq();route();ui();apply();save();
 }
 
@@ -403,21 +432,40 @@ async function play(i,o={}){
  render();save();
  if(!o.silent){await ctx.resume();try{await au.play()}catch(e){}}
 }
+const grp=i=>{const d=items[i].dir||"";let a=i,b=i;while(a>0&&(items[a-1].dir||"")==d)a--;while(b<items.length-1&&(items[b+1].dir||"")==d)b++;return[a,b]};
+let aq=[];
 function next(auto){
  if(!items.length)return;
- if(auto&&S.rp==2){au.currentTime=0;au.play();return}
+ if(auto&&S.rp==3){au.currentTime=0;au.play();return}
+ if(cur<0)return play(0);
+ const[a,b]=grp(cur),last=cur==b;
+ if(S.rp==1)return play(last?a:cur+1);
  let n;
- if(S.sh&&items.length>1){do n=Math.floor(Math.random()*items.length);while(n==cur)}
- else{n=cur+1;if(n>=items.length){if(S.rp==1||!auto)n=0;else return}}
+ if(S.sh==2&&items.length>1){do n=Math.floor(Math.random()*items.length);while(n==cur)}
+ else if(S.sh==1&&last){
+  const keys=[...new Set(items.map(x=>x.dir||""))],here=items[cur].dir||"";
+  aq=aq.filter(k=>keys.includes(k)&&k!=here);
+  if(!aq.length)aq=keys.filter(k=>k!=here).sort(()=>Math.random()-.5);
+  const k=aq.shift();
+  if(k!==undefined)n=items.findIndex(x=>(x.dir||"")==k);
+ }
+ if(n===undefined){n=cur+1;if(n>=items.length){if(S.rp==2||!auto)n=0;else return}}
  play(n);
 }
-function prev(){if(au.currentTime>3){au.currentTime=0;return}play(cur>0?cur-1:items.length-1)}
+function prev(){
+ if(au.currentTime>3){au.currentTime=0;return}
+ if(!items.length)return;
+ if(cur<0)return play(0);
+ const[a,b]=grp(cur);
+ play(S.rp==1&&cur==a?b:(cur>0?cur-1:items.length-1));
+}
 
 /* ---------- UI ---------- */
 const ic=(b,t)=>b.querySelector(".m").textContent=t;
+function setBd(b,t){let e=b.querySelector(".bd");if(!t){if(e)e.remove();return}if(!e){e=document.createElement("span");e.className="bd";b.appendChild(e)}e.textContent=t}
 function ui(){
- $("#bShuf").classList.toggle("on",!!S.sh);
- ic($("#bRep"),S.rp==2?"repeat_one":"repeat");$("#bRep").classList.toggle("on",S.rp>0);
+ $("#bShuf").classList.toggle("on",!!S.sh);setBd($("#bShuf"),["","ALB","ALL"][S.sh]);$("#bShuf").title="Shuffle: "+["Off","Album","All"][S.sh];
+ ic($("#bRep"),S.rp==3?"repeat_one":"repeat");$("#bRep").classList.toggle("on",S.rp>0);setBd($("#bRep"),["","ALB","ALL",""][S.rp]);$("#bRep").title="Repeat: "+["Off","Album","All","One"][S.rp];
  $("#bEq").classList.toggle("on",!!S.eq);$("#eqT").textContent=S.eq?"ON":"OFF";
  $("#vol").value=S.vol;au.volume=S.vol;
  $("#pre").value=S.pre;$("#preN").value=S.pre;
@@ -428,8 +476,10 @@ $("#bPlay").onclick=async()=>{
  await ctx.resume();au.paused?au.play():au.pause();
 };
 $("#bNext").onclick=()=>next(false);$("#bPrev").onclick=prev;
-$("#bShuf").onclick=()=>{S.sh^=1;ui();save()};
-$("#bRep").onclick=()=>{S.rp=(S.rp+1)%3;ui();save()};
+$("#bShuf").onclick=()=>{S.sh=(S.sh+1)%3;aq=[];ui();save()};
+$("#bRep").onclick=()=>{S.rp=(S.rp+1)%4;ui();save()};
+function tab(t){S.tab=t;document.body.dataset.tab=t;$("#tPl").classList.toggle("on",t=="pl");$("#tCfg").classList.toggle("on",t=="cfg");draw();save()}
+$("#tPl").onclick=()=>tab("pl");$("#tCfg").onclick=()=>tab("cfg");
 $("#vol").oninput=e=>{S.vol=+e.target.value;au.volume=S.vol;save()};
 $("#seek").oninput=e=>{au.currentTime=+e.target.value};
 $("#pre").oninput=e=>{S.pre=+e.target.value;ui();apply();save()};
@@ -474,7 +524,8 @@ addEventListener("drop",async e=>{e.preventDefault();const out=[];
 addEventListener("keydown",e=>{if(e.code=="Space"&&!/INPUT|SELECT|BUTTON/.test(e.target.tagName)){e.preventDefault();$("#bPlay").click()}});
 addEventListener("resize",draw);
 document.addEventListener("focusin",e=>{const t=e.target;if(t.classList&&t.classList.contains("nb")){t.select();t.addEventListener("mouseup",v=>v.preventDefault(),{once:true});setTimeout(()=>t.select(),10)}});
-if(window.ResizeObserver)new ResizeObserver(()=>document.documentElement.style.setProperty("--dh",$("#dock").offsetHeight+"px")).observe($("#dock"));
+const sv=()=>{const r=document.documentElement.style;r.setProperty("--dh",$("#dock").offsetHeight+"px");r.setProperty("--th",($("#tabs").offsetHeight+16)+"px")};
+if(window.ResizeObserver){const ro=new ResizeObserver(sv);ro.observe($("#dock"));ro.observe($("#tabs"))}else sv();
 
 let lastSave=0;
 au.onplay=()=>ic($("#bPlay"),"pause");au.onpause=()=>ic($("#bPlay"),"play_arrow");
@@ -489,7 +540,7 @@ $("#codecs").innerHTML=CODECS.map(([n,m])=>{const ok=au.canPlayType(m);return `<
 
 /* ---------- 起動 ---------- */
 (async()=>{
- buildEq();ui();route();apply();
+ tab(S.tab==="cfg"?"cfg":"pl");buildEq();ui();route();apply();
  const all=(await tx("readonly",s=>s.getAll()))||[];
  const by=Object.fromEntries(all.map(x=>[x.id,x]));
  const order=S.ids.filter(id=>by[id]).concat(all.map(x=>x.id).filter(id=>!S.ids.includes(id)));
@@ -501,6 +552,10 @@ $("#codecs").innerHTML=CODECS.map(([n,m])=>{const ok=au.canPlayType(m);return `<
  }
  if(items.length&&!items.some(x=>x.handle))msg("Please re-add your files. This browser can't keep file access between sessions.");
 })();
+</script>
+<script>
+if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 </script>
 </body>
 </html>
