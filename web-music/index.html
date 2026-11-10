@@ -38,11 +38,13 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
 .w{max-width:980px;margin:0 auto;padding:12px 12px calc(var(--dh,230px) + var(--th,56px) + 16px);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 body{overflow-x:hidden}
-.tabs{position:fixed;left:0;right:0;bottom:calc(var(--dh,230px) + 8px);z-index:19;display:flex;justify-content:center;pointer-events:none}
-.tabs>div{pointer-events:auto;display:flex;gap:4px;max-width:calc(100% - 16px);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--dh,230px) + 8px);z-index:19;display:flex;gap:4px;max-width:calc(100% - 16px);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
 .tabs button{border:0;border-radius:999px;padding:6px 14px;font-size:13px;white-space:nowrap}
 .tabs button.on{background:var(--ac);color:#fff}
 .tabs .m{font-size:18px}
+html,body{overscroll-behavior:none}
+button,input,select{touch-action:manipulation}
+#list{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .bd{position:absolute;right:-2px;bottom:-1px;font-size:8px;font-weight:700;line-height:1;background:var(--ac);color:#fff;border-radius:6px;padding:2px 3px}
 #pl{display:flex;flex-direction:column;min-height:0}
 body[data-tab=pl] #eqcard,body[data-tab=pl] #cc,body[data-tab=cfg] #pl{display:none}
@@ -141,10 +143,10 @@ details summary{cursor:pointer;color:var(--mut)}
  </div>
 </div>
 
-<div class="tabs" id="tabs"><div>
+<div class="tabs" id="tabs">
  <button id="tPl"><span class="m">queue_music</span>Playlist</button>
  <button id="tCfg"><span class="m">tune</span>Playback Config</button>
-</div></div>
+</div>
 <div class="dock" id="dock"><div class="dk">
  <div id="msg"></div>
  <div class="top"><div id="cover"><span class="m">album</span></div><div class="tt"><div id="title">No track selected</div><div class="sub" id="info">&nbsp;</div></div></div>
@@ -156,7 +158,7 @@ details summary{cursor:pointer;color:var(--mut)}
   <button class="ic" id="bNext"><span class="m">skip_next</span></button>
   <button class="ic" id="bRep" title="Repeat"><span class="m">repeat</span></button>
  </div>
- <div class="sk"><span class="m" style="color:var(--mut)">volume_up</span><input type="range" id="vol" min="0" max="1" step="0.01"></div>
+ <div class="sk"><span class="m" style="color:var(--mut)">volume_mute</span><input type="range" id="vol" min="0" max="1" step="0.01"><span class="m" style="color:var(--mut)">volume_up</span></div>
 </div></div>
 
 <input type="file" id="fi" accept="audio/*,.mp3,.m4a,.aac,.ogg,.oga,.opus,.flac,.wav,.weba,.webm,.aif,.aiff,.aifc,.caf,.mka,.ac3,.amr,.3gp,.mp4,.wma,.ape,.wv" multiple hidden>
@@ -203,13 +205,16 @@ const db=new Promise(res=>{try{const r=indexedDB.open("mp",1);r.onupgradeneeded=
 async function tx(mode,fn){const d=await db;if(!d)return;return new Promise(r=>{try{const t=d.transaction("f",mode);const q=fn(t.objectStore("f"));t.oncomplete=()=>r(q&&q.result);t.onerror=()=>r()}catch(e){r()}})}
 
 /* ---------- オーディオグラフ / PEQ ---------- */
+try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
 const ctx=new(window.AudioContext||window.webkitAudioContext)();
-const src=ctx.createMediaElementSource(au),pre=ctx.createGain(),fl=F.map(()=>ctx.createBiquadFilter());
+const src=ctx.createMediaElementSource(au),pre=ctx.createGain(),fl=F.map(()=>ctx.createBiquadFilter()),vg=ctx.createGain();
+vg.connect(ctx.destination);au.volume=1;vg.gain.value=S.vol;
+const setVol=()=>{const t=ctx.currentTime;vg.gain.cancelScheduledValues(t);vg.gain.setTargetAtTime(S.vol,t,.02)};
 function route(){
  src.disconnect();pre.disconnect();fl.forEach(f=>f.disconnect());
  let n=pre;src.connect(pre);
  if(S.eq)fl.forEach((f,i)=>{if(S.b[i].on){n.connect(f);n=f}});
- n.connect(ctx.destination);
+ n.connect(vg);
 }
 function apply(){
  pre.gain.value=S.eq?Math.pow(10,S.pre/20):1;
@@ -311,6 +316,7 @@ function classify(es){
 }
 const srt=(a,b)=>(a.dir||"").localeCompare(b.dir||"",undefined,{numeric:true})||a.file.name.localeCompare(b.file.name,undefined,{numeric:true});
 async function add(entries){
+ sq=aq=null;
  const cid=cur>=0?items[cur].id:null;
 const need=entries;
  if(need.length){
@@ -336,6 +342,7 @@ const need=entries;
  S.ids=items.map(x=>x.id);save();render();
 }
 async function removeDir(d){
+ sq=aq=null;
  if(!confirm("Remove this folder from the playlist?"))return;
  const cid=cur>=0?items[cur].id:null;
  for(const it of items.filter(x=>(x.dir||"")==d)){delete mem[it.id];await tx("readwrite",s=>s.delete(it.id))}
@@ -411,7 +418,8 @@ function meta(f){
   if(g.title)$("#title").textContent=g.title;
   const a=[g.artist,g.album].filter(Boolean).join(" \u2013 ");
   if(a)$("#info").textContent=a;
-  if(pc&&pc.data){cUrl=URL.createObjectURL(new Blob([new Uint8Array(pc.data)],{type:pc.format||"image/jpeg"}));const im=new Image();im.onload=()=>{if(tk==ctk){cv.innerHTML="";cv.appendChild(im)}};im.src=cUrl}
+  mm(g.title||$("#title").textContent,g.artist,g.album);
+  if(pc&&pc.data){cUrl=URL.createObjectURL(new Blob([new Uint8Array(pc.data)],{type:pc.format||"image/jpeg"}));mm(g.title||$("#title").textContent,g.artist,g.album,cUrl);const im=new Image();im.onload=()=>{if(tk==ctk){cv.innerHTML="";cv.appendChild(im)}};im.src=cUrl}
  };
  const rd=b=>{try{jsmediatags.read(b,{onSuccess:show,onError:()=>{}})}catch(e){}};
  if(/\.(wav|aif|aiff|aifc)$/i.test(f.name))riffId3(f).then(b=>{if(b&&tk==ctk)rd(b)}).catch(()=>{});
@@ -423,17 +431,23 @@ async function play(i,o={}){
  try{f=await getFile(it,!o.silent)}catch(e){}
  if(!f){if(!o.silent)msg("Couldn't load the file (permission required, or please re-add it): "+it.name);return}
  msg();cur=i;S.last=it.id;
+ if(!o.back){hist.push(it.id);if(hist.length>500)hist.shift()}
+ if(sq)sq=sq.filter(x=>x!=it.id);
+ if(aq)aq=aq.filter(k=>k!=key(i));
  if(curUrl)URL.revokeObjectURL(curUrl);
  curUrl=URL.createObjectURL(f);au.src=curUrl;
  if(o.pos)au.addEventListener("loadedmetadata",()=>{au.currentTime=o.pos},{once:true});
  $("#title").textContent=it.name.replace(/\.[^.]+$/,"");
  $("#info").textContent=(f.type||"Unknown type")+" / "+(f.size/1048576).toFixed(1)+" MB";
+ mm(it.name.replace(/\.[^.]+$/,""));
  meta(f);
  render();save();
  if(!o.silent){await ctx.resume();try{await au.play()}catch(e){}}
 }
-const grp=i=>{const d=items[i].dir||"";let a=i,b=i;while(a>0&&(items[a-1].dir||"")==d)a--;while(b<items.length-1&&(items[b+1].dir||"")==d)b++;return[a,b]};
-let aq=[];
+const key=i=>items[i].dir||("\u0001"+items[i].id);
+const grp=i=>{const k=key(i);let a=i,b=i;while(a>0&&key(a-1)==k)a--;while(b<items.length-1&&key(b+1)==k)b++;return[a,b]};
+let sq=null,aq=null,hist=[];
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function next(auto){
  if(!items.length)return;
  if(auto&&S.rp==3){au.currentTime=0;au.play();return}
@@ -441,13 +455,24 @@ function next(auto){
  const[a,b]=grp(cur),last=cur==b;
  if(S.rp==1)return play(last?a:cur+1);
  let n;
- if(S.sh==2&&items.length>1){do n=Math.floor(Math.random()*items.length);while(n==cur)}
- else if(S.sh==1&&last){
-  const keys=[...new Set(items.map(x=>x.dir||""))],here=items[cur].dir||"";
-  aq=aq.filter(k=>keys.includes(k)&&k!=here);
-  if(!aq.length)aq=keys.filter(k=>k!=here).sort(()=>Math.random()-.5);
+ if(S.sh==2){
+  const ids=new Set(items.map(x=>x.id));
+  if(sq)sq=sq.filter(id=>ids.has(id));
+  if(!sq||!sq.length){
+   if(sq&&auto&&S.rp==0)return;
+   sq=shuf(items.filter((x,i)=>i!=cur).map(x=>x.id));
+  }
+  const id=sq.shift();
+  if(id!==undefined)n=items.findIndex(x=>x.id==id);
+ }else if(S.sh==1&&last){
+  const keys=[...new Set(items.map((x,i)=>key(i)))],here=key(cur);
+  if(aq)aq=aq.filter(k=>keys.includes(k));
+  if(!aq||!aq.length){
+   if(aq&&auto&&S.rp==0)return;
+   aq=shuf(keys.filter(k=>k!=here));
+  }
   const k=aq.shift();
-  if(k!==undefined)n=items.findIndex(x=>(x.dir||"")==k);
+  if(k!==undefined)n=items.findIndex((x,i)=>key(i)==k);
  }
  if(n===undefined){n=cur+1;if(n>=items.length){if(S.rp==2||!auto)n=0;else return}}
  play(n);
@@ -456,6 +481,7 @@ function prev(){
  if(au.currentTime>3){au.currentTime=0;return}
  if(!items.length)return;
  if(cur<0)return play(0);
+ if(S.sh&&hist.length>1){hist.pop();const i=items.findIndex(x=>x.id==hist[hist.length-1]);if(i>=0)return play(i,{back:true})}
  const[a,b]=grp(cur);
  play(S.rp==1&&cur==a?b:(cur>0?cur-1:items.length-1));
 }
@@ -467,7 +493,7 @@ function ui(){
  $("#bShuf").classList.toggle("on",!!S.sh);setBd($("#bShuf"),["","ALB","ALL"][S.sh]);$("#bShuf").title="Shuffle: "+["Off","Album","All"][S.sh];
  ic($("#bRep"),S.rp==3?"repeat_one":"repeat");$("#bRep").classList.toggle("on",S.rp>0);setBd($("#bRep"),["","ALB","ALL",""][S.rp]);$("#bRep").title="Repeat: "+["Off","Album","All","One"][S.rp];
  $("#bEq").classList.toggle("on",!!S.eq);$("#eqT").textContent=S.eq?"ON":"OFF";
- $("#vol").value=S.vol;au.volume=S.vol;
+ $("#vol").value=S.vol;setVol();
  $("#pre").value=S.pre;$("#preN").value=S.pre;
  if(S.th)document.documentElement.dataset.theme=S.th;
 }
@@ -476,11 +502,11 @@ $("#bPlay").onclick=async()=>{
  await ctx.resume();au.paused?au.play():au.pause();
 };
 $("#bNext").onclick=()=>next(false);$("#bPrev").onclick=prev;
-$("#bShuf").onclick=()=>{S.sh=(S.sh+1)%3;aq=[];ui();save()};
+$("#bShuf").onclick=()=>{S.sh=(S.sh+1)%3;sq=aq=null;ui();save()};
 $("#bRep").onclick=()=>{S.rp=(S.rp+1)%4;ui();save()};
-function tab(t){S.tab=t;document.body.dataset.tab=t;$("#tPl").classList.toggle("on",t=="pl");$("#tCfg").classList.toggle("on",t=="cfg");draw();save()}
+function tab(t){window.scrollTo(0,0);S.tab=t;document.body.dataset.tab=t;$("#tPl").classList.toggle("on",t=="pl");$("#tCfg").classList.toggle("on",t=="cfg");draw();save()}
 $("#tPl").onclick=()=>tab("pl");$("#tCfg").onclick=()=>tab("cfg");
-$("#vol").oninput=e=>{S.vol=+e.target.value;au.volume=S.vol;save()};
+$("#vol").oninput=e=>{S.vol=+e.target.value;setVol();save()};
 $("#seek").oninput=e=>{au.currentTime=+e.target.value};
 $("#pre").oninput=e=>{S.pre=+e.target.value;ui();apply();save()};
 $("#preN").onchange=e=>{S.pre=Math.min(15,Math.max(-15,+e.target.value||0));ui();apply();save()};
@@ -492,7 +518,7 @@ $("#pn").onchange=()=>{const k=+S.pi.slice(1);if(!S.cu[k].n.trim())S.cu[k].n="Cu
 $("#saveto").onchange=e=>{const v=e.target.value;if(v==="")return;const k=+v;S.cu[k].b=cp(S.b);S.cu[k].pre=S.pre;S.pi="c"+k;S.dirty=0;presets();save()};
 $("#bEq").onclick=()=>{S.eq^=1;route();ui();apply();save()};
 $("#bTheme").onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;S.th=dark?"light":"dark";document.documentElement.dataset.theme=S.th;draw();save()};
-$("#bClear").onclick=async()=>{if(!items.length||!confirm("Clear the entire playlist?"))return;au.pause();items=[];mem={};cur=-1;await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
+$("#bClear").onclick=async()=>{if(!items.length||!confirm("Clear the entire playlist?"))return;au.pause();items=[];mem={};cur=-1;sq=aq=null;hist=[];await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
 $("#bFiles").onclick=async()=>{
  if(window.showOpenFilePicker){
   try{const hs=await showOpenFilePicker({multiple:true,types:[{description:"Audio",accept:{"audio/*":[".mp3",".m4a",".aac",".ogg",".oga",".opus",".flac",".wav",".weba",".webm",".aif",".aiff",".aifc",".caf",".mka",".ac3",".amr",".3gp",".mp4",".wma",".ape",".wv"]}}]});
@@ -525,11 +551,25 @@ addEventListener("keydown",e=>{if(e.code=="Space"&&!/INPUT|SELECT|BUTTON/.test(e
 addEventListener("resize",draw);
 document.addEventListener("focusin",e=>{const t=e.target;if(t.classList&&t.classList.contains("nb")){t.select();t.addEventListener("mouseup",v=>v.preventDefault(),{once:true});setTimeout(()=>t.select(),10)}});
 const sv=()=>{const r=document.documentElement.style;r.setProperty("--dh",$("#dock").offsetHeight+"px");r.setProperty("--th",($("#tabs").offsetHeight+16)+"px")};
+document.addEventListener("focusout",e=>{const t=e.target;if(t.classList&&t.classList.contains("nb"))setTimeout(()=>window.scrollTo(0,window.scrollY),120)});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("nb"))e.target.blur()});
+document.addEventListener("change",e=>{if(e.target.tagName==="SELECT")e.target.blur()});
 if(window.ResizeObserver){const ro=new ResizeObserver(sv);ro.observe($("#dock"));ro.observe($("#tabs"))}else sv();
 
+const mm=(t,a,b,u)=>{try{navigator.mediaSession.metadata=new MediaMetadata({title:t||"",artist:a||"",album:b||"",artwork:u?[{src:u}]:[]})}catch(e){}};
+const ps=v=>{try{navigator.mediaSession.playbackState=v}catch(e){}};
+try{const ms=navigator.mediaSession,h=(k,f)=>{try{ms.setActionHandler(k,f)}catch(e){}};
+ h("play",()=>{ctx.resume();au.play()});h("pause",()=>au.pause());
+ h("previoustrack",prev);h("nexttrack",()=>next(false));
+ h("seekto",e=>{if(e.seekTime!=null)au.currentTime=e.seekTime});
+}catch(e){}
+const wake=()=>{if(!au.paused&&ctx.state!=="running")ctx.resume().catch(()=>{})};
+ctx.onstatechange=wake;
+document.addEventListener("visibilitychange",wake);addEventListener("pageshow",wake);addEventListener("focus",wake);
 let lastSave=0;
-au.onplay=()=>ic($("#bPlay"),"pause");au.onpause=()=>ic($("#bPlay"),"play_arrow");
-au.onended=()=>next(true);
+au.onplay=()=>{ic($("#bPlay"),"pause");ps("playing")};au.onpause=()=>{ic($("#bPlay"),"play_arrow");ps("paused")};
+let t0=0;au.onloadstart=()=>{t0=Date.now()};
+au.onended=()=>{if(au.duration>5&&Date.now()-t0<1500){msg("Playback ended unexpectedly");return}next(true)};
 au.onloadedmetadata=()=>{$("#seek").max=au.duration||1;$("#td").textContent=fmt(au.duration)};
 au.ontimeupdate=()=>{$("#seek").value=au.currentTime;$("#tc").textContent=fmt(au.currentTime);if(Date.now()-lastSave>2000){lastSave=Date.now();S.pos=au.currentTime;save()}};
 au.onerror=()=>msg("This file is unsupported or corrupted: "+(items[cur]?items[cur].name:""));
