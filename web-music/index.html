@@ -42,6 +42,14 @@ body{overflow-x:hidden}
 .tabs button{border:0;border-radius:999px;padding:6px 14px;font-size:13px;white-space:nowrap}
 .tabs button.on{background:var(--ac);color:#fff}
 .tabs .m{font-size:18px}
+.sw{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.tg{position:relative;flex:none;width:44px;height:26px;border-radius:13px;background:var(--line);transition:background .15s}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}
+.sw input:checked+.tg{background:var(--ac)}
+.sw input:checked+.tg::after{transform:translateX(18px)}
+.sw input:focus-visible+.tg{outline:2px solid var(--ac);outline-offset:2px}
+.sw .m{font-size:18px;color:var(--mut)}
 html,body{overscroll-behavior:none}
 button,input,select{touch-action:manipulation}
 #list{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -122,8 +130,9 @@ details summary{cursor:pointer;color:var(--mut)}
  <div class="card lock" id="eqcard">
   <div class="row" style="margin-bottom:8px">
    <b>Equalizer</b>
-   <button id="bEdit"><span class="m">lock</span><span id="edT">Locked</span></button>
-   <button id="bEq"><span class="m">equalizer</span><span id="eqT">ON</span></button>
+   <label class="sw"><span>EQ</span><input type="checkbox" id="swEq" checked><span class="tg"></span></label>
+   <span style="flex:1;min-width:0"></span>
+   <label class="sw"><span class="m" id="lkIc">lock</span><span>Lock</span><input type="checkbox" id="swLk" checked><span class="tg"></span></label>
   </div>
   <div class="row" style="margin-bottom:8px">
    <span class="sub">Preset</span>
@@ -500,7 +509,7 @@ function setBd(b,t){let e=b.querySelector(".bd");if(!t){if(e)e.remove();return}i
 function ui(){
  $("#bShuf").classList.toggle("on",!!S.sh);setBd($("#bShuf"),["","ALB","ALL"][S.sh]);$("#bShuf").title="Shuffle: "+["Off","Album","All"][S.sh];
  ic($("#bRep"),S.rp==3?"repeat_one":"repeat");$("#bRep").classList.toggle("on",S.rp>0);setBd($("#bRep"),["","ALB","ALL",""][S.rp]);$("#bRep").title="Repeat: "+["Off","Album","All","One"][S.rp];
- $("#bEq").classList.toggle("on",!!S.eq);$("#eqT").textContent=S.eq?"ON":"OFF";
+ $("#swEq").checked=!!S.eq;
  $("#vol").value=S.vol;setVol();
  $("#pre").value=S.pre;$("#preN").value=S.pre;
  if(S.th)document.documentElement.dataset.theme=S.th;
@@ -518,13 +527,13 @@ $("#vol").oninput=e=>{S.vol=+e.target.value;setVol();save()};
 $("#seek").oninput=e=>{au.currentTime=+e.target.value};
 $("#pre").oninput=e=>{S.pre=+e.target.value;ui();apply();save()};
 $("#preN").onchange=e=>{S.pre=Math.min(15,Math.max(-15,+e.target.value||0));ui();apply();save()};
-$("#bEdit").onclick=()=>{const l=$("#eqcard").classList.toggle("lock");$("#bEdit").classList.toggle("on",!l);ic($("#bEdit"),l?"lock":"lock_open");$("#edT").textContent=l?"Locked":"Editing"};
+$("#swLk").onchange=e=>{const l=e.target.checked;$("#eqcard").classList.toggle("lock",l);$("#lkIc").textContent=l?"lock":"lock_open"};
 $("#bColA").onclick=()=>{S.ca^=1;save();render()};
 $("#preset").onchange=e=>setActive(e.target.value);
 $("#pn").oninput=e=>{S.cu[+S.pi.slice(1)].n=e.target.value.slice(0,24);presets();save()};
 $("#pn").onchange=()=>{const k=+S.pi.slice(1);if(!S.cu[k].n.trim())S.cu[k].n="Custom "+(k+1);presets();save()};
 $("#saveto").onchange=e=>{const v=e.target.value;if(v==="")return;const k=+v;S.cu[k].b=cp(S.b);S.cu[k].pre=S.pre;S.pi="c"+k;S.dirty=0;presets();save()};
-$("#bEq").onclick=()=>{S.eq^=1;route();ui();apply();save()};
+$("#swEq").onchange=e=>{S.eq=e.target.checked?1:0;route();ui();apply();save()};
 $("#bTheme").onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;S.th=dark?"light":"dark";document.documentElement.dataset.theme=S.th;draw();save()};
 $("#bClear").onclick=async()=>{if(!items.length||!confirm("Clear the entire playlist?"))return;au.pause();items=[];mem={};cur=-1;sq=aq=null;hist=[];await tx("readwrite",s=>s.clear());S.ids=[];S.last=null;save();render()};
 $("#bFiles").onclick=async()=>{

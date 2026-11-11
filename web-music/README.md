@@ -26,11 +26,11 @@ A local audio player that runs in the browser, with a 10-band parametric equaliz
 
 ### Equalizer
 - 10 bands. Per band: on/off, filter type (Peak, LShelf, HShelf, LPF, HPF, Notch, BPF), frequency (10–22000 Hz), gain (±15 dB), and Q (0.1–18).
-- Preamp (±15 dB), a master EQ on/off switch, and a graph of the combined frequency response.
+- Preamp (±15 dB), a master EQ on/off switch (top left of the equalizer), and a graph of the combined frequency response.
 - Signal path: media element → preamp → enabled bands in series → output. Q has no effect on shelf filters (Web Audio specification).
 - **Presets**: Flat, Bright, Exciting, Mellow, Relax, Vocal. Built-in presets are not overwritten; an edited built-in preset is marked with `*`.
 - **Custom 1–5**: editable and renamable. Changes are saved to the selected slot automatically. **Save to…** copies the current settings into a slot.
-- **Edit lock**: bands, preamp, preset name, and Save to… are locked by default to prevent accidental changes while scrolling. Press the lock button to edit. Selecting a preset is allowed while locked.
+- **Edit lock**: bands, preamp, preset name, and Save to… are locked by default to prevent accidental changes while scrolling. Turn the **Lock** switch (top right of the equalizer) off to edit. Selecting a preset is allowed while locked.
 - Numeric fields select their contents on focus.
 
 #### Built-in presets
