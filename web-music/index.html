@@ -433,7 +433,7 @@ async function play(i,o={}){
  msg();cur=i;S.last=it.id;
  if(!o.back){hist.push(it.id);if(hist.length>500)hist.shift()}
  if(sq)sq=sq.filter(x=>x!=it.id);
- if(aq)aq=aq.filter(k=>k!=key(i));
+ if(aq){if(aq.k==key(i))aq.q=aq.q.filter(x=>x!=it.id);else aq=null}
  if(curUrl)URL.revokeObjectURL(curUrl);
  curUrl=URL.createObjectURL(f);au.src=curUrl;
  if(o.pos)au.addEventListener("loadedmetadata",()=>{au.currentTime=o.pos},{once:true});
@@ -452,8 +452,25 @@ function next(auto){
  if(!items.length)return;
  if(auto&&S.rp==3){au.currentTime=0;au.play();return}
  if(cur<0)return play(0);
- const[a,b]=grp(cur),last=cur==b;
- if(S.rp==1)return play(last?a:cur+1);
+ const[a,b]=grp(cur);
+ if(S.sh==1||(S.rp==1&&S.sh)){ /* shuffle inside the current album */
+  if(!aq||aq.k!=key(cur))aq={k:key(cur),q:shuf(items.slice(a,b+1).filter((x,i)=>a+i!=cur).map(x=>x.id))};
+  if(!aq.q.length){
+   if(S.rp==1){
+    const q=shuf(items.slice(a,b+1).map(x=>x.id));
+    if(q.length>1&&q[0]==items[cur].id){const j=1+Math.floor(Math.random()*(q.length-1));[q[0],q[j]]=[q[j],q[0]]}
+    aq={k:key(cur),q};
+   }else{
+    let nb=b+1;
+    if(nb>=items.length){if(S.rp==2||!auto)nb=0;else return}
+    const[a2,b2]=grp(nb);
+    aq={k:key(nb),q:shuf(items.slice(a2,b2+1).map(x=>x.id))};
+   }
+  }
+  const nid=aq.q.shift();
+  return play(items.findIndex(x=>x.id==nid));
+ }
+ if(S.rp==1)return play(cur==b?a:cur+1);
  let n;
  if(S.sh==2){
   const ids=new Set(items.map(x=>x.id));
@@ -464,15 +481,6 @@ function next(auto){
   }
   const id=sq.shift();
   if(id!==undefined)n=items.findIndex(x=>x.id==id);
- }else if(S.sh==1&&last){
-  const keys=[...new Set(items.map((x,i)=>key(i)))],here=key(cur);
-  if(aq)aq=aq.filter(k=>keys.includes(k));
-  if(!aq||!aq.length){
-   if(aq&&auto&&S.rp==0)return;
-   aq=shuf(keys.filter(k=>k!=here));
-  }
-  const k=aq.shift();
-  if(k!==undefined)n=items.findIndex((x,i)=>key(i)==k);
  }
  if(n===undefined){n=cur+1;if(n>=items.length){if(S.rp==2||!auto)n=0;else return}}
  play(n);

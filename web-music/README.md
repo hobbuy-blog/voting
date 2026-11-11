@@ -9,9 +9,9 @@ A local audio player that runs in the browser, with a 10-band parametric equaliz
 - Recognized extensions: `mp3 m4a aac ogg oga opus flac wav weba webm aif aiff aifc caf mka ac3 eac3 amr 3gp mp4 wma ape wv mpga mp2`.
 - Controls: play/pause, previous/next, seek, volume. `Space` toggles play/pause.
 - **Shuffle** cycles through: off → album shuffle → all shuffle.
-  - Album shuffle plays an album in order, then moves to a not-yet-played album, chosen in random order. Each individually added file without an album tag counts as its own album.
+  - Album shuffle plays the tracks of the current album once each in random order. When the album is finished, playback continues with the next album in the playlist, again in random track order (it stops at the end of the playlist unless repeat is on). Each individually added file without an album tag is treated as its own one-track album.
   - All shuffle plays every track once in random order. With repeat off, playback stops after the last track; with repeat all, the order is reshuffled. The previous button steps back through the played history.
-- **Repeat** cycles through: off → album repeat → all repeat → single-track repeat. Album repeat takes priority over shuffle.
+- **Repeat** cycles through: off → album repeat → all repeat → single-track repeat. Album repeat loops the current album; with shuffle on, the album's tracks are reshuffled on each pass.
 - The current track's title, artist/album, and cover art are read from its tags and shown in the player.
 
 ### Library
@@ -40,32 +40,30 @@ Bands not listed are disabled or at 0 dB. All presets use a preamp of 0 dB. Band
 ##### Flat
 All bands at 0 dB.
 
-画像挿入
-
 ##### Bright
 60 Hz low shelf +3 dB; 2.5 kHz peak +6 dB (Q 2).
 
-画像挿入
+![Bright](./image/eq-bright.jpg)
 
 ##### Exciting
 60 Hz low shelf +10 dB; 6.3 kHz peak +6 dB (Q 0.5); 16 kHz peak +9 dB (Q 0.5).
 
-画像挿入
+![Exciting](./image/eq-exciting.jpg)
 
 ##### Mellow
 400 Hz peak +1 dB (Q 1); 1 kHz peak +2 dB (Q 0.7); 2.5 kHz peak −1 dB; 6.3 kHz peak −2 dB (Q 0.5).
 
-画像挿入
+![Mellow](./image/eq-mellow.jpg)
 
 ##### Relax
 60 Hz low shelf +3 dB; 400 Hz peak −3 dB (Q 0.7); 2.5 kHz peak +3 dB (Q 1); 16 kHz high shelf +6 dB.
 
-画像挿入
+![Relax](./image/eq-relax.jpg)
 
 ##### Vocal
 400 Hz peak +3 dB (Q 0.6); 1 kHz peak +3 dB (Q 0.6); 16 kHz high shelf −3 dB.
 
-画像挿入
+![Vocal](./image/eq-vocal.jpg)
 
 ### Interface
 - Two tabs, **Playlist** and **Playback Config**, above a fixed player bar. The Playlist tab fills the space above the tabs; the Playback Config tab (equalizer and codec list) scrolls as a page.
@@ -74,12 +72,12 @@ All bands at 0 dB.
 #### Playlist tab
 The add/clear buttons, the theme button, and the playlist. Tracks are shown in collapsible groups.
 
-画像挿入
+![Playlist](./image/main-main.PNG)
 
 #### Playback Config tab
 The equalizer and the codec list.
 
-画像挿入
+![PlaybackConfig](./image/main-eq.PNG)
 
 ## Stored data
 
